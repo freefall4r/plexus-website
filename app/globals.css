@@ -1,0 +1,167 @@
+@import "tailwindcss";
+
+/* ============================================================
+   PLEXUS AMMAN — design tokens
+   Warm artisanal: sawdust/bone canvas, walnut ink, burnt amber.
+   ============================================================ */
+@theme {
+  --color-bone: #f3ece0;
+  --color-bone-2: #e9dfce;
+  --color-sand: #ddcdb4;
+  --color-ink: #20160d;
+  --color-ink-soft: #4a3a28;
+  --color-walnut: #5a3a1f;
+  --color-walnut-deep: #3a2412;
+  --color-amber: #c8772e;
+  --color-amber-bright: #e08a36;
+  --color-olive: #6f6a3c;
+  --color-clay: #a85c34;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0.05, 0.36, 1);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+    --font-body: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+    --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  }
+
+  /* Arabic typography */
+  html[lang="ar"] {
+    --font-display: var(--font-reem), var(--font-cairo), sans-serif;
+    --font-body: var(--font-cairo), ui-sans-serif, system-ui, sans-serif;
+  }
+  html[lang="ar"] .overline {
+    letter-spacing: 0.12em;
+  }
+  html[lang="ar"] h1,
+  html[lang="ar"] h2,
+  html[lang="ar"] h3,
+  html[lang="ar"] h4 {
+    line-height: 1.15;
+    letter-spacing: 0;
+  }
+
+  * {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  html {
+    scroll-behavior: auto; /* Lenis handles smoothing */
+    background: var(--color-walnut-deep);
+  }
+
+  body {
+    background-color: var(--color-bone);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    overflow-x: clip; /* NEVER overflow-x:hidden — breaks position:sticky */
+    cursor: none;
+    font-feature-settings: "ss01", "cv01";
+  }
+
+  /* When Lenis is active */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  ::selection {
+    background: var(--color-amber);
+    color: var(--color-bone);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 0.98;
+  }
+
+  a, button {
+    cursor: none;
+  }
+
+  @media (hover: none) {
+    body, a, button { cursor: auto; }
+  }
+}
+
+@layer utilities {
+  .font-display { font-family: var(--font-display); }
+  .font-body { font-family: var(--font-body); }
+  .font-mono { font-family: var(--font-mono); }
+
+  /* Editorial overline */
+  .overline {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+  }
+
+  /* Paper grain overlay */
+  .grain::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent);
+    mask-image: linear-gradient(to bottom, black 70%, transparent);
+  }
+
+  .text-stroke {
+    -webkit-text-stroke: 1.5px var(--color-ink);
+    color: transparent;
+  }
+
+  .edge-line {
+    background-image: linear-gradient(to right, transparent, var(--color-ink-soft), transparent);
+  }
+}
+
+/* Reliable on-load reveals (CSS, not JS — always fire on first paint) */
+@keyframes px-rise {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes px-clip-rise {
+  from { transform: translateY(115%); }
+  to { transform: translateY(0); }
+}
+@layer utilities {
+  .px-reveal {
+    opacity: 0;
+    animation: px-rise 0.9s var(--ease-out-expo) both;
+  }
+  .px-clip {
+    display: block;
+    transform: translateY(115%);
+    animation: px-clip-rise 1s var(--ease-out-expo) both;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
