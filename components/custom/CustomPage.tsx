@@ -22,8 +22,8 @@ export function CustomPage() {
   return (
     <div className="relative bg-walnut-deep text-bone">
       {/* ===== HERO (pinned, scroll-driven gem) ===== */}
-      <section className="relative h-[185vh]">
-        <div className="sticky top-0 h-screen overflow-hidden">
+      <section className="relative h-[120vh] md:h-[185vh]">
+        <div className="sticky top-0 h-[100svh] overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(120%_110%_at_60%_25%,rgba(42,36,26,1)_0%,rgba(31,27,20,1)_55%,rgba(20,17,12,1)_100%)]" />
 
           {/* the scroll-animated 3D gem */}
@@ -35,7 +35,7 @@ export function CustomPage() {
           {/* left scrim for text */}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[rgba(20,17,12,0.95)] via-[rgba(20,17,12,0.7)] to-transparent md:via-[rgba(20,17,12,0.3)] md:to-transparent" />
 
-          <div className="relative mx-auto flex h-screen max-w-[1500px] flex-col justify-center px-5 pt-32 pb-16 md:px-10">
+          <div className="relative mx-auto flex h-[100svh] max-w-[1500px] flex-col justify-center px-5 pt-32 pb-16 md:px-10">
             <p className="px-reveal overline text-copper" style={{ animationDelay: "0.1s" }}>
               {t("studio.over")}
             </p>
