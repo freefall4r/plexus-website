@@ -6,17 +6,24 @@
    oak and deep mud. Proportioned on the golden ratio (φ ≈ 1.618).
    ============================================================ */
 @theme {
-  --color-bone: #ece4d4;        /* raw plaster — warm canvas */
-  --color-bone-2: #e3d7c2;      /* deeper plaster wash */
-  --color-sand: #d9c39a;        /* straw */
-  --color-ink: #463526;         /* deep mud — primary text */
-  --color-ink-soft: #7a6750;    /* muted mud */
-  --color-walnut: #8a6b45;      /* oak */
-  --color-walnut-deep: #3a2c1e; /* deep mud — dark sections */
-  --color-amber: #b07d5a;       /* terracotta clay — primary accent */
-  --color-amber-bright: #c69a72;/* lit clay / straw */
-  --color-olive: #6f6a44;       /* dry grass / olive */
-  --color-clay: #9c5f3e;        /* deep terracotta */
+  /* Mineral-natural palette: limewash plaster ground, walnut ink,
+     copper as the single jewel accent, sage-stone for the research track.
+     ~80% limewash/plaster · 15% wood/ink · 5% copper. */
+  --color-bone: #f4efe6;        /* limewash — warm off-white canvas */
+  --color-bone-2: #e8dfd0;      /* plaster — alternating bands / cards */
+  --color-sand: #d9cbb3;        /* sand — image mats, dividers */
+  --color-stone: #cfc6b6;       /* dry stone */
+  --color-ink: #2c271e;         /* warm walnut-black — primary text */
+  --color-ink-soft: #6b5d4a;    /* muted walnut — secondary text */
+  --color-walnut: #a6713e;      /* warm wood — links/hover */
+  --color-walnut-deep: #1f1b14; /* deep ground — footer / photo overlays */
+  --color-amber: #9c5b2c;       /* COPPER — single jewel accent (alias) */
+  --color-amber-bright: #b07a4b;/* lit copper */
+  --color-copper: #9c5b2c;      /* copper (explicit) */
+  --color-copper-bright: #b9794a;
+  --color-sage: #7c8471;        /* sage-stone — research/engineering track */
+  --color-olive: #7c8471;       /* sage (alias) */
+  --color-clay: #9c5b2c;        /* copper (alias) */
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-soft: cubic-bezier(0.65, 0.05, 0.36, 1);
@@ -107,10 +114,10 @@
   .limewash {
     background-color: var(--color-bone);
     background-image:
-      radial-gradient(120% 90% at 12% 8%, rgba(227, 215, 194, 0.9) 0%, rgba(227, 215, 194, 0) 45%),
-      radial-gradient(110% 80% at 88% 18%, rgba(217, 195, 154, 0.4) 0%, rgba(217, 195, 154, 0) 50%),
-      radial-gradient(130% 100% at 70% 92%, rgba(138, 107, 69, 0.12) 0%, rgba(138, 107, 69, 0) 55%),
-      radial-gradient(100% 70% at 30% 70%, rgba(236, 228, 212, 0.85) 0%, rgba(236, 228, 212, 0) 60%);
+      radial-gradient(120% 90% at 12% 8%, rgba(232, 223, 208, 0.9) 0%, rgba(232, 223, 208, 0) 45%),
+      radial-gradient(110% 80% at 88% 18%, rgba(217, 203, 179, 0.4) 0%, rgba(217, 203, 179, 0) 50%),
+      radial-gradient(130% 100% at 70% 92%, rgba(124, 132, 113, 0.08) 0%, rgba(124, 132, 113, 0) 55%),
+      radial-gradient(100% 70% at 30% 70%, rgba(244, 239, 230, 0.9) 0%, rgba(244, 239, 230, 0) 60%);
   }
 
   /* Golden-ratio type scale */
