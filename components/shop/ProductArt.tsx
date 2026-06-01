@@ -4,7 +4,7 @@ import * as React from "react";
 import type { ArtKey } from "@/lib/products";
 
 /**
- * ProductArt — the visual signature of PLEXUS AMMAN.
+ * ProductArt — the visual signature of Plexus Workshop.
  *
  * Renders a premium, editorial single-weight line illustration of a product on
  * a warm, layered wood-tone gradient with subtle grain and a soft contact

@@ -61,12 +61,12 @@ export function Nav() {
         } ${onDark ? "text-bone" : "text-ink"}`}
       >
         <div className="mx-auto flex max-w-[1500px] items-center justify-between px-5 py-4 md:px-10">
-          <Link href="/" className="group flex items-baseline gap-2" aria-label="PLEXUS AMMAN home">
+          <Link href="/" className="group flex items-baseline gap-2" aria-label="Plexus Workshop home">
             <span className="font-display text-2xl leading-none tracking-tight md:text-3xl">
               {brand.name}
             </span>
             <span className={`overline transition-colors group-hover:text-amber ${onDark ? "text-bone/60" : "text-ink-soft"}`}>
-              {brand.city}
+              {brand.tag}
             </span>
           </Link>
 

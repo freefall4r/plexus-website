@@ -6,7 +6,7 @@ You add products, drag in images, set prices in JOD, and fill EN/AR fields — n
 ## One-time setup
 
 1. Go to **https://www.sanity.io/manage** and sign in (Google/GitHub/email — free).
-2. Click **Create new project**. Name it `PLEXUS AMMAN`.
+2. Click **Create new project**. Name it `Plexus Workshop`.
 3. When asked for a dataset, use **`production`** (the default).
 4. Open the project → **API** tab → copy the **Project ID** (looks like `abc12xyz`).
 5. Paste it into **`.env.local`**:

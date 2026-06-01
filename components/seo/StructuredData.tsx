@@ -13,8 +13,7 @@ const PLACEHOLDERS = new Set<string>([
   "962790000000",
   "+962790000000",
   "+962 7 9000 0000",
-  "hello@plexusamman.com",
-  "plexus.amman",
+  "hello@plexusworkshop.com",
 ]);
 
 const real = (v?: string) =>
@@ -35,7 +34,6 @@ export function StructuredData() {
     "@type": "LocalBusiness",
     "@id": `${site.url}/#business`,
     name: brand.full,
-    alternateName: "Plexus Workshop",
     url: site.url,
     image: `${site.url}/work/faceted-oak-table.jpg`,
     logo: `${site.url}/work/faceted-oak-table.jpg`,

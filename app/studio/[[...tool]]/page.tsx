@@ -1,5 +1,5 @@
 /**
- * PLEXUS AMMAN — Sanity Studio (the product dashboard), mounted at /studio.
+ * Plexus Workshop — Sanity Studio (the product dashboard), mounted at /studio.
  * Once NEXT_PUBLIC_SANITY_PROJECT_ID is set, this becomes your full dashboard.
  * Until then it shows a short setup note (so the build never breaks).
  */
@@ -25,7 +25,7 @@ export default function StudioPage() {
       >
         <div style={{ maxWidth: 520 }}>
           <p style={{ letterSpacing: "0.2em", fontSize: 12, opacity: 0.7 }}>
-            PLEXUS AMMAN · STUDIO
+            Plexus Workshop · STUDIO
           </p>
           <h1 style={{ fontSize: 28, margin: "0.5rem 0 1rem" }}>
             Almost ready — one step left

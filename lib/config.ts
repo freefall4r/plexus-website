@@ -1,10 +1,10 @@
-// PLEXUS AMMAN — central brand & contact config.
+// Plexus Workshop — central brand & contact config.
 // Replace the PLACEHOLDER values with the real ones; everything wires up automatically.
 
 export const brand = {
-  name: "PLEXUS",
-  city: "AMMAN",
-  full: "PLEXUS AMMAN",
+  name: "Plexus",
+  tag: "Workshop",
+  full: "Plexus Workshop",
   tagline: "Wood, joined with intention.",
   est: "EST. AMMAN — JORDAN",
   description:
@@ -17,8 +17,8 @@ export const contact = {
   whatsapp: "962790000000", // PLACEHOLDER WhatsApp number
   phoneDisplay: "+962 7 9000 0000", // PLACEHOLDER shown to humans
   phoneTel: "+962790000000", // PLACEHOLDER tel: link
-  email: "hello@plexusamman.com", // PLACEHOLDER
-  instagram: "plexus.amman", // PLACEHOLDER handle (no @)
+  email: "hello@plexusworkshop.com", // PLACEHOLDER — swap in the real address
+  instagram: "plexus.workshop", // real handle (no @) — instagram.com/plexus.workshop
   addressLine: "Workshop — Amman, Jordan",
   mapsQuery: "Amman, Jordan",
 } as const;

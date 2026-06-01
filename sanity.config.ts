@@ -12,7 +12,7 @@ import { schema } from "./sanity/schemaTypes";
 
 export default defineConfig({
   name: "plexus-studio",
-  title: "PLEXUS AMMAN — Catalogue",
+  title: "Plexus Workshop — Catalogue",
   basePath: "/studio",
   projectId,
   dataset,

@@ -1,4 +1,4 @@
-// PLEXUS AMMAN — product catalogue
+// Plexus Workshop — product catalogue
 // A custom wood workshop in Amman, Jordan. Prices in Jordanian Dinar (JOD).
 // All data is hand-authored. No external imports.
 

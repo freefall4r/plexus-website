@@ -6,7 +6,7 @@ import { getCatalogue } from "@/lib/catalogue";
 export const metadata: Metadata = {
   title: "Shop — The Collection",
   description:
-    "Handmade pieces from PLEXUS AMMAN — sculptural objects and furniture in solid wood, stone & metal, each made to order.",
+    "Handmade pieces from Plexus Workshop — sculptural objects and furniture in solid wood, stone & metal, each made to order.",
 };
 
 // Re-check Sanity periodically so new products appear without a redeploy.

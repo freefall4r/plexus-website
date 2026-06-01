@@ -1,4 +1,4 @@
-# PLEXUS AMMAN
+# Plexus Workshop
 
 A cinematic, bilingual (EN / AR-RTL) website for a custom woodworking workshop in Amman, Jordan.
 
