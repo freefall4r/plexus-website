@@ -25,8 +25,8 @@ export function MakerProcess() {
         <Reveal delay={0.12}>
           <div className="relative mt-12 aspect-[16/10] w-full overflow-hidden md:mt-16 md:aspect-[21/8]">
             <Image
-              src="/brand/hero-carved.jpg"
-              alt="Hand-carved, dimpled wood surface raked by low light"
+              src="/brand/craft.jpg"
+              alt="Hand tools and sawdust on a workbench in warm low light"
               fill
               sizes="100vw"
               className="object-cover"
