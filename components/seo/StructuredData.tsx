@@ -9,12 +9,7 @@ import { brand, contact, site } from "@/lib/config";
  * Instagram sameAs are only emitted once you replace the placeholders with the
  * real values. Everything then populates automatically; no change needed here.
  */
-const PLACEHOLDERS = new Set<string>([
-  "962790000000",
-  "+962790000000",
-  "+962 7 9000 0000",
-  "hello@plexusworkshop.com",
-]);
+const PLACEHOLDERS = new Set<string>(["hello@plexusworkshop.com"]);
 
 const real = (v?: string) =>
   v && !PLACEHOLDERS.has(v.trim()) ? v.trim() : undefined;
@@ -40,6 +35,7 @@ export function StructuredData() {
     description: brand.description,
     address: {
       "@type": "PostalAddress",
+      streetAddress: contact.street,
       addressLocality: "Amman",
       addressCountry: "JO",
     },

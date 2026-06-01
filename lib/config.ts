@@ -14,13 +14,14 @@ export const brand = {
 // --- CONTACT (placeholders — swap in the real details) ---
 export const contact = {
   // International format, digits only after the +, no spaces — used for wa.me + tel:
-  whatsapp: "962790000000", // PLACEHOLDER WhatsApp number
-  phoneDisplay: "+962 7 9000 0000", // PLACEHOLDER shown to humans
-  phoneTel: "+962790000000", // PLACEHOLDER tel: link
+  whatsapp: "962791792129", // WhatsApp / mobile (intl, digits only)
+  phoneDisplay: "+962 7 9179 2129", // shown to humans
+  phoneTel: "+962791792129", // tel: link
   email: "hello@plexusworkshop.com", // PLACEHOLDER — swap in the real address
   instagram: "plexus.workshop", // real handle (no @) — instagram.com/plexus.workshop
-  addressLine: "Workshop — Amman, Jordan",
-  mapsQuery: "Amman, Jordan",
+  street: "Waela Bent Al Askaa", // street, used in structured data + maps
+  addressLine: "Waela Bent Al Askaa, Amman",
+  mapsQuery: "Waela Bent Al Askaa, Amman, Jordan",
 } as const;
 
 // --- SITE / SEO ---
