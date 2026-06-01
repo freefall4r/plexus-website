@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { MotionConfig } from "framer-motion";
 import { SmoothScroll } from "./SmoothScroll";
 import { Nav } from "./Nav";
 import { Footer } from "./Footer";
@@ -19,13 +20,17 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="grain flex min-h-screen flex-col">
-      <SmoothScroll>
-        <Nav />
-        <main className="flex-1">{children}</main>
-        <Footer />
-      </SmoothScroll>
-      <ContactDock />
-    </div>
+    // reducedMotion="user" — when a visitor enables "Reduce Motion" on their
+    // device, framer-motion drops transform/layout animations automatically.
+    <MotionConfig reducedMotion="user">
+      <div className="grain flex min-h-screen flex-col">
+        <SmoothScroll>
+          <Nav />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </SmoothScroll>
+        <ContactDock />
+      </div>
+    </MotionConfig>
   );
 }
