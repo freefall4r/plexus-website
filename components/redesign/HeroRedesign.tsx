@@ -11,12 +11,12 @@ export function HeroRedesign() {
     <section className="relative min-h-[100svh] w-full overflow-hidden bg-walnut-deep text-bone">
       {/* full-bleed hand-carved texture */}
       <Image
-        src="/brand/hero-carved.jpg"
-        alt="Hand-carved dimpled wood panel, raking light across the grain"
+        src="/brand/hero.jpg"
+        alt="Warm afternoon light through a wooden window onto a handmade wood counter and stools"
         fill
         priority
         sizes="100vw"
-        className="object-cover"
+        className="object-cover object-[center_42%]"
       />
       {/* warm legibility wash */}
       <div
@@ -24,7 +24,7 @@ export function HeroRedesign() {
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(180deg, rgba(31,27,20,0.55) 0%, rgba(31,27,20,0.15) 32%, rgba(31,27,20,0.25) 62%, rgba(31,27,20,0.82) 100%)",
+            "linear-gradient(180deg, rgba(31,27,20,0.5) 0%, rgba(31,27,20,0.05) 30%, rgba(31,27,20,0.12) 55%, rgba(31,27,20,0.8) 100%), linear-gradient(90deg, rgba(31,27,20,0.62) 0%, rgba(31,27,20,0.12) 46%, rgba(31,27,20,0) 72%)",
         }}
       />
 
