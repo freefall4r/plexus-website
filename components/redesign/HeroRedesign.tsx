@@ -1,68 +1,144 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
+/**
+ * Deterministic flowing "contour" lines — echoes the hand-carved topographic
+ * wood panel and the timber-engineer identity. Computed once at module load
+ * (no Math.random, so SSR and client markup match).
+ */
+function buildContours() {
+  const W = 1440;
+  const N = 9;
+  const lines: string[] = [];
+  for (let i = 0; i < N; i++) {
+    const base = 130 + (i * 640) / (N - 1);
+    const amp = 24 + (i % 3) * 11;
+    const freq = 0.0042 + (i % 2) * 0.0012;
+    const phase = i * 0.9;
+    let d = "";
+    for (let x = -40; x <= W + 40; x += 22) {
+      const y =
+        base +
+        amp * Math.sin(x * freq + phase) +
+        11 * Math.sin(x * 0.0017 + phase * 1.7);
+      d += `${x === -40 ? "M" : "L"} ${x} ${y.toFixed(1)} `;
+    }
+    lines.push(d.trim());
+  }
+  return lines;
+}
+const LINES = buildContours();
+
 export function HeroRedesign() {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end start"],
+  });
+  const driftY = useTransform(scrollYProgress, [0, 1], [0, -70]);
+  const contourFade = useTransform(scrollYProgress, [0, 1], [1, 0]);
+
   return (
-    <section className="relative min-h-[100svh] w-full overflow-hidden bg-walnut-deep text-bone">
-      {/* full-bleed hand-carved texture */}
-      <Image
-        src="/brand/hero-olive.jpg"
-        alt="Olive tree on an old stone terrace at golden hour, sea beyond"
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover object-center"
-      />
-      {/* warm legibility wash */}
+    <section
+      ref={ref}
+      className="relative flex min-h-[100svh] w-full items-center overflow-hidden bg-bone"
+    >
+      {/* animated topographic contours (draw themselves) */}
+      <motion.svg
+        aria-hidden
+        style={{ y: driftY, opacity: contourFade }}
+        className="pointer-events-none absolute inset-0 h-full w-full"
+        viewBox="0 0 1440 900"
+        preserveAspectRatio="xMidYMid slice"
+      >
+        {LINES.map((d, i) => (
+          <motion.path
+            key={i}
+            d={d}
+            fill="none"
+            stroke="var(--color-copper)"
+            strokeWidth={1.1}
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 0.16 }}
+            transition={{
+              pathLength: { duration: 2.2, delay: 0.25 + i * 0.12, ease },
+              opacity: { duration: 1, delay: 0.25 + i * 0.12 },
+            }}
+          />
+        ))}
+      </motion.svg>
+
+      {/* soft light pool so the type stays crisp */}
       <div
         aria-hidden
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(180deg, rgba(31,27,20,0.5) 0%, rgba(31,27,20,0.05) 30%, rgba(31,27,20,0.12) 55%, rgba(31,27,20,0.8) 100%), linear-gradient(90deg, rgba(31,27,20,0.62) 0%, rgba(31,27,20,0.12) 46%, rgba(31,27,20,0) 72%)",
+            "radial-gradient(75% 65% at 18% 42%, rgba(244,239,230,0.72) 0%, rgba(244,239,230,0) 60%)",
         }}
       />
 
-      {/* content */}
-      <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-[1500px] flex-col justify-end px-5 pb-20 pt-32 md:px-10 md:pb-28">
+      <motion.div
+        style={{ y: driftY }}
+        className="relative z-10 mx-auto w-full max-w-[1500px] px-5 md:px-10"
+      >
         <motion.span
-          className="overline text-bone/70"
-          initial={{ opacity: 0, y: 12 }}
+          className="overline text-ink-soft"
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease }}
         >
           Plexus Workshop — Amman, Jordan
         </motion.span>
 
-        <motion.h1
-          className="mt-5 max-w-[16ch] font-display text-[clamp(3rem,2.2rem+5vw,7rem)] font-light leading-[0.95] tracking-[-0.02em]"
-          initial={{ opacity: 0, y: 22 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.08, ease }}
-        >
-          Wood, made personal.
-        </motion.h1>
+        <h1 className="mt-6 font-display text-[clamp(2.6rem,1.8rem+4.4vw,6rem)] font-light leading-[0.95] tracking-[-0.02em] text-ink">
+          {["Wood, made", "personal."].map((line, i) => (
+            <span key={line} className="block overflow-hidden pb-[0.06em]">
+              <motion.span
+                className="block"
+                initial={{ y: "115%" }}
+                animate={{ y: 0 }}
+                transition={{ duration: 1, delay: 0.15 + i * 0.12, ease }}
+              >
+                {i === 1 ? (
+                  <>
+                    personal<span className="text-copper">.</span>
+                  </>
+                ) : (
+                  line
+                )}
+              </motion.span>
+            </span>
+          ))}
+        </h1>
+
+        <motion.div
+          className="mt-9 h-px w-full max-w-[300px] origin-left bg-ink/25"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 1, delay: 0.5, ease }}
+        />
 
         <motion.p
-          className="mt-7 max-w-[52ch] text-[clamp(1.05rem,0.98rem+0.4vw,1.3rem)] leading-relaxed text-bone/85"
-          initial={{ opacity: 0, y: 18 }}
+          className="mt-8 max-w-[50ch] text-[clamp(1.05rem,0.98rem+0.4vw,1.3rem)] leading-relaxed text-ink-soft"
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.18, ease }}
+          transition={{ duration: 0.9, delay: 0.55, ease }}
         >
-          Handmade furniture and sculptural objects in solid wood — from a
-          workshop that understands timber down to the grain.
+          Handmade furniture, sculptural objects, and timber research — shaped in
+          Amman by an engineer who reads the grain.
         </motion.p>
 
         <motion.div
           className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4"
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.28, ease }}
+          transition={{ duration: 0.9, delay: 0.68, ease }}
         >
           <Link
             href="/custom"
@@ -75,28 +151,22 @@ export function HeroRedesign() {
           </Link>
           <Link
             href="/shop"
-            className="group inline-flex items-center gap-2 text-sm tracking-wide text-bone/90"
+            className="group inline-flex items-center gap-2 text-sm tracking-wide text-ink"
           >
             <span className="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-1 transition-[background-size] duration-500 group-hover:bg-[length:100%_1px]">
               Explore the work
             </span>
           </Link>
         </motion.div>
-      </div>
 
-      {/* scroll cue */}
-      <motion.div
-        aria-hidden
-        className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1, duration: 1 }}
-      >
         <motion.div
-          className="h-9 w-px bg-bone/40"
-          animate={{ scaleY: [0.3, 1, 0.3], originY: 0 }}
-          transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-        />
+          className="mt-14 overline text-ink-soft/70"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 0.95 }}
+        >
+          Wood · Stone · Copper · Limewash
+        </motion.div>
       </motion.div>
     </section>
   );

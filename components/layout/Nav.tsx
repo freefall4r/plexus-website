@@ -33,7 +33,8 @@ export function Nav() {
   useEffect(() => setOpen(false), [pathname]);
 
   // Pages with a dark hero use light chrome until the user scrolls past it.
-  const darkHero = pathname === "/" || pathname === "/custom";
+  // The home hero is now a light/limewash typographic hero, so only /custom is dark.
+  const darkHero = pathname === "/custom";
   const onDark = darkHero && !scrolled && !open;
 
   const LangToggle = (
