@@ -37,8 +37,8 @@ export function MakerProcess() {
           <Reveal delay={0.15} className="md:order-1">
             <div className="relative aspect-[4/5] w-full overflow-hidden bg-sand">
               <Image
-                src="/brand/relief.jpg"
-                alt="Detail of a hand-carved walnut relief panel"
+                src="/brand/hero-carved.jpg"
+                alt="Detail of a hand-carved, dimpled wood panel"
                 fill
                 sizes="(min-width: 768px) 45vw, 100vw"
                 className="object-cover"

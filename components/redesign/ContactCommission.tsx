@@ -6,7 +6,7 @@ const linkClass =
 
 export function ContactCommission() {
   return (
-    <section id="contact" className="py-24 md:py-32 bg-bone-2">
+    <section id="contact" className="py-24 md:py-32 bg-bone">
       <div className="mx-auto max-w-[1500px] px-5 md:px-10">
         <div className="grid gap-14 md:grid-cols-2 md:gap-16">
           {/* Left — invitation + WhatsApp CTA */}
