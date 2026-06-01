@@ -37,14 +37,14 @@ export function Process() {
   }, []);
 
   return (
-    <section ref={ref} className="relative h-[360vh] text-bone">
+    <section ref={ref} className="relative h-[360vh] text-ink">
       <div className="sticky top-0 flex h-screen flex-col justify-center overflow-hidden">
         <div className="mx-auto mb-10 flex w-full max-w-[1500px] items-end justify-between px-5 md:px-10">
           <div>
-            <p className="overline text-amber">{t("process.over")}</p>
+            <p className="overline text-clay">{t("process.over")}</p>
             <h2 className="mt-3 font-display text-4xl md:text-6xl">{t("process.title")}</h2>
           </div>
-          <p className="hidden font-mono text-xs text-bone/40 md:block">04 →</p>
+          <p className="hidden font-mono text-xs text-ink/40 md:block">04 →</p>
         </div>
 
         <motion.div
@@ -55,9 +55,9 @@ export function Process() {
           {steps.map((s) => (
             <article
               key={s.n}
-              className="relative flex h-[58vh] w-[82vw] shrink-0 flex-col justify-between rounded-3xl border border-bone/10 bg-gradient-to-br from-[#241606]/85 to-[#0c0805]/92 p-8 backdrop-blur-md md:w-[44vw] md:p-12"
+              className="relative flex h-[58vh] w-[82vw] shrink-0 flex-col justify-between rounded-3xl border border-bone/10 bg-gradient-to-br from-walnut-deep/95 to-ink/95 p-8 text-bone backdrop-blur-md md:w-[44vw] md:p-12"
             >
-              <span className="font-display text-7xl text-amber/80 md:text-8xl">{s.n}</span>
+              <span className="font-display text-7xl text-amber-bright/80 md:text-8xl">{s.n}</span>
               <div>
                 <h3 className="font-display text-3xl md:text-4xl">{t(s.t)}</h3>
                 <p className="mt-4 max-w-md text-bone/70 md:text-lg">{t(s.b)}</p>

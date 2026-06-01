@@ -32,7 +32,7 @@ export function WoodMarquee() {
   const { lang } = useLang();
   const words = lang === "ar" ? wordsAr : wordsEn;
   return (
-    <div className="border-y border-bone/10 bg-[#0c0805]/50 py-5 backdrop-blur-sm">
+    <div className="border-y border-walnut/30 bg-walnut-deep/90 py-5 backdrop-blur-sm">
       <Marquee speed={34}>
         {words.map((w, i) => (
           <span key={i} className="flex items-center">

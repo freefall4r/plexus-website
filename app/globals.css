@@ -2,23 +2,33 @@
 
 /* ============================================================
    PLEXUS AMMAN — design tokens
-   Warm artisanal: sawdust/bone canvas, walnut ink, burnt amber.
+   Natural & minimal: raw-plaster canvas, straw, terracotta clay,
+   oak and deep mud. Proportioned on the golden ratio (φ ≈ 1.618).
    ============================================================ */
 @theme {
-  --color-bone: #f3ece0;
-  --color-bone-2: #e9dfce;
-  --color-sand: #ddcdb4;
-  --color-ink: #20160d;
-  --color-ink-soft: #4a3a28;
-  --color-walnut: #5a3a1f;
-  --color-walnut-deep: #3a2412;
-  --color-amber: #c8772e;
-  --color-amber-bright: #e08a36;
-  --color-olive: #6f6a3c;
-  --color-clay: #a85c34;
+  --color-bone: #ece4d4;        /* raw plaster — warm canvas */
+  --color-bone-2: #e3d7c2;      /* deeper plaster wash */
+  --color-sand: #d9c39a;        /* straw */
+  --color-ink: #463526;         /* deep mud — primary text */
+  --color-ink-soft: #7a6750;    /* muted mud */
+  --color-walnut: #8a6b45;      /* oak */
+  --color-walnut-deep: #3a2c1e; /* deep mud — dark sections */
+  --color-amber: #b07d5a;       /* terracotta clay — primary accent */
+  --color-amber-bright: #c69a72;/* lit clay / straw */
+  --color-olive: #6f6a44;       /* dry grass / olive */
+  --color-clay: #9c5f3e;        /* deep terracotta */
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-soft: cubic-bezier(0.65, 0.05, 0.36, 1);
+
+  /* Golden-ratio type scale (φ = 1.618), fluid via clamp */
+  --phi: 1.618;
+  --step--1: clamp(0.83rem, 0.8rem + 0.15vw, 0.9rem);
+  --step-0:  clamp(1rem, 0.96rem + 0.2vw, 1.1rem);
+  --step-1:  clamp(1.35rem, 1.2rem + 0.7vw, 1.78rem);
+  --step-2:  clamp(1.95rem, 1.6rem + 1.7vw, 2.88rem);
+  --step-3:  clamp(2.9rem, 2.2rem + 3.4vw, 4.66rem);
+  --step-4:  clamp(4.0rem, 2.6rem + 7vw, 7.54rem);
 }
 
 @layer base {
@@ -59,8 +69,9 @@
     background-color: var(--color-bone);
     color: var(--color-ink);
     font-family: var(--font-body);
+    font-size: var(--step-0);
+    line-height: 1.618; /* φ leading for body text */
     overflow-x: clip; /* NEVER overflow-x:hidden — breaks position:sticky */
-    cursor: none;
     font-feature-settings: "ss01", "cv01";
   }
 
@@ -77,27 +88,38 @@
   }
 
   ::selection {
-    background: var(--color-amber);
-    color: var(--color-bone);
+    background: var(--color-sand);
+    color: var(--color-ink);
   }
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    font-weight: 500;
-    letter-spacing: -0.02em;
-    line-height: 0.98;
-  }
-
-  a, button {
-    cursor: none;
-  }
-
-  @media (hover: none) {
-    body, a, button { cursor: auto; }
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    line-height: 1.05;
   }
 }
 
 @layer utilities {
+  /* Plaster / mud wall — soft mottled earthen wash, brushed in irregular pools.
+     Painted on a position:fixed underlay (see usage), so NO background-attachment:fixed
+     is needed — that would repaint the whole page every scroll frame and cause jank. */
+  .limewash {
+    background-color: var(--color-bone);
+    background-image:
+      radial-gradient(120% 90% at 12% 8%, rgba(227, 215, 194, 0.9) 0%, rgba(227, 215, 194, 0) 45%),
+      radial-gradient(110% 80% at 88% 18%, rgba(217, 195, 154, 0.4) 0%, rgba(217, 195, 154, 0) 50%),
+      radial-gradient(130% 100% at 70% 92%, rgba(138, 107, 69, 0.12) 0%, rgba(138, 107, 69, 0) 55%),
+      radial-gradient(100% 70% at 30% 70%, rgba(236, 228, 212, 0.85) 0%, rgba(236, 228, 212, 0) 60%);
+  }
+
+  /* Golden-ratio type scale */
+  .t-1 { font-size: var(--step-1); line-height: 1.2; }
+  .t-2 { font-size: var(--step-2); line-height: 1.08; }
+  .t-3 { font-size: var(--step-3); line-height: 1.02; }
+  .t-4 { font-size: var(--step-4); line-height: 0.98; }
+  .t-sm { font-size: var(--step--1); }
+
   .font-display { font-family: var(--font-display); }
   .font-body { font-family: var(--font-body); }
   .font-mono { font-family: var(--font-mono); }

@@ -12,6 +12,9 @@ export function Cursor() {
   useEffect(() => {
     const canHover = window.matchMedia("(hover: hover)").matches;
     if (!canHover) return;
+    // Only enable after mount: matchMedia needs the browser, and gating on it
+    // server-side would cause a hydration mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEnabled(true);
 
     const pos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };

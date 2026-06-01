@@ -1,19 +1,24 @@
 import type { Metadata } from "next";
 import { ShopHeader } from "@/components/shop/ShopHeader";
 import { ShopClient } from "@/components/shop/ShopClient";
+import { getCatalogue } from "@/lib/catalogue";
 
 export const metadata: Metadata = {
   title: "Shop — The Collection",
   description:
-    "One hundred handmade wooden pieces from PLEXUS AMMAN — sculptural objects and furniture, each made to order in solid wood.",
+    "Handmade pieces from PLEXUS AMMAN — sculptural objects and furniture in solid wood, stone & metal, each made to order.",
 };
 
-export default function ShopPage() {
+// Re-check Sanity periodically so new products appear without a redeploy.
+export const revalidate = 30;
+
+export default async function ShopPage() {
+  const items = await getCatalogue();
   return (
     <div className="pb-28">
       <ShopHeader />
       <div className="mt-12 px-5 md:px-10">
-        <ShopClient />
+        <ShopClient items={items} />
       </div>
     </div>
   );

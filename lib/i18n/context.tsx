@@ -2,7 +2,6 @@
 
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useState,
@@ -27,11 +26,14 @@ const STORAGE_KEY = "plexus-lang";
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("en");
 
-  // hydrate from storage / browser on mount
+  // hydrate from storage / browser on mount. We deliberately set state here
+  // (not via a lazy initializer) to keep SSR output stable and avoid a
+  // hydration mismatch — the language only resolves after the client mounts.
   useEffect(() => {
     const stored = (typeof window !== "undefined" &&
       localStorage.getItem(STORAGE_KEY)) as Lang | null;
     if (stored === "en" || stored === "ar") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLangState(stored);
     } else if (typeof navigator !== "undefined" && navigator.language?.startsWith("ar")) {
       setLangState("ar");

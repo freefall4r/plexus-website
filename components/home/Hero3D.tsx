@@ -2,7 +2,7 @@
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { RoundedBox } from "@react-three/drei";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { MotionValue } from "framer-motion";
 import * as THREE from "three";
 
@@ -92,8 +92,7 @@ function Burr({ progress }: { progress: MotionValue<number> }) {
 
 function Dust() {
   const ref = useRef<THREE.Points>(null);
-  const geo = useRef<THREE.BufferGeometry | null>(null);
-  if (!geo.current) {
+  const geo = useMemo(() => {
     const g = new THREE.BufferGeometry();
     const n = 120;
     const arr = new Float32Array(n * 3);
@@ -103,13 +102,13 @@ function Dust() {
       arr[i * 3 + 2] = (Math.sin(i * 37.719) * 43758.5453) % 1 * 16 - 8;
     }
     g.setAttribute("position", new THREE.BufferAttribute(arr, 3));
-    geo.current = g;
-  }
+    return g;
+  }, []);
   useFrame((state) => {
     if (ref.current) ref.current.rotation.y = state.clock.elapsedTime * 0.03;
   });
   return (
-    <points ref={ref} geometry={geo.current}>
+    <points ref={ref} geometry={geo}>
       <pointsMaterial size={0.07} color="#e0b483" transparent opacity={0.6} sizeAttenuation />
     </points>
   );

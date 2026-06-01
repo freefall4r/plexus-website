@@ -3,27 +3,32 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  products,
   categories,
   collections,
-  woods,
   type WoodCategory,
   type Collection,
 } from "@/lib/products";
+import type { CatalogueProduct } from "@/lib/catalogue";
 import { ProductCard } from "./ProductCard";
 import { useLang } from "@/lib/i18n/context";
 
 type Sort = "featured" | "priceAsc" | "priceDesc";
 
-export function ShopClient() {
+export function ShopClient({ items }: { items: CatalogueProduct[] }) {
   const { t, lang } = useLang();
   const [collection, setCollection] = useState<Collection | "all">("all");
   const [category, setCategory] = useState<WoodCategory | "all">("all");
   const [wood, setWood] = useState<string | "all">("all");
   const [sort, setSort] = useState<Sort>("featured");
 
+  // woods actually present in the catalogue (for the filter dropdown)
+  const woods = useMemo(
+    () => Array.from(new Set(items.map((p) => p.wood).filter(Boolean))),
+    [items]
+  );
+
   const filtered = useMemo(() => {
-    let list = products.filter((p) => {
+    let list = items.filter((p) => {
       if (collection !== "all" && p.collection !== collection) return false;
       if (category !== "all" && p.category !== category) return false;
       if (wood !== "all" && p.wood !== wood) return false;
@@ -34,7 +39,7 @@ export function ShopClient() {
     else if (sort === "priceDesc") list.sort((a, b) => b.price - a.price);
     else list.sort((a, b) => Number(!!b.featured) - Number(!!a.featured));
     return list;
-  }, [collection, category, wood, sort]);
+  }, [items, collection, category, wood, sort]);
 
   const clear = () => {
     setCollection("all");

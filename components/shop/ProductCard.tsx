@@ -2,17 +2,16 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import type { Product } from "@/lib/products";
-import { ProductArt } from "./ProductArt";
+import type { CatalogueProduct } from "@/lib/catalogue";
+import { ProductMedia } from "./ProductMedia";
 import { useLang } from "@/lib/i18n/context";
 import { currency } from "@/lib/config";
 
-export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
+export function ProductCard({ product, index = 0 }: { product: CatalogueProduct; index?: number }) {
   const { lang, t, num } = useLang();
   const name = lang === "ar" ? product.name_ar : product.name;
   const blurb = lang === "ar" ? product.blurb_ar : product.blurb;
   const wood = lang === "ar" ? product.wood_ar : product.wood;
-  const seed = parseInt(product.id.replace(/\D/g, ""), 10) || index;
 
   return (
     <motion.div
@@ -24,7 +23,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
       <Link href={`/shop/${product.slug}`} className="group block" data-cursor="hover">
         <div className="relative aspect-square overflow-hidden rounded-2xl bg-bone-2">
           <div className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-[1.05]">
-            <ProductArt artKey={product.artKey} wood={product.wood} seed={seed} className="h-full w-full" />
+            <ProductMedia product={product} alt={name} className="h-full w-full" />
           </div>
           {product.featured && (
             <span className="absolute left-3 top-3 rounded-full bg-ink/85 px-3 py-1 font-mono text-[10px] tracking-widest text-bone">

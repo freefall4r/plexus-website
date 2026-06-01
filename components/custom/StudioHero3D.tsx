@@ -17,17 +17,17 @@ function Gem({ scroll }: { scroll: React.RefObject<ScrollState> }) {
   const mat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: "#7a4f29",
+        color: "#b08a5b",
         roughness: 0.4,
         metalness: 0.05,
         flatShading: true,
-        emissive: new THREE.Color("#3a2412"),
+        emissive: new THREE.Color("#5a4126"),
         emissiveIntensity: 0.4,
       }),
     []
   );
   const shellMat = useMemo(
-    () => new THREE.MeshBasicMaterial({ wireframe: true, color: "#c8772e", transparent: true, opacity: 0.12 }),
+    () => new THREE.MeshBasicMaterial({ wireframe: true, color: "#b87a52", transparent: true, opacity: 0.12 }),
     []
   );
 
@@ -52,7 +52,8 @@ function Gem({ scroll }: { scroll: React.RefObject<ScrollState> }) {
     if (shell.current) {
       const sc = 1.28 + p * 0.9;
       shell.current.scale.setScalar(sc);
-      shellMat.opacity = 0.14 * (1 - Math.min(1, p * 1.1));
+      (shell.current.material as THREE.MeshBasicMaterial).opacity =
+        0.14 * (1 - Math.min(1, p * 1.1));
       shell.current.rotation.y -= dt * 0.15;
     }
   });
@@ -61,7 +62,7 @@ function Gem({ scroll }: { scroll: React.RefObject<ScrollState> }) {
     <group ref={grp}>
       <mesh material={mat} castShadow>
         <icosahedronGeometry args={[3.1, 0]} />
-        <Edges threshold={1} color="#e8963f" />
+        <Edges threshold={1} color="#d2966b" />
       </mesh>
       <mesh ref={shell} material={shellMat} scale={1.28}>
         <icosahedronGeometry args={[3.1, 0]} />
@@ -84,7 +85,7 @@ function Chips({ scroll }: { scroll: React.RefObject<ScrollState> }) {
     []
   );
   const refs = useRef<(THREE.Mesh | null)[]>([]);
-  const mat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#9a6a38", roughness: 0.5 }), []);
+  const mat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#c8a576", roughness: 0.5 }), []);
 
   useFrame((state) => {
     const s = scroll.current ?? { p: 0, mx: 0, my: 0 };
@@ -155,18 +156,18 @@ export function StudioHero3D() {
         gl.domElement.addEventListener("webglcontextlost", (e) => e.preventDefault(), false);
       }}
     >
-      <ambientLight intensity={0.35} />
+      <ambientLight intensity={0.5} />
       <directionalLight
         position={[6, 8, 6]}
         intensity={3}
-        color="#ffd9a0"
+        color="#fff0d8"
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.0004}
         shadow-normalBias={0.05}
       />
-      <directionalLight position={[-7, 1, -5]} intensity={1.6} color="#c8772e" />
-      <pointLight position={[0, 0, 6]} intensity={14} distance={16} color="#ffb866" />
+      <directionalLight position={[-7, 1, -5]} intensity={1.6} color="#b87a52" />
+      <pointLight position={[0, 0, 6]} intensity={14} distance={16} color="#ffc98c" />
 
       <Float speed={1.4} rotationIntensity={0.2} floatIntensity={0.5}>
         <Gem scroll={scroll} />

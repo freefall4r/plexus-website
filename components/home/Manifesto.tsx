@@ -15,13 +15,13 @@ export function Manifesto() {
 
   return (
     <section className="relative py-32 md:py-52">
-      {/* scrim so the text stays readable over the 3D */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_60%_at_30%_50%,rgba(12,8,5,0.85),rgba(12,8,5,0.4)_60%,transparent)]" />
+      {/* soft limewash wash so the text stays readable over the 3D */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_60%_at_30%_50%,rgba(246,242,234,0.92),rgba(246,242,234,0.55)_60%,transparent)]" />
       <div className="relative mx-auto max-w-5xl px-5 md:px-10">
-        <p className="overline mb-10 text-amber">{t("manifesto.over")}</p>
+        <p className="overline mb-10 text-clay">{t("manifesto.over")}</p>
         <h2
           ref={ref}
-          className="font-display text-3xl leading-[1.18] tracking-tight text-bone md:text-[2.9rem] md:leading-[1.25]"
+          className="font-display text-3xl leading-[1.18] tracking-tight text-ink md:text-[2.9rem] md:leading-[1.25]"
         >
           {words.map((w, i) => {
             const start = i / words.length;

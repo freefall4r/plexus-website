@@ -9,11 +9,7 @@ import {
 import "./globals.css";
 import { brand } from "@/lib/config";
 import { LanguageProvider } from "@/lib/i18n/context";
-import { SmoothScroll } from "@/components/layout/SmoothScroll";
-import { Cursor } from "@/components/layout/Cursor";
-import { Nav } from "@/components/layout/Nav";
-import { Footer } from "@/components/layout/Footer";
-import { ContactDock } from "@/components/layout/ContactDock";
+import { SiteChrome } from "@/components/layout/SiteChrome";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -76,15 +72,9 @@ export default function RootLayout({
       lang="en"
       className={`${fraunces.variable} ${hanken.variable} ${jetbrains.variable} ${cairo.variable} ${reem.variable}`}
     >
-      <body className="grain min-h-screen flex flex-col">
+      <body>
         <LanguageProvider>
-          <Cursor />
-          <SmoothScroll>
-            <Nav />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </SmoothScroll>
-          <ContactDock />
+          <SiteChrome>{children}</SiteChrome>
         </LanguageProvider>
       </body>
     </html>

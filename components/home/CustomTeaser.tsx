@@ -8,17 +8,17 @@ import { useLang } from "@/lib/i18n/context";
 export function CustomTeaser() {
   const { t } = useLang();
   return (
-    <section className="relative overflow-hidden py-24 text-bone md:py-36">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_70%_at_25%_50%,rgba(12,8,5,0.88),rgba(12,8,5,0.35)_65%,transparent)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_60%_at_85%_35%,rgba(200,119,46,0.18),transparent_70%)]" />
+    <section className="relative overflow-hidden py-24 text-ink md:py-36">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_70%_at_25%_50%,rgba(246,242,234,0.92),rgba(246,242,234,0.5)_65%,transparent)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_60%_at_85%_35%,rgba(184,122,82,0.16),transparent_70%)]" />
       <div className="mx-auto grid max-w-[1500px] items-center gap-14 px-5 md:grid-cols-2 md:px-10">
         <div>
           <Reveal>
-            <p className="overline text-amber">{t("teaser.over")}</p>
+            <p className="overline text-clay">{t("teaser.over")}</p>
             <h2 className="mt-4 font-display text-4xl leading-[1.04] md:text-7xl">
               {t("teaser.title")}
             </h2>
-            <p className="mt-6 max-w-md text-bone/70 md:text-lg">{t("teaser.body")}</p>
+            <p className="mt-6 max-w-md text-ink-soft md:text-lg">{t("teaser.body")}</p>
             <Link
               href="/custom"
               className="mt-8 inline-flex items-center gap-2 rounded-full bg-amber px-7 py-3 text-sm font-medium text-walnut-deep transition-transform hover:-translate-y-0.5"

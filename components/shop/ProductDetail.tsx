@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import type { Product } from "@/lib/products";
 import { categories } from "@/lib/products";
-import { ProductArt } from "./ProductArt";
+import type { CatalogueProduct } from "@/lib/catalogue";
+import { ProductMedia } from "./ProductMedia";
 import { ProductCard } from "./ProductCard";
 import { useLang } from "@/lib/i18n/context";
 import { brand, currency, waLink, mailLink } from "@/lib/config";
@@ -13,8 +13,8 @@ export function ProductDetail({
   product,
   related,
 }: {
-  product: Product;
-  related: Product[];
+  product: CatalogueProduct;
+  related: CatalogueProduct[];
 }) {
   const { t, lang, num } = useLang();
   const name = lang === "ar" ? product.name_ar : product.name;
@@ -22,7 +22,6 @@ export function ProductDetail({
   const wood = lang === "ar" ? product.wood_ar : product.wood;
   const cat = categories.find((c) => c.key === product.category);
   const catLabel = cat ? (lang === "ar" ? cat.label_ar : cat.label) : product.category;
-  const seed = parseInt(product.id.replace(/\D/g, ""), 10) || 1;
 
   const orderMsg =
     lang === "ar"
@@ -55,7 +54,7 @@ export function ProductDetail({
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="relative aspect-square overflow-hidden rounded-3xl bg-bone-2 lg:sticky lg:top-24"
           >
-            <ProductArt artKey={product.artKey} wood={product.wood} seed={seed} className="h-full w-full" />
+            <ProductMedia product={product} alt={name} className="h-full w-full" />
             {product.featured && (
               <span className="absolute left-4 top-4 rounded-full bg-ink/85 px-3 py-1 font-mono text-[11px] tracking-widest text-bone">
                 ★ {t("shop.sort.featured")}
