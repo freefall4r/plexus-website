@@ -1,6 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Reveal } from "./Reveal";
+import { useLang } from "@/lib/i18n/context";
+import { sectionCopy } from "@/lib/i18n/sections";
 
 type Piece = {
   src: string;
@@ -91,7 +95,15 @@ const pieces: Piece[] = [
   },
 ];
 
-function PieceCard({ piece }: { piece: Piece }) {
+function PieceCard({
+  piece,
+  name,
+  material,
+}: {
+  piece: Piece;
+  name: string;
+  material: string;
+}) {
   return (
     <Reveal delay={piece.delay} className={piece.span}>
       <figure className="group">
@@ -100,7 +112,7 @@ function PieceCard({ piece }: { piece: Piece }) {
         >
           <Image
             src={piece.src}
-            alt={piece.name}
+            alt={name}
             fill
             sizes={piece.sizes}
             className="object-cover transition-[filter,transform] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02] group-hover:brightness-[1.04]"
@@ -108,9 +120,9 @@ function PieceCard({ piece }: { piece: Piece }) {
         </div>
         <figcaption className="mt-4">
           <h3 className="font-display text-[clamp(1.25rem,1.1rem+0.5vw,1.6rem)] font-light leading-tight text-ink">
-            {piece.name}
+            {name}
           </h3>
-          <p className="overline mt-1.5 text-ink-soft">{piece.material}</p>
+          <p className="overline mt-1.5 text-ink-soft">{material}</p>
         </figcaption>
       </figure>
     </Reveal>
@@ -118,21 +130,28 @@ function PieceCard({ piece }: { piece: Piece }) {
 }
 
 export function WorkGrid() {
+  const { lang } = useLang();
+  const c = sectionCopy.work[lang];
   return (
     <section className="py-24 md:py-32 bg-bone-2">
       <div className="mx-auto max-w-[1500px] px-5 md:px-10">
         <Reveal>
           <header className="max-w-[26ch]">
-            <span className="overline text-copper">Furniture &amp; objects</span>
+            <span className="overline text-copper">{c.eyebrow}</span>
             <h2 className="mt-5 font-display text-[clamp(2.4rem,1.8rem+3vw,4.4rem)] font-light leading-[1.02] tracking-[-0.02em] text-ink">
-              Made to be lived with.
+              {c.heading}
             </h2>
           </header>
         </Reveal>
 
         <div className="mt-16 grid grid-cols-2 gap-x-5 gap-y-12 md:mt-24 md:grid-cols-12 md:gap-x-8 md:gap-y-6">
-          {pieces.map((piece) => (
-            <PieceCard key={piece.name} piece={piece} />
+          {pieces.map((piece, index) => (
+            <PieceCard
+              key={piece.name}
+              piece={piece}
+              name={c.items[index].name}
+              material={c.items[index].material}
+            />
           ))}
         </div>
 
@@ -143,10 +162,10 @@ export function WorkGrid() {
               className="group inline-flex items-center gap-2 text-sm tracking-wide text-ink transition-colors hover:text-copper"
             >
               <span className="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-1 transition-[background-size] duration-500 group-hover:bg-[length:100%_1px]">
-                See the full collection
+                {c.cta}
               </span>
               <span className="transition-transform duration-300 group-hover:translate-x-1">
-                →
+                {lang === "ar" ? "←" : "→"}
               </span>
             </Link>
           </div>

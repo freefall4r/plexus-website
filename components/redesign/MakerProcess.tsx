@@ -1,23 +1,24 @@
+"use client";
+
 import Image from "next/image";
 import { Reveal } from "./Reveal";
-
-const steps = [
-  { n: "01", title: "Chosen", body: "Timber selected for grain, moisture and character." },
-  { n: "02", title: "Cut", body: "Joinery cut and fitted by hand on the bench in Amman." },
-  { n: "03", title: "Finished", body: "Oiled and waxed by hand — natural, food-safe, made to be touched." },
-];
+import { useLang } from "@/lib/i18n/context";
+import { sectionCopy } from "@/lib/i18n/sections";
 
 export function MakerProcess() {
+  const { lang } = useLang();
+  const c = sectionCopy.craft[lang];
+
   return (
     <section className="py-24 md:py-32 bg-bone-2">
       <div className="mx-auto max-w-[1500px] px-5 md:px-10">
         {/* Eyebrow + oversized statement */}
         <Reveal>
-          <span className="overline text-copper">The craft</span>
+          <span className="overline text-copper">{c.eyebrow}</span>
         </Reveal>
         <Reveal delay={0.08}>
           <p className="mt-7 max-w-[18ch] font-display text-[clamp(2.1rem,1.5rem+2.8vw,4.2rem)] font-light leading-[1.02] tracking-[-0.02em] text-ink">
-            Raw timber becomes furniture meant to outlive us.
+            {c.statement}
           </p>
         </Reveal>
 
@@ -40,7 +41,7 @@ export function MakerProcess() {
               }}
             />
             <span className="absolute bottom-5 left-5 font-display text-lg italic text-bone/90 md:bottom-7 md:left-8 md:text-xl">
-              Mortise and tenon. No shortcuts.
+              {c.overlay}
             </span>
           </div>
         </Reveal>
@@ -50,7 +51,7 @@ export function MakerProcess() {
           <div className="mt-16 h-px w-full bg-copper/25 md:mt-20" />
         </Reveal>
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-3 sm:gap-8 md:gap-14">
-          {steps.map((s, i) => (
+          {c.steps.map((s, i) => (
             <Reveal key={s.n} delay={0.14 + i * 0.12}>
               <div className="pt-7">
                 <div className="flex items-baseline gap-3">

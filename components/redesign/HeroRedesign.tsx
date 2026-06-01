@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { useLang } from "@/lib/i18n/context";
+import { sectionCopy } from "@/lib/i18n/sections";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -35,6 +37,8 @@ function buildContours() {
 const LINES = buildContours();
 
 export function HeroRedesign() {
+  const { lang } = useLang();
+  const c = sectionCopy.hero[lang];
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -93,11 +97,11 @@ export function HeroRedesign() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease }}
         >
-          Plexus Workshop — Amman, Jordan
+          {c.eyebrow}
         </motion.span>
 
         <h1 className="mt-6 font-display text-[clamp(2.6rem,1.8rem+4.4vw,6rem)] font-light leading-[0.95] tracking-[-0.02em] text-ink">
-          {["Wood, made", "personal."].map((line, i) => (
+          {[c.line1, c.line2].map((line, i) => (
             <span key={line} className="block overflow-hidden pb-[0.06em]">
               <motion.span
                 className="block"
@@ -107,7 +111,8 @@ export function HeroRedesign() {
               >
                 {i === 1 ? (
                   <>
-                    personal<span className="text-copper">.</span>
+                    {c.line2.slice(0, -1)}
+                    <span className="text-copper">{c.line2.slice(-1)}</span>
                   </>
                 ) : (
                   line
@@ -130,8 +135,7 @@ export function HeroRedesign() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, delay: 0.55, ease }}
         >
-          Handmade furniture, sculptural objects, and timber research — shaped in
-          Amman by an engineer who reads the grain.
+          {c.sub}
         </motion.p>
 
         <motion.div
@@ -144,9 +148,9 @@ export function HeroRedesign() {
             href="/custom"
             className="group inline-flex items-center gap-2 rounded-full bg-copper px-7 py-3.5 text-sm font-medium tracking-wide text-bone transition-colors hover:bg-copper-bright"
           >
-            See your idea in 3D
+            {c.cta}
             <span className="transition-transform duration-300 group-hover:translate-x-1">
-              →
+              {lang === "ar" ? "←" : "→"}
             </span>
           </Link>
           <Link
@@ -154,7 +158,7 @@ export function HeroRedesign() {
             className="group inline-flex items-center gap-2 text-sm tracking-wide text-ink"
           >
             <span className="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-1 transition-[background-size] duration-500 group-hover:bg-[length:100%_1px]">
-              Explore the work
+              {c.link}
             </span>
           </Link>
         </motion.div>
@@ -165,7 +169,7 @@ export function HeroRedesign() {
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.95 }}
         >
-          Wood · Stone · Copper · Limewash
+          {c.materials}
         </motion.div>
       </motion.div>
     </section>
