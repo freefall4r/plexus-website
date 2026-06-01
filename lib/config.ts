@@ -23,6 +23,17 @@ export const contact = {
   mapsQuery: "Amman, Jordan",
 } as const;
 
+// --- SITE / SEO ---
+export const site = {
+  // Canonical production URL (the live Vercel domain). Used for metadata,
+  // sitemap, robots and structured data.
+  url: "https://www.plexusworkshop.com",
+  // Google Business Profile link — a "sameAs" signal that helps Google
+  // associate this domain with the listing. Best replaced with the Maps
+  // "share" link once you have it (Maps → your business → Share → copy link).
+  googleProfile: "https://www.google.com/search?q=Plexus+Workshop",
+} as const;
+
 export const currency = {
   code: "JOD",
   symbol: "JD",

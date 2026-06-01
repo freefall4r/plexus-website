@@ -7,9 +7,10 @@ import {
   Reem_Kufi,
 } from "next/font/google";
 import "./globals.css";
-import { brand } from "@/lib/config";
+import { brand, site } from "@/lib/config";
 import { LanguageProvider } from "@/lib/i18n/context";
 import { SiteChrome } from "@/components/layout/SiteChrome";
+import { StructuredData } from "@/components/seo/StructuredData";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -42,7 +43,12 @@ const reem = Reem_Kufi({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://plexusamman.com"),
+  metadataBase: new URL(site.url),
+  alternates: { canonical: "/" },
+  // Google Search Console domain verification. Set GOOGLE_SITE_VERIFICATION in
+  // the environment (.env.local + Vercel) to the token from Search Console →
+  // Settings → Ownership verification → HTML tag. Omitted when unset.
+  verification: { google: process.env.GOOGLE_SITE_VERIFICATION },
   title: {
     default: `${brand.full} — ${brand.tagline}`,
     template: `%s · ${brand.full}`,
@@ -73,6 +79,7 @@ export default function RootLayout({
       className={`${fraunces.variable} ${hanken.variable} ${jetbrains.variable} ${cairo.variable} ${reem.variable}`}
     >
       <body>
+        <StructuredData />
         <LanguageProvider>
           <SiteChrome>{children}</SiteChrome>
         </LanguageProvider>
