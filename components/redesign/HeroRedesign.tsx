@@ -11,12 +11,12 @@ export function HeroRedesign() {
     <section className="relative min-h-[100svh] w-full overflow-hidden bg-walnut-deep text-bone">
       {/* full-bleed hand-carved texture */}
       <Image
-        src="/brand/hero.jpg"
-        alt="Warm afternoon light through a wooden window onto a handmade wood counter and stools"
+        src="/brand/hero-olive.jpg"
+        alt="Olive tree on an old stone terrace at golden hour, sea beyond"
         fill
         priority
         sizes="100vw"
-        className="object-cover object-[center_42%]"
+        className="object-cover object-center"
       />
       {/* warm legibility wash */}
       <div
