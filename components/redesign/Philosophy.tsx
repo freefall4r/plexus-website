@@ -9,9 +9,9 @@ export function Philosophy() {
   const { lang } = useLang();
   const c = sectionCopy.philosophy[lang];
   return (
-    <section className="py-24 md:py-32 bg-bone">
+    <section className="pt-10 pb-24 md:pt-14 md:pb-32 bg-bone">
       <div className="mx-auto max-w-[1500px] px-5 md:px-10">
-        <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-12 md:gap-16 lg:gap-24">
+        <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-12 md:gap-16 lg:gap-24">
           {/* Image — tall, large, offset to one side */}
           <Reveal className="md:col-span-5 lg:col-span-5" y={20}>
             <figure className="md:mr-auto md:max-w-[440px]">
