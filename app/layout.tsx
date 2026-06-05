@@ -11,6 +11,7 @@ import { brand, site } from "@/lib/config";
 import { LanguageProvider } from "@/lib/i18n/context";
 import { SiteChrome } from "@/components/layout/SiteChrome";
 import { StructuredData } from "@/components/seo/StructuredData";
+import { Analytics } from "@vercel/analytics/next";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -83,6 +84,7 @@ export default function RootLayout({
         <LanguageProvider>
           <SiteChrome>{children}</SiteChrome>
         </LanguageProvider>
+        <Analytics />
       </body>
     </html>
   );
