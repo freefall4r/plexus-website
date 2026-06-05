@@ -4,11 +4,12 @@ import { Reveal } from "@/components/redesign/Reveal";
 import { contact, waLink, igLink, mailLink } from "@/lib/config";
 import { useLang } from "@/lib/i18n/context";
 import { sectionCopy } from "@/lib/i18n/sections";
+import type { HomeContent } from "@/lib/home";
 
 const linkClass =
   "text-ink transition-colors hover:text-copper focus-visible:text-copper";
 
-export function ContactCommission() {
+export function ContactCommission({ content }: { content?: HomeContent["contact"] }) {
   const { lang } = useLang();
   const c = sectionCopy.contact[lang];
   return (
@@ -17,14 +18,14 @@ export function ContactCommission() {
         <div className="grid gap-14 md:grid-cols-2 md:gap-16">
           {/* Left — invitation + WhatsApp CTA */}
           <Reveal>
-            <span className="overline text-ink-soft">{c.eyebrow}</span>
+            <span className="overline text-ink-soft">{content?.eyebrow?.[lang] || c.eyebrow}</span>
 
             <h2 className="mt-5 max-w-[15ch] font-display text-[clamp(2.4rem,1.9rem+2.6vw,4rem)] font-light leading-[1.02] tracking-[-0.02em] text-ink">
-              {c.heading}
+              {content?.heading?.[lang] || c.heading}
             </h2>
 
             <p className="mt-7 max-w-[46ch] text-[clamp(1.05rem,0.98rem+0.4vw,1.25rem)] leading-relaxed text-ink-soft">
-              {c.p}
+              {content?.p?.[lang] || c.p}
             </p>
 
             <a

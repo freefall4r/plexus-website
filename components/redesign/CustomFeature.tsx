@@ -5,28 +5,32 @@ import { motion } from "framer-motion";
 import { Reveal } from "./Reveal";
 import { useLang } from "@/lib/i18n/context";
 import { sectionCopy } from "@/lib/i18n/sections";
+import type { HomeContent } from "@/lib/home";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-export function CustomFeature() {
+export function CustomFeature({ content }: { content?: HomeContent["studio"] }) {
   const { lang } = useLang();
   const c = sectionCopy.custom[lang];
+  const eyebrow = content?.eyebrow?.[lang] || c.eyebrow;
+  const heading = content?.heading?.[lang] || c.heading;
+  const sub = content?.sub?.[lang] || c.sub;
   return (
     <section className="py-28 md:py-40 bg-walnut-deep text-bone">
       <div className="mx-auto max-w-[1500px] px-5 md:px-10">
         <Reveal>
-          <span className="overline text-copper">{c.eyebrow}</span>
+          <span className="overline text-copper">{eyebrow}</span>
         </Reveal>
 
         <Reveal delay={0.08}>
           <h2 className="mt-6 max-w-[18ch] font-display font-light leading-tight tracking-[-0.02em] text-[clamp(2.4rem,1.8rem+3vw,4.5rem)]">
-            {c.heading}
+            {heading}
           </h2>
         </Reveal>
 
         <Reveal delay={0.16}>
           <p className="mt-7 max-w-[60ch] text-[clamp(1.05rem,0.98rem+0.4vw,1.25rem)] leading-relaxed text-bone/80">
-            {c.sub}
+            {sub}
           </p>
         </Reveal>
 

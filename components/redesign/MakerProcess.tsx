@@ -4,8 +4,9 @@ import Image from "next/image";
 import { Reveal } from "./Reveal";
 import { useLang } from "@/lib/i18n/context";
 import { sectionCopy } from "@/lib/i18n/sections";
+import type { HomeContent } from "@/lib/home";
 
-export function MakerProcess() {
+export function MakerProcess({ content }: { content?: HomeContent["craft"] }) {
   const { lang } = useLang();
   const c = sectionCopy.craft[lang];
 
@@ -14,11 +15,11 @@ export function MakerProcess() {
       <div className="mx-auto max-w-[1500px] px-5 md:px-10">
         {/* Eyebrow + oversized statement */}
         <Reveal>
-          <span className="overline text-copper">{c.eyebrow}</span>
+          <span className="overline text-copper">{content?.eyebrow?.[lang] || c.eyebrow}</span>
         </Reveal>
         <Reveal delay={0.08}>
           <p className="mt-7 max-w-[18ch] font-display text-[clamp(2.1rem,1.5rem+2.8vw,4.2rem)] font-light leading-[1.02] tracking-[-0.02em] text-ink">
-            {c.statement}
+            {content?.statement?.[lang] || c.statement}
           </p>
         </Reveal>
 
@@ -26,7 +27,7 @@ export function MakerProcess() {
         <Reveal delay={0.12}>
           <div className="relative mt-12 aspect-[16/10] w-full overflow-hidden md:mt-16 md:aspect-[21/8]">
             <Image
-              src="/brand/craft.jpg"
+              src={content?.image || "/brand/craft.jpg"}
               alt="Hand tools and sawdust on a workbench in warm low light"
               fill
               sizes="100vw"
@@ -41,7 +42,7 @@ export function MakerProcess() {
               }}
             />
             <span className="absolute bottom-5 left-5 font-display text-lg italic text-bone/90 md:bottom-7 md:left-8 md:text-xl">
-              {c.overlay}
+              {content?.overlay?.[lang] || c.overlay}
             </span>
           </div>
         </Reveal>

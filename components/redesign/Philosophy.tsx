@@ -4,8 +4,9 @@ import Image from "next/image";
 import { Reveal } from "@/components/redesign/Reveal";
 import { useLang } from "@/lib/i18n/context";
 import { sectionCopy } from "@/lib/i18n/sections";
+import type { HomeContent } from "@/lib/home";
 
-export function Philosophy() {
+export function Philosophy({ content }: { content?: HomeContent["philosophy"] }) {
   const { lang } = useLang();
   const c = sectionCopy.philosophy[lang];
   return (
@@ -17,7 +18,7 @@ export function Philosophy() {
             <figure className="md:mr-auto md:max-w-[440px]">
               <div className="relative aspect-[4/5] overflow-hidden bg-sand">
                 <Image
-                  src="/brand/arbutus.jpg"
+                  src={content?.image || "/brand/arbutus.jpg"}
                   alt={c.caption}
                   fill
                   sizes="(min-width: 768px) 40vw, 100vw"
@@ -33,24 +34,24 @@ export function Philosophy() {
           {/* Text — air, asymmetry, pushed right */}
           <div className="md:col-span-6 md:col-start-7 lg:col-span-5 lg:col-start-8">
             <Reveal>
-              <span className="overline text-copper">{c.eyebrow}</span>
+              <span className="overline text-copper">{content?.eyebrow?.[lang] || c.eyebrow}</span>
             </Reveal>
 
             <Reveal delay={0.08}>
               <h2 className="mt-6 max-w-[18ch] font-display t-3 font-light text-ink">
-                {c.heading}
+                {content?.heading?.[lang] || c.heading}
               </h2>
             </Reveal>
 
             <Reveal delay={0.16}>
               <p className="mt-8 max-w-[46ch] text-ink-soft leading-relaxed">
-                {c.p1}
+                {content?.p1?.[lang] || c.p1}
               </p>
             </Reveal>
 
             <Reveal delay={0.24}>
               <p className="mt-6 max-w-[46ch] text-ink-soft leading-relaxed">
-                {c.p2}
+                {content?.p2?.[lang] || c.p2}
               </p>
             </Reveal>
           </div>

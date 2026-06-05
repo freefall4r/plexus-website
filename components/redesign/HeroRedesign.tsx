@@ -5,6 +5,7 @@ import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useLang } from "@/lib/i18n/context";
 import { sectionCopy } from "@/lib/i18n/sections";
+import type { HomeContent } from "@/lib/home";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -36,9 +37,13 @@ function buildContours() {
 }
 const LINES = buildContours();
 
-export function HeroRedesign() {
+export function HeroRedesign({ content }: { content?: HomeContent["hero"] }) {
   const { lang } = useLang();
   const c = sectionCopy.hero[lang];
+  const eyebrow = content?.eyebrow?.[lang] || c.eyebrow;
+  const line1 = content?.line1?.[lang] || c.line1;
+  const line2 = content?.line2?.[lang] || c.line2;
+  const sub = content?.sub?.[lang] || c.sub;
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -97,11 +102,11 @@ export function HeroRedesign() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease }}
         >
-          {c.eyebrow}
+          {eyebrow}
         </motion.span>
 
         <h1 className="mt-6 font-display text-[clamp(2.6rem,1.8rem+4.4vw,6rem)] font-light leading-[0.95] tracking-[-0.02em] text-ink">
-          {[c.line1, c.line2].map((line, i) => (
+          {[line1, line2].map((line, i) => (
             <span key={line} className="block overflow-hidden pb-[0.06em]">
               <motion.span
                 className="block"
@@ -111,8 +116,8 @@ export function HeroRedesign() {
               >
                 {i === 1 ? (
                   <>
-                    {c.line2.slice(0, -1)}
-                    <span className="text-copper">{c.line2.slice(-1)}</span>
+                    {line2.slice(0, -1)}
+                    <span className="text-copper">{line2.slice(-1)}</span>
                   </>
                 ) : (
                   line
@@ -135,7 +140,7 @@ export function HeroRedesign() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, delay: 0.55, ease }}
         >
-          {c.sub}
+          {sub}
         </motion.p>
 
         <motion.div

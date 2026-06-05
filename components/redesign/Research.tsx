@@ -5,8 +5,9 @@ import Link from "next/link";
 import { Reveal } from "./Reveal";
 import { useLang } from "@/lib/i18n/context";
 import { sectionCopy } from "@/lib/i18n/sections";
+import type { HomeContent } from "@/lib/home";
 
-export function Research() {
+export function Research({ content }: { content?: HomeContent["research"] }) {
   const { lang } = useLang();
   const c = sectionCopy.research[lang];
 
@@ -18,19 +19,19 @@ export function Research() {
           <div className="md:col-span-6 lg:col-span-5">
             <Reveal>
               <span className="overline text-sage">
-                {c.eyebrow}
+                {content?.eyebrow?.[lang] || c.eyebrow}
               </span>
             </Reveal>
 
             <Reveal delay={0.05}>
               <h2 className="mt-5 max-w-[14ch] font-display text-[clamp(2rem,1.5rem+2.6vw,3.4rem)] font-light leading-[1.02] tracking-[-0.015em] text-ink">
-                {c.heading}
+                {content?.heading?.[lang] || c.heading}
               </h2>
             </Reveal>
 
             <Reveal delay={0.1}>
               <p className="mt-7 max-w-[52ch] text-[clamp(1.02rem,0.96rem+0.3vw,1.18rem)] leading-relaxed text-ink-soft">
-                {c.intro}
+                {content?.intro?.[lang] || c.intro}
               </p>
             </Reveal>
 
@@ -82,7 +83,7 @@ export function Research() {
             <Reveal delay={0.1}>
               <div className="relative aspect-[4/5] overflow-hidden bg-sand">
                 <Image
-                  src="/brand/topography.jpg"
+                  src={content?.image || "/brand/topography.jpg"}
                   alt="Wood panel carved with topographic contour lines, like a map of the grain"
                   fill
                   sizes="(min-width: 768px) 50vw, 100vw"
