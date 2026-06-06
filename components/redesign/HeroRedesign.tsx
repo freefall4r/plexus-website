@@ -5,6 +5,7 @@ import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useLang } from "@/lib/i18n/context";
 import { sectionCopy } from "@/lib/i18n/sections";
+import { reviews } from "@/lib/config";
 import type { HomeContent } from "@/lib/home";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -168,8 +169,27 @@ export function HeroRedesign({ content }: { content?: HomeContent["hero"] }) {
           </Link>
         </motion.div>
 
+        <motion.a
+          href={reviews.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-9 inline-flex items-center gap-2 text-sm text-ink-soft transition-colors hover:text-copper"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 0.82 }}
+        >
+          <span className="tracking-tight text-amber" aria-hidden>★★★★★</span>
+          <span className="font-semibold text-ink">{reviews.rating.toFixed(1)}</span>
+          <span>·</span>
+          <span>
+            {lang === "ar"
+              ? `${reviews.count} تقييم على Google`
+              : `${reviews.count} reviews on Google`}
+          </span>
+        </motion.a>
+
         <motion.div
-          className="mt-14 overline text-ink-soft/70"
+          className="mt-12 overline text-ink-soft/70"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.95 }}

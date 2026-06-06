@@ -1,7 +1,7 @@
 "use client";
 
 import { Reveal } from "@/components/redesign/Reveal";
-import { contact, waLink, igLink, mailLink } from "@/lib/config";
+import { contact, waLink, igLink, mailLink, reviews } from "@/lib/config";
 import { useLang } from "@/lib/i18n/context";
 import { sectionCopy } from "@/lib/i18n/sections";
 import type { HomeContent } from "@/lib/home";
@@ -37,6 +37,22 @@ export function ContactCommission({ content }: { content?: HomeContent["contact"
               {c.button}
               <span className="transition-transform duration-300 group-hover:translate-x-1">
                 {lang === "ar" ? "←" : "→"}
+              </span>
+            </a>
+
+            <a
+              href={reviews.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 inline-flex items-center gap-2 text-sm text-ink-soft transition-colors hover:text-copper"
+            >
+              <span className="tracking-tight text-amber" aria-hidden>★★★★★</span>
+              <span className="font-semibold text-ink">{reviews.rating.toFixed(1)}</span>
+              <span>·</span>
+              <span>
+                {lang === "ar"
+                  ? `${reviews.count} تقييم على Google`
+                  : `${reviews.count} reviews on Google`}
               </span>
             </a>
           </Reveal>
