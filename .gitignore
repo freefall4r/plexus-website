@@ -45,3 +45,11 @@ next-env.d.ts
 
 # keep the example, ignore real secrets
 !.env.example
+
+# Local design/research scratch (not part of the site)
+/renders/
+/PRODUCT-RESEARCH.md
+/catalog-preview.html
+/collection.html
+/designs.html
+/restyle-preview.html

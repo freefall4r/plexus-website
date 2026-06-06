@@ -139,6 +139,37 @@
     text-transform: uppercase;
   }
 
+  /* Limewash plaster underlay — a very minimal mottled wash behind all content.
+     Fixed (painted once, no scroll repaint), sits behind content via z-index:-1;
+     the flat bone body shows through the soft transparent areas. Scoped to .grain
+     so /studio stays clean. */
+  /* Own stacking context so the z-index:-1 plaster underlay paints ABOVE the
+     body's opaque bone background (otherwise the body bg hides it entirely). */
+  .grain {
+    isolation: isolate;
+  }
+
+  .grain::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: var(--color-bone);
+    /* Two fractal layers = troweled lime-plaster surface: a coarse mottle (the
+       trowel pools) + a finer tooth (grain), both soft-light over the tonal
+       wash below. Behind content, so images/text are untouched. */
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.07' numOctaves='4' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23a)'/%3E%3C/svg%3E"),
+      radial-gradient(95% 80% at 20% 14%, rgba(176, 156, 126, 0.16) 0%, rgba(176, 156, 126, 0) 62%),
+      radial-gradient(110% 90% at 30% 24%, rgba(255, 252, 246, 0.30) 0%, rgba(255, 252, 246, 0) 60%),
+      radial-gradient(100% 90% at 82% 86%, rgba(174, 156, 126, 0.18) 0%, rgba(174, 156, 126, 0) 60%),
+      linear-gradient(125deg, rgba(150, 130, 102, 0.11) 0%, rgba(150, 130, 102, 0) 32%, rgba(150, 130, 102, 0) 66%, rgba(150, 130, 102, 0.13) 100%);
+    background-size: 240px 240px, auto, auto, auto, auto;
+    background-repeat: repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+    background-blend-mode: soft-light, normal, normal, normal, normal;
+  }
+
   /* Paper grain overlay */
   .grain::after {
     content: "";
@@ -146,7 +177,7 @@
     inset: 0;
     z-index: 60;
     pointer-events: none;
-    opacity: 0.05;
+    opacity: 0.075;
     mix-blend-mode: multiply;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }

@@ -23,8 +23,18 @@ export function ProductDetail({
   const cat = categories.find((c) => c.key === product.category);
   const catLabel = cat ? (lang === "ar" ? cat.label_ar : cat.label) : product.category;
 
-  const orderMsg =
+  const isSold = product.tags?.includes("sold") ?? false;
+  const soldLabel = lang === "ar" ? "تم البيع" : "Sold";
+  const soldNote =
     lang === "ar"
+      ? "قطعة فريدة — هذه القطعة بيعت. يمكن طلب قطعة مشابهة."
+      : "One of a kind — this piece is sold. A similar piece can be commissioned.";
+
+  const orderMsg = isSold
+    ? lang === "ar"
+      ? `مرحبًا ${brand.name}، رأيت «${product.name_ar}» (بيعت). هل يمكنكم صنع قطعة مشابهة لي؟`
+      : `Hi ${brand.name}, I saw the "${product.name}" (now sold). Could you make a similar piece for me?`
+    : lang === "ar"
       ? `مرحبًا ${brand.name}، أنا مهتم بـ «${product.name_ar}» (${currency.symbol} ${product.price}). هل يمكننا الحديث عن الطلب؟`
       : `Hi ${brand.name}, I'm interested in the "${product.name}" (${currency.symbol} ${product.price}). Can we talk about ordering it?`;
 
@@ -55,11 +65,15 @@ export function ProductDetail({
             className="relative aspect-square overflow-hidden rounded-3xl bg-bone-2 lg:sticky lg:top-24"
           >
             <ProductMedia product={product} alt={name} className="h-full w-full" />
-            {product.featured && (
+            {isSold ? (
+              <span className="absolute left-4 top-4 rounded-full bg-ink/85 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-bone">
+                {soldLabel}
+              </span>
+            ) : product.featured ? (
               <span className="absolute left-4 top-4 rounded-full bg-ink/85 px-3 py-1 font-mono text-[11px] tracking-widest text-bone">
                 ★ {t("shop.sort.featured")}
               </span>
-            )}
+            ) : null}
           </motion.div>
 
           {/* info */}
@@ -71,10 +85,19 @@ export function ProductDetail({
             >
               <p className="overline text-amber">{catLabel}</p>
               <h1 className="mt-3 font-display text-5xl leading-[0.95] md:text-7xl">{name}</h1>
-              <p className="mt-4 font-mono text-2xl">
-                {currency.symbol} {num(product.price)}
+              <div className="mt-4 flex items-center gap-3">
+                <p className={`font-mono text-2xl ${isSold ? "text-ink-soft line-through" : ""}`}>
+                  {currency.symbol} {num(product.price)}
+                </p>
+                {isSold && (
+                  <span className="rounded-full bg-ink/85 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-bone">
+                    {soldLabel}
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-sm text-ink-soft">
+                {isSold ? soldNote : t("shop.madeToOrder")}
               </p>
-              <p className="mt-1 text-sm text-ink-soft">{t("shop.madeToOrder")}</p>
 
               <p className="mt-7 max-w-prose leading-relaxed text-ink-soft md:text-lg">{desc}</p>
 
@@ -98,7 +121,11 @@ export function ProductDetail({
                   rel="noopener noreferrer"
                   className="rounded-full bg-ink px-7 py-3.5 text-sm font-medium text-bone transition-colors hover:bg-amber"
                 >
-                  {t("pd.orderWhats")}
+                  {isSold
+                    ? lang === "ar"
+                      ? "اطلب قطعة مشابهة"
+                      : "Commission a similar piece"
+                    : t("pd.orderWhats")}
                 </a>
                 <a
                   href={mailLink(`${brand.name} — ${product.name}`, orderMsg)}

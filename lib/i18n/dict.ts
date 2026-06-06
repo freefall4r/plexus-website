@@ -6,6 +6,7 @@ export const dict = {
   "nav.shop": { en: "Shop", ar: "المتجر" },
   "nav.custom": { en: "Custom 3D", ar: "تصميم ثلاثي الأبعاد" },
   "nav.about": { en: "Workshop", ar: "الورشة" },
+  "nav.partners": { en: "Brand Partnerships", ar: "شراكات العلامات" },
   "nav.make": { en: "Make something", ar: "اصنع قطعتك" },
 
   // generic

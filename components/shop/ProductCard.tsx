@@ -12,6 +12,8 @@ export function ProductCard({ product, index = 0 }: { product: CatalogueProduct;
   const name = lang === "ar" ? product.name_ar : product.name;
   const blurb = lang === "ar" ? product.blurb_ar : product.blurb;
   const wood = lang === "ar" ? product.wood_ar : product.wood;
+  const isSold = product.tags?.includes("sold") ?? false;
+  const soldLabel = lang === "ar" ? "تم البيع" : "Sold";
 
   return (
     <motion.div
@@ -29,15 +31,21 @@ export function ProductCard({ product, index = 0 }: { product: CatalogueProduct;
           <div className="absolute inset-0 transition-[filter,transform] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05] group-hover:brightness-[1.04]">
             <ProductMedia product={product} alt={name} className="h-full w-full" />
           </div>
-          {product.featured && (
+          {isSold ? (
+            <span className="absolute left-3 top-3 rounded-sm bg-ink/85 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-bone backdrop-blur">
+              {soldLabel}
+            </span>
+          ) : product.featured ? (
             <span className="absolute left-3 top-3 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-copper">
               <span className="h-1.5 w-1.5 rounded-full bg-copper" aria-hidden />
               Featured
             </span>
+          ) : null}
+          {!isSold && (
+            <span className="absolute bottom-3 ltr:right-3 rtl:left-3 translate-y-2 rounded-sm bg-bone/90 px-3 py-1 font-mono text-xs text-ink opacity-0 backdrop-blur transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+              {t("shop.madeToOrder")}
+            </span>
           )}
-          <span className="absolute bottom-3 ltr:right-3 rtl:left-3 translate-y-2 rounded-sm bg-bone/90 px-3 py-1 font-mono text-xs text-ink opacity-0 backdrop-blur transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-            {t("shop.madeToOrder")}
-          </span>
         </div>
 
         <div className="mt-4 flex items-start justify-between gap-3">
@@ -46,7 +54,7 @@ export function ProductCard({ product, index = 0 }: { product: CatalogueProduct;
             <p className="mt-0.5 truncate text-sm text-ink-soft">{blurb}</p>
           </div>
           <div className="shrink-0 text-right rtl:text-left">
-            <p className="font-mono text-sm text-ink">
+            <p className={`font-mono text-sm ${isSold ? "text-ink-soft line-through" : "text-ink"}`}>
               {currency.symbol} {num(product.price)}
             </p>
             <p className="mt-0.5 text-xs text-ink-soft">{wood}</p>
