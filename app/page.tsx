@@ -5,6 +5,7 @@ import { CustomFeature } from "@/components/redesign/CustomFeature";
 import { Research } from "@/components/redesign/Research";
 import { MakerProcess } from "@/components/redesign/MakerProcess";
 import { Testimonials } from "@/components/redesign/Testimonials";
+import { InstagramFollow } from "@/components/redesign/InstagramFollow";
 import { ContactCommission } from "@/components/redesign/ContactCommission";
 import { getHomeContent } from "@/lib/home";
 import { getTestimonials } from "@/lib/testimonials";
@@ -23,6 +24,7 @@ export default async function Home() {
       <Research content={home?.research} />
       <MakerProcess content={home?.craft} />
       <Testimonials items={testimonials} />
+      <InstagramFollow />
       <ContactCommission content={home?.contact} />
     </>
   );
