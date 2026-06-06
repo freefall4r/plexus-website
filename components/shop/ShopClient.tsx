@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   categories,
   collections,
@@ -122,16 +121,11 @@ export function ShopClient({ items }: { items: CatalogueProduct[] }) {
             </button>
           </div>
         ) : (
-          <motion.div
-            layout
-            className="grid grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-3 md:gap-x-7 lg:grid-cols-4"
-          >
-            <AnimatePresence mode="popLayout">
-              {filtered.map((p, i) => (
-                <ProductCard key={p.id} product={p} index={i} />
-              ))}
-            </AnimatePresence>
-          </motion.div>
+          <div className="grid grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-3 md:gap-x-7 lg:grid-cols-4">
+            {filtered.map((p, i) => (
+              <ProductCard key={p.id} product={p} index={i} />
+            ))}
+          </div>
         )}
       </div>
     </div>
