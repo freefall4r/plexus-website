@@ -68,8 +68,8 @@ export const dict = {
   // shop
   "shop.title": { en: "The Collection", ar: "المجموعة" },
   "shop.sub": {
-    en: "One hundred pieces — sculptural objects and furniture, each made to order in solid wood.",
-    ar: "مئة قطعة — أشياء نحتية وأثاث، كلٌّ منها يُصنع حسب الطلب من الخشب الصلب.",
+    en: "Sculptural objects and furniture — each piece made to order in solid wood, stone & copper.",
+    ar: "أشياء نحتية وأثاث — كل قطعة تُصنع حسب الطلب من الخشب الصلب والحجر والنحاس.",
   },
   "shop.all": { en: "All", ar: "الكل" },
   "shop.filterWood": { en: "Wood", ar: "الخشب" },

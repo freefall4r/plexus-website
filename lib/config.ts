@@ -32,7 +32,7 @@ export const site = {
   // Google Business Profile link — a "sameAs" signal that helps Google
   // associate this domain with the listing. Best replaced with the Maps
   // "share" link once you have it (Maps → your business → Share → copy link).
-  googleProfile: "https://www.google.com/search?q=Plexus+Workshop",
+  googleProfile: "https://share.google/nwNy5rQrXpqzIuzTV",
 } as const;
 
 export const currency = {
