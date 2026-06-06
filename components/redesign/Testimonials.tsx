@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useLang } from "@/lib/i18n/context";
+import { reviews } from "@/lib/config";
 import type { Testimonial } from "@/lib/testimonials";
 
 /** Client testimonials. Renders nothing until real ones are added in /studio,
@@ -18,6 +19,19 @@ export function Testimonials({ items }: { items: Testimonial[] }) {
         <h2 className="mt-3 font-display text-4xl leading-[1.02] md:text-6xl">
           {ar ? "ماذا يقول عملاؤنا" : "What people say"}
         </h2>
+
+        <a
+          href={reviews.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-5 inline-flex items-center gap-2.5 rounded-full border border-ink/10 bg-bone-2/50 px-4 py-2 text-sm transition-colors hover:border-copper/40"
+        >
+          <span className="tracking-tight text-amber" aria-hidden>★★★★★</span>
+          <span className="font-semibold text-ink">{reviews.rating.toFixed(1)}</span>
+          <span className="text-ink-soft">
+            {ar ? `${reviews.count} تقييم على Google` : `${reviews.count} Google reviews`}
+          </span>
+        </a>
 
         <div className="mt-12 grid gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
           {items.map((t, i) => {

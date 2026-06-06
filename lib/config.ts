@@ -35,6 +35,13 @@ export const site = {
   googleProfile: "https://share.google/nwNy5rQrXpqzIuzTV",
 } as const;
 
+// --- GOOGLE REVIEWS --- (update the count as your reviews grow)
+export const reviews = {
+  rating: 5.0,
+  count: 17,
+  url: site.googleProfile,
+} as const;
+
 export const currency = {
   code: "JOD",
   symbol: "JD",
