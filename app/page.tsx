@@ -6,6 +6,7 @@ import { Research } from "@/components/redesign/Research";
 import { MakerProcess } from "@/components/redesign/MakerProcess";
 import { Testimonials } from "@/components/redesign/Testimonials";
 import { InstagramFollow } from "@/components/redesign/InstagramFollow";
+import { Faq } from "@/components/redesign/Faq";
 import { ContactCommission } from "@/components/redesign/ContactCommission";
 import { getHomeContent } from "@/lib/home";
 import { getTestimonials } from "@/lib/testimonials";
@@ -25,6 +26,7 @@ export default async function Home() {
       <MakerProcess content={home?.craft} />
       <Testimonials items={testimonials} />
       <InstagramFollow />
+      <Faq />
       <ContactCommission content={home?.contact} />
     </>
   );
