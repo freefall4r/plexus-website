@@ -96,6 +96,18 @@ export default function RootLayout({
       className={`${fraunces.variable} ${hanken.variable} ${jetbrains.variable} ${cairo.variable} ${reem.variable}`}
     >
       <body>
+        {/* Failsafe: content fades in via framer-motion JS (ships at opacity:0).
+            If JS is disabled / blocked / errors (old or in-app browsers), reveal
+            everything so the page is never blank. */}
+        <noscript>
+          <style>{`[style*="opacity:0"],[style*="opacity: 0"]{opacity:1!important;transform:none!important}`}</style>
+        </noscript>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              '(function(){function r(){try{var e=document.querySelectorAll(\'[style*="opacity:0"],[style*="opacity: 0"]\');for(var i=0;i<e.length;i++){e[i].style.opacity="1";e[i].style.transform="none";}}catch(x){}}window.addEventListener("error",function(){setTimeout(r,150);});window.addEventListener("unhandledrejection",function(){setTimeout(r,150);});})();',
+          }}
+        />
         <StructuredData />
         <LanguageProvider>
           <SiteChrome>{children}</SiteChrome>
