@@ -170,6 +170,20 @@
     background-blend-mode: soft-light, normal, normal, normal, normal;
   }
 
+  /* On a tall, narrow phone the diagonal + side pools squash into harsh
+     blotches. Flatten to an even, soft top-to-bottom wash + grain on mobile. */
+  @media (max-width: 640px) {
+    .grain::before {
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.07' numOctaves='4' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23a)'/%3E%3C/svg%3E"),
+        radial-gradient(150% 55% at 50% 0%, rgba(255, 252, 246, 0.16) 0%, rgba(255, 252, 246, 0) 72%),
+        radial-gradient(150% 55% at 50% 100%, rgba(176, 158, 128, 0.07) 0%, rgba(176, 158, 128, 0) 72%);
+      background-size: 220px 220px, auto, auto;
+      background-repeat: repeat, no-repeat, no-repeat;
+      background-blend-mode: soft-light, normal, normal;
+    }
+  }
+
   /* Paper grain overlay */
   .grain::after {
     content: "";

@@ -32,11 +32,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const stored = (typeof window !== "undefined" &&
       localStorage.getItem(STORAGE_KEY)) as Lang | null;
+    // Default language is English. Only an explicit, saved choice switches it
+    // (device/browser locale is intentionally ignored so EN is always default).
     if (stored === "en" || stored === "ar") {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLangState(stored);
-    } else if (typeof navigator !== "undefined" && navigator.language?.startsWith("ar")) {
-      setLangState("ar");
     }
   }, []);
 
