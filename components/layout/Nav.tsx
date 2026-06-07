@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { brand } from "@/lib/config";
 import { useLang } from "@/lib/i18n/context";
+import { useCart } from "@/lib/cart";
 import type { DictKey } from "@/lib/i18n/dict";
 
 const items: { href: string; key: DictKey }[] = [
@@ -19,6 +20,7 @@ const items: { href: string; key: DictKey }[] = [
 export function Nav() {
   const pathname = usePathname();
   const { t, lang, toggle } = useLang();
+  const { count, open: openCart } = useCart();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -50,6 +52,29 @@ export function Nav() {
       }`}
     >
       {lang === "en" ? "العربية" : "EN"}
+    </button>
+  );
+
+  const CartButton = (
+    <button
+      onClick={openCart}
+      data-cursor="hover"
+      aria-label="Open cart"
+      className={`relative rounded-full border p-2 transition-colors ${
+        onDark
+          ? "border-bone/30 text-bone hover:border-bone hover:bg-bone/10"
+          : "border-ink/20 text-ink hover:border-ink hover:bg-ink/5"
+      }`}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+        <path d="M6 7h12l-1 13H7L6 7Z" />
+        <path d="M9 7a3 3 0 0 1 6 0" />
+      </svg>
+      {count > 0 && (
+        <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-copper px-1 font-mono text-[10px] font-bold text-bone">
+          {count}
+        </span>
+      )}
     </button>
   );
 
@@ -92,6 +117,7 @@ export function Nav() {
               );
             })}
             {LangToggle}
+            {CartButton}
             <Link
               href="/custom"
               className={`rounded-full px-5 py-2 text-sm transition-colors hover:bg-amber hover:text-[#160e07] ${
@@ -103,6 +129,7 @@ export function Nav() {
           </nav>
 
           <div className="flex items-center gap-3 md:hidden">
+            {CartButton}
             {LangToggle}
             <button
               onClick={() => setOpen((v) => !v)}

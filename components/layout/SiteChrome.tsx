@@ -6,6 +6,7 @@ import { SmoothScroll } from "./SmoothScroll";
 import { Nav } from "./Nav";
 import { Footer } from "./Footer";
 import { ContactDock } from "./ContactDock";
+import { CartDrawer } from "@/components/cart/CartDrawer";
 
 /**
  * Wraps marketing pages with the site chrome (nav, footer, smooth scroll, grain).
@@ -30,6 +31,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
           <Footer />
         </SmoothScroll>
         <ContactDock />
+        <CartDrawer />
       </div>
     </MotionConfig>
   );

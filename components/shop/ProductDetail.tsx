@@ -6,6 +6,7 @@ import { categories } from "@/lib/products";
 import type { CatalogueProduct } from "@/lib/catalogue";
 import { ProductMedia } from "./ProductMedia";
 import { ProductCard } from "./ProductCard";
+import { AddToCart } from "@/components/cart/AddToCart";
 import { useLang } from "@/lib/i18n/context";
 import { brand, currency, waLink, mailLink } from "@/lib/config";
 
@@ -115,17 +116,32 @@ export function ProductDetail({
 
               {/* order */}
               <div className="mt-8 flex flex-wrap gap-3">
+                {!isSold && (
+                  <AddToCart
+                    slug={product.slug}
+                    name={product.name}
+                    name_ar={product.name_ar}
+                    price={product.price}
+                    image={product.imageUrl}
+                  />
+                )}
                 <a
                   href={waLink(orderMsg)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-full bg-ink px-7 py-3.5 text-sm font-medium text-bone transition-colors hover:bg-amber"
+                  className={
+                    isSold
+                      ? "rounded-full bg-ink px-7 py-3.5 text-sm font-medium text-bone transition-colors hover:bg-amber"
+                      : "rounded-full border border-ink/25 px-7 py-3.5 text-sm transition-colors hover:border-ink"
+                  }
                 >
                   {isSold
                     ? lang === "ar"
                       ? "اطلب قطعة مشابهة"
                       : "Commission a similar piece"
-                    : t("pd.orderWhats")}
+                    : lang === "ar"
+                      ? "اسأل عبر واتساب"
+                      : "Ask on WhatsApp"}
                 </a>
                 <a
                   href={mailLink(`${brand.name} — ${product.name}`, orderMsg)}

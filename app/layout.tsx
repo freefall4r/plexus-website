@@ -9,6 +9,7 @@ import {
 import "./globals.css";
 import { brand, site } from "@/lib/config";
 import { LanguageProvider } from "@/lib/i18n/context";
+import { CartProvider } from "@/lib/cart";
 import { SiteChrome } from "@/components/layout/SiteChrome";
 import { StructuredData } from "@/components/seo/StructuredData";
 import { Analytics } from "@vercel/analytics/next";
@@ -110,7 +111,9 @@ export default function RootLayout({
         />
         <StructuredData />
         <LanguageProvider>
-          <SiteChrome>{children}</SiteChrome>
+          <CartProvider>
+            <SiteChrome>{children}</SiteChrome>
+          </CartProvider>
         </LanguageProvider>
         <Analytics />
       </body>
