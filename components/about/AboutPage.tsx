@@ -124,11 +124,12 @@ export function AboutPage() {
         <Reveal delay={0.1}>
           <div className="relative mt-16 aspect-[16/9] w-full overflow-hidden bg-sand md:mt-24">
             <Image
-              src="/brand/hero-carved.jpg"
-              alt="Detail of a hand-carved, dimpled wood panel catching raking light"
+              src="/brand/fault-line-bench.jpg"
+              alt="A solid oak bench split by a glowing copper-filled fault line running its length — a Plexus piece"
               fill
               sizes="(min-width: 1300px) 1300px, 100vw"
               className="object-cover"
+              priority
             />
           </div>
         </Reveal>
@@ -252,8 +253,8 @@ export function AboutPage() {
           <Reveal delay={0.1}>
             <div className="relative mt-16 aspect-[16/9] w-full overflow-hidden bg-sand">
               <Image
-                src="/brand/workshop-fabrication.jpg"
-                alt="A multi-material piece from Plexus — solid walnut with cast resin and copper, joining wood, stone-like material and metal in one object"
+                src="/brand/hero-carved.jpg"
+                alt="Detail of a hand-carved, dimpled wood panel catching raking light"
                 fill
                 sizes="(min-width: 1300px) 1300px, 100vw"
                 className="object-cover"
