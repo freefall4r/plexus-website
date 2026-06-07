@@ -70,6 +70,10 @@
   html {
     scroll-behavior: auto; /* Lenis handles smoothing */
     background: var(--color-walnut-deep);
+    /* Stop in-app browsers (Instagram/Facebook WebView, iOS Safari) from
+       auto-inflating text, which reflows/glitches type on load. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
