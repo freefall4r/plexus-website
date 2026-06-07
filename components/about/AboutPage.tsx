@@ -252,8 +252,8 @@ export function AboutPage() {
           <Reveal delay={0.1}>
             <div className="relative mt-16 aspect-[16/9] w-full overflow-hidden bg-sand">
               <Image
-                src="/brand/craft.jpg"
-                alt="Inside the Plexus workshop — tools and work in progress"
+                src="/brand/workshop-fabrication.jpg"
+                alt="A multi-material piece from Plexus — solid walnut with cast resin and copper, joining wood, stone-like material and metal in one object"
                 fill
                 sizes="(min-width: 1300px) 1300px, 100vw"
                 className="object-cover"
