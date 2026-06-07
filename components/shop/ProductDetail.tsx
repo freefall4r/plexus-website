@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { categories } from "@/lib/products";
 import type { CatalogueProduct } from "@/lib/catalogue";
 import { ProductMedia } from "./ProductMedia";
+import { ProductGallery } from "./ProductGallery";
 import { ProductCard } from "./ProductCard";
 import { AddToCart } from "@/components/cart/AddToCart";
 import { useLang } from "@/lib/i18n/context";
@@ -25,6 +26,7 @@ export function ProductDetail({
   const catLabel = cat ? (lang === "ar" ? cat.label_ar : cat.label) : product.category;
 
   const isSold = product.tags?.includes("sold") ?? false;
+  const photos = [product.imageUrl, ...(product.galleryUrls ?? [])].filter(Boolean) as string[];
   const soldLabel = lang === "ar" ? "تم البيع" : "Sold";
   const soldNote =
     lang === "ar"
@@ -63,18 +65,26 @@ export function ProductDetail({
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="relative aspect-square overflow-hidden rounded-3xl bg-bone-2 lg:sticky lg:top-24"
+            className="lg:sticky lg:top-24"
           >
-            <ProductMedia product={product} alt={name} className="h-full w-full" />
-            {isSold ? (
-              <span className="absolute left-4 top-4 rounded-full bg-ink/85 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-bone">
-                {soldLabel}
-              </span>
-            ) : product.featured ? (
-              <span className="absolute left-4 top-4 rounded-full bg-ink/85 px-3 py-1 font-mono text-[11px] tracking-widest text-bone">
-                ★ {t("shop.sort.featured")}
-              </span>
-            ) : null}
+            <div className="relative">
+              {photos.length > 0 ? (
+                <ProductGallery images={photos} alt={name} />
+              ) : (
+                <div className="relative aspect-square overflow-hidden rounded-3xl bg-bone-2">
+                  <ProductMedia product={product} alt={name} className="h-full w-full" />
+                </div>
+              )}
+              {isSold ? (
+                <span className="absolute left-4 top-4 rounded-full bg-ink/85 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-bone">
+                  {soldLabel}
+                </span>
+              ) : product.featured ? (
+                <span className="absolute left-4 top-4 rounded-full bg-ink/85 px-3 py-1 font-mono text-[11px] tracking-widest text-bone">
+                  ★ {t("shop.sort.featured")}
+                </span>
+              ) : null}
+            </div>
           </motion.div>
 
           {/* info */}
