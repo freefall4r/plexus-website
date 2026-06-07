@@ -124,8 +124,8 @@ export function AboutPage() {
         <Reveal delay={0.1}>
           <div className="relative mt-16 aspect-[16/9] w-full overflow-hidden bg-sand md:mt-24">
             <Image
-              src="/brand/fault-line-bench.jpg"
-              alt="A solid oak bench split by a glowing copper-filled fault line running its length — a Plexus piece"
+              src="/brand/workshop-fabrication.jpg"
+              alt="A multi-material Plexus piece — solid walnut with cast-resin inlay and copper legs, in a warm limewash room"
               fill
               sizes="(min-width: 1300px) 1300px, 100vw"
               className="object-cover"
