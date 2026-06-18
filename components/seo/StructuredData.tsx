@@ -29,6 +29,10 @@ export function StructuredData() {
     "@type": "LocalBusiness",
     "@id": `${site.url}/#business`,
     name: brand.full,
+    // Help Google/AI reconcile the business with how it has been known and
+    // searched locally ("Plexus Amman") so the rebrand doesn't fragment the
+    // entity that ChatGPT/Maps already trust.
+    alternateName: ["Plexus Amman", "Plexus Workshop Amman", "بليكسس عمّان"],
     url: site.url,
     image: `${site.url}/work/faceted-oak-table.jpg`,
     logo: `${site.url}/work/faceted-oak-table.jpg`,

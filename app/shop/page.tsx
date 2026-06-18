@@ -4,9 +4,9 @@ import { ShopClient } from "@/components/shop/ShopClient";
 import { getCatalogue } from "@/lib/catalogue";
 
 export const metadata: Metadata = {
-  title: "Shop — The Collection",
+  title: "Shop — Custom Wood Furniture in Amman",
   description:
-    "Handmade pieces from Plexus Workshop — sculptural objects and furniture in solid wood, stone & metal, each made to order.",
+    "Handmade pieces from Plexus Workshop in Amman, Jordan — sculptural objects and custom furniture in solid wood, stone & metal, each made to order. أثاث وتفصيل خشب طبيعي في عمّان.",
 };
 
 // Re-check Sanity periodically so new products appear without a redeploy.
