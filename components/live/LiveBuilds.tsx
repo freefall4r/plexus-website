@@ -94,7 +94,7 @@ export function LiveBuilds({ builds }: { builds: LiveBuild[] }) {
               {builds.map((b, i) => (
                 <motion.a
                   key={b.slug}
-                  href={`/live/${b.slug}/`}
+                  href={`/live/${b.slug}`}
                   initial={{ opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
