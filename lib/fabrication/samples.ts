@@ -1,0 +1,166 @@
+// ── On-Demand Fabrication — seeded gallery (static fallback) ──
+// Shown on /fabrication when Sanity has no fabricationExample / fabricationTemplate
+// documents yet, so the page is never empty. As soon as anahata adds real entries
+// in /studio (with real Higgsfield/photo images), those override these samples.
+// Images are placeholder line-art cards drawn in public/fabrication/ (see
+// scripts/fabrication-placeholders.py) — swap for real product shots later.
+
+import type { FabricationExample, FabricationTemplate } from "./sanity";
+
+const img = (name: string) => `/fabrication/${name}.png`;
+
+export const SAMPLE_EXAMPLES: FabricationExample[] = [
+  // ---- Milling & turning (bowls, cups, candle holders) ----
+  {
+    id: "s-bowl",
+    title: "Turned olive bowl",
+    title_ar: "وعاء زيتون مخروط",
+    service: "milling",
+    imageUrl: img("milling-bowl"),
+    material: "Olive wood",
+    material_ar: "خشب الزيتون",
+    description: "A deep bowl turned from a single olive blank, oiled to bring out the grain.",
+    description_ar: "وعاء عميق مخروط من كتلة زيتون واحدة، مزيّت لإبراز خطوط الخشب.",
+  },
+  {
+    id: "s-cup",
+    title: "Walnut cup",
+    title_ar: "كوب جوز",
+    service: "milling",
+    imageUrl: img("milling-cup"),
+    material: "Solid walnut",
+    material_ar: "جوز صلب",
+    description: "A hand-finished cup milled from solid walnut, smooth to the touch.",
+    description_ar: "كوب مصنوع من الجوز الصلب وملموسه ناعم، بلمسة نهائية يدوية.",
+  },
+  {
+    id: "s-candle",
+    title: "Oak candle holder",
+    title_ar: "حامل شموع بلوط",
+    service: "milling",
+    imageUrl: img("milling-candle"),
+    material: "Solid oak",
+    material_ar: "بلوط صلب",
+    description: "A turned tea-light holder with a clean profile — sold singly or in sets.",
+    description_ar: "حامل شمعة مخروط بخطٍّ أنيق — يُباع مفردًا أو بطقم.",
+  },
+  // ---- CNC routing ----
+  {
+    id: "s-screen",
+    title: "Mashrabiya screen panel",
+    title_ar: "لوح مشربية",
+    service: "cnc",
+    imageUrl: img("cnc-screen"),
+    material: "Birch plywood, 9mm",
+    material_ar: "بتولا طبقي، ٩ مم",
+    description: "A geometric room divider routed from birch ply to your pattern and size.",
+    description_ar: "فاصل غرفة هندسي مقصوص من خشب البتولا حسب نقشك ومقاسك.",
+  },
+  {
+    id: "s-sign",
+    title: "Carved shop sign",
+    title_ar: "لافتة محفورة",
+    service: "cnc",
+    imageUrl: img("cnc-sign"),
+    material: "Solid oak",
+    material_ar: "بلوط صلب",
+    description: "A 3D-carved sign or logo plaque milled into solid hardwood.",
+    description_ar: "لافتة أو لوحة شعار محفورة ثلاثية الأبعاد في خشب صلب.",
+  },
+  {
+    id: "s-bracket",
+    title: "Live-edge shelf bracket",
+    title_ar: "حامل رف بحافة طبيعية",
+    service: "cnc",
+    imageUrl: img("cnc-bracket"),
+    material: "Beech",
+    material_ar: "زان",
+    description: "Precision-milled brackets cut to match your shelf depth and load.",
+    description_ar: "حوامل مقصوصة بدقة لتناسب عمق الرف والحِمل.",
+  },
+  // ---- Laser cutting ----
+  {
+    id: "s-coasters",
+    title: "Engraved coaster set",
+    title_ar: "طقم قواعد أكواب محفورة",
+    service: "laser",
+    imageUrl: img("laser-coasters"),
+    material: "Birch plywood",
+    material_ar: "بتولا طبقي",
+    description: "Laser-cut coasters with your engraved design — great for gifts and brands.",
+    description_ar: "قواعد أكواب مقصوصة بالليزر مع نقشك المحفور — مثالية للهدايا والعلامات.",
+  },
+  {
+    id: "s-map",
+    title: "Layered city map",
+    title_ar: "خريطة مدينة بطبقات",
+    service: "laser",
+    imageUrl: img("laser-map"),
+    material: "MDF + acrylic",
+    material_ar: "MDF + أكريليك",
+    description: "Multi-layer wall art cut from thin sheets for depth and shadow.",
+    description_ar: "لوحة جدارية متعددة الطبقات مقصوصة من ألواح رقيقة للعمق والظل.",
+  },
+  {
+    id: "s-logo",
+    title: "Acrylic logo sign",
+    title_ar: "لافتة شعار أكريليك",
+    service: "laser",
+    imageUrl: img("laser-logo"),
+    material: "Cast acrylic",
+    material_ar: "أكريليك",
+    description: "Crisp laser-cut lettering or logos for reception walls and events.",
+    description_ar: "حروف أو شعارات مقصوصة بدقة لجدران الاستقبال والفعاليات.",
+  },
+];
+
+export const SAMPLE_TEMPLATES: FabricationTemplate[] = [
+  {
+    id: "t-lid",
+    slug: "wooden-box-lid",
+    title: "Wooden box lid",
+    title_ar: "غطاء صندوق خشبي",
+    service: "cnc",
+    imageUrl: img("tpl-lid"),
+    description: "Our signature engraved lid — choose the wood, size and engraving.",
+    description_ar: "غطاؤنا المميّز المحفور — اختر الخشب والمقاس والنقش.",
+    defaultMaterial: "Solid oak",
+    defaultThickness: "12mm",
+  },
+  {
+    id: "t-tray",
+    slug: "serving-tray",
+    title: "Serving tray",
+    title_ar: "صينية تقديم",
+    service: "cnc",
+    imageUrl: img("tpl-tray"),
+    description: "A handled tray sized to your table — raw, sanded or oiled.",
+    description_ar: "صينية بمقابض حسب مقاس طاولتك — خام أو مصنفرة أو مزيّتة.",
+    defaultMaterial: "Birch plywood",
+    defaultThickness: "12mm",
+  },
+  {
+    id: "t-coasters",
+    slug: "coaster-set",
+    title: "Coaster set (4)",
+    title_ar: "طقم قواعد أكواب (٤)",
+    service: "laser",
+    imageUrl: img("tpl-coasters"),
+    description: "A set of four engraved coasters — add your monogram or brand.",
+    description_ar: "طقم من أربع قواعد محفورة — أضف حرفك الأول أو علامتك.",
+    defaultMaterial: "Birch plywood",
+    defaultThickness: "3mm",
+  },
+  {
+    id: "t-tealight",
+    slug: "tealight-holder",
+    title: "Tea-light holder",
+    title_ar: "حامل شمعة",
+    service: "milling",
+    imageUrl: img("tpl-tealight"),
+    description: "A turned tea-light holder in your choice of hardwood.",
+    description_ar: "حامل شمعة مخروط من الخشب الصلب الذي تختاره.",
+    defaultMaterial: "Solid walnut",
+    defaultThickness: "blank-s",
+  },
+];

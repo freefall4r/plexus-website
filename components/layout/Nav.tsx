@@ -13,6 +13,7 @@ const items: { href: string; key: DictKey }[] = [
   { href: "/", key: "nav.home" },
   { href: "/shop", key: "nav.shop" },
   { href: "/custom", key: "nav.custom" },
+  { href: "/fabrication", key: "nav.fab" },
   { href: "/partnerships", key: "nav.partners" },
   { href: "/live", key: "nav.live" },
   { href: "/about", key: "nav.about" },

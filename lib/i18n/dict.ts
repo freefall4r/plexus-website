@@ -7,6 +7,7 @@ export const dict = {
   "nav.custom": { en: "Custom 3D", ar: "تصميم ثلاثي الأبعاد" },
   "nav.about": { en: "Workshop", ar: "الورشة" },
   "nav.partners": { en: "Brand Partnerships", ar: "شراكات العلامات" },
+  "nav.fab": { en: "Fabrication", ar: "التصنيع" },
   "nav.live": { en: "Live Builds", ar: "أعمال مباشرة" },
   "nav.make": { en: "Make something", ar: "اصنع قطعتك" },
 
