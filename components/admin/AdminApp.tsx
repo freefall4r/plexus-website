@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import type { Project, Stage, Message, StageStatus } from "@/lib/live/types";
+import type { BizDoc, DocType } from "@/lib/docs/types";
+import { HomeView } from "./HomeView";
+import { DocsView } from "./DocsView";
 
 // ---------- small helpers ----------
 function slugify(s: string): string {
@@ -57,12 +60,18 @@ const STATUS_COLOR: Record<StageStatus, string> = {
 
 export function AdminApp({
   initialProjects,
+  initialDocs,
   firebaseReady,
 }: {
   initialProjects: Project[];
+  initialDocs: BizDoc[];
   firebaseReady: boolean;
 }) {
   const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [docs, setDocs] = useState<BizDoc[]>(initialDocs);
+  const [tab, setTab] = useState<"home" | "builds" | "docs">("home");
+  const [docStart, setDocStart] = useState<DocType | null>(null);
+  const [docNonce, setDocNonce] = useState(0);
   const [draft, setDraft] = useState<Project | null>(null);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState("");
@@ -130,32 +139,65 @@ export function AdminApp({
     return data.url as string;
   }
 
-  // ---------- list view ----------
+  // ---------- tabbed shell (home / builds / docs) ----------
   if (!draft) {
+    const nav = (
+      <BottomNav
+        tab={tab}
+        onTab={(t) => {
+          setTab(t);
+          if (t === "docs") setDocStart(null);
+        }}
+      />
+    );
     return (
-      <Shell onLogout={logout} toast={toast}>
-        {!firebaseReady && (
-          <div className="mb-4 rounded-xl border border-amber-700/40 bg-amber-950/40 p-3 text-sm text-amber-300">
-            Firebase isn&apos;t connected yet — projects you create won&apos;t save until
-            the keys are added. (Setup step.)
-          </div>
+      <Shell onLogout={logout} toast={toast} nav={nav}>
+        {tab === "home" && (
+          <HomeView
+            projects={projects}
+            docs={docs}
+            onNewBuild={() => setDraft(blankProject())}
+            onNewDoc={(t) => {
+              setDocStart(t);
+              setDocNonce((n) => n + 1);
+              setTab("docs");
+            }}
+            onNav={setTab}
+          />
         )}
-        <div className="mb-4 flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Builds</h1>
-          <button
-            onClick={() => setDraft(blankProject())}
-            className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-neutral-950 active:scale-95"
-          >
-            + New
-          </button>
-        </div>
-        {projects.length === 0 && (
-          <p className="mt-10 text-center text-sm text-neutral-500">
-            No projects yet. Tap “+ New” to create your first client build page.
-          </p>
+        {tab === "docs" && (
+          <DocsView
+            key={`docs-${docNonce}`}
+            docs={docs}
+            firebaseReady={firebaseReady}
+            flash={flash}
+            onChange={setDocs}
+            startNew={docStart}
+          />
         )}
-        <div className="space-y-3">
-          {projects.map((p) => (
+        {tab === "builds" && (
+          <>
+            {!firebaseReady && (
+              <div className="mb-4 rounded-xl border border-amber-700/40 bg-amber-950/40 p-3 text-sm text-amber-300">
+                Firebase isn&apos;t connected yet — new builds won&apos;t save until the keys are added.
+              </div>
+            )}
+            <div className="mb-4 flex items-center justify-between">
+              <h1 className="text-lg font-semibold">Builds</h1>
+              <button
+                onClick={() => setDraft(blankProject())}
+                className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-neutral-950 active:scale-95"
+              >
+                ＋ New
+              </button>
+            </div>
+            {projects.length === 0 && (
+              <p className="mt-10 text-center text-sm text-neutral-500">
+                No builds yet. Tap “＋ New” to create your first client build page.
+              </p>
+            )}
+            <div className="space-y-3">
+              {projects.map((p) => (
             <button
               key={p.slug}
               onClick={() => setDraft(structuredClone(p))}
@@ -184,8 +226,10 @@ export function AdminApp({
               </div>
               <div className="text-xs tabular-nums text-amber-400">{p.pct}%</div>
             </button>
-          ))}
-        </div>
+              ))}
+            </div>
+          </>
+        )}
       </Shell>
     );
   }
@@ -452,11 +496,13 @@ function Shell({
   onLogout,
   toast,
   top,
+  nav,
 }: {
   children: React.ReactNode;
   onLogout: () => void;
   toast: string;
   top?: React.ReactNode;
+  nav?: React.ReactNode;
 }) {
   return (
     <div style={{ minHeight: "100dvh" }} className="bg-neutral-950 text-neutral-100">
@@ -470,14 +516,48 @@ function Shell({
           </div>
         )}
       </div>
-      <div className="mx-auto max-w-xl space-y-4 px-4 py-5">{children}</div>
+      <div className={`mx-auto max-w-xl space-y-4 px-4 py-5 ${nav ? "pb-28" : ""}`}>
+        {children}
+      </div>
       {toast && (
-        <div className="fixed inset-x-0 bottom-6 z-20 flex justify-center">
+        <div className={`fixed inset-x-0 z-30 flex justify-center ${nav ? "bottom-24" : "bottom-6"}`}>
           <div className="rounded-full bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-900 shadow-lg">
             {toast}
           </div>
         </div>
       )}
+      {nav}
+    </div>
+  );
+}
+
+function BottomNav({
+  tab,
+  onTab,
+}: {
+  tab: "home" | "builds" | "docs";
+  onTab: (t: "home" | "builds" | "docs") => void;
+}) {
+  const items: [typeof tab, string][] = [
+    ["home", "Home"],
+    ["builds", "Builds"],
+    ["docs", "Docs"],
+  ];
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-neutral-800 bg-neutral-950/95 backdrop-blur">
+      <div className="mx-auto flex max-w-xl">
+        {items.map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => onTab(key)}
+            className={`flex-1 py-3.5 text-sm font-medium ${
+              tab === key ? "text-amber-400" : "text-neutral-500"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
