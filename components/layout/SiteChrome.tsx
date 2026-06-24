@@ -16,7 +16,7 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 export function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  if (pathname?.startsWith("/studio")) {
+  if (pathname?.startsWith("/studio") || pathname?.startsWith("/plexusadmin")) {
     return <>{children}</>;
   }
 

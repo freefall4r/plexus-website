@@ -1,0 +1,17 @@
+rules_version = '2';
+// Plexus Workshop — Storage security rules.
+//
+// Uploads happen server-side via the Admin SDK (which bypasses these rules).
+// Images are served to browsers through their tokenized download URLs
+// (firebasestorage.googleapis.com/...?alt=media&token=...), which work
+// independently of these rules — so we deny all direct/listing access here.
+//
+//   live/{slug}/...           -> live-build photos
+//   fabrication/{orderId}/... -> client-uploaded CAD/reference files
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
