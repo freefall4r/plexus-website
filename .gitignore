@@ -53,3 +53,6 @@ next-env.d.ts
 /collection.html
 /designs.html
 /restyle-preview.html
+
+# Plexus Live — build seed files hold client names + portal passcodes (public repo)
+/scripts/builds/
