@@ -9,6 +9,7 @@ export const dict = {
   "nav.partners": { en: "Brand Partnerships", ar: "شراكات العلامات" },
   "nav.fab": { en: "Fabrication", ar: "التصنيع" },
   "nav.live": { en: "Live Builds", ar: "أعمال مباشرة" },
+  "nav.library": { en: "Wood Library", ar: "مكتبة الأخشاب" },
   "nav.make": { en: "Make something", ar: "اصنع قطعتك" },
 
   // generic

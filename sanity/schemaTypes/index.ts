@@ -4,6 +4,7 @@ import { homepage } from "./homepage";
 import { testimonial } from "./testimonial";
 import { fabricationExample } from "./fabricationExample";
 import { fabricationTemplate } from "./fabricationTemplate";
+import { woodEntry } from "./woodEntry";
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
@@ -12,5 +13,6 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     testimonial,
     fabricationExample,
     fabricationTemplate,
+    woodEntry,
   ],
 };

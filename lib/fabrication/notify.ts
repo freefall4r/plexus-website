@@ -1,21 +1,21 @@
 // ── On-Demand Fabrication — new-order WhatsApp ping ──
-// Best-effort notification to anahata when an order lands. Uses the Meta
-// WhatsApp Cloud API (same Meta path as Content Studio's IG auto-posting).
-// If the WhatsApp env vars are absent it simply no-ops — the order still saves
-// to Firestore and shows up in /plexusadmin. Never throws (never blocks an order).
+// Best-effort notification to anahata when an order lands, via CallMeBot (a free
+// service that WhatsApps your OWN number). If the env vars are absent it no-ops —
+// the order still saves to Firestore and shows in /plexusadmin. Never throws.
+//
+// Setup: message CallMeBot once from your WhatsApp to get an API key, then set
+//   CALLMEBOT_APIKEY  +  WHATSAPP_NOTIFY_TO  (your number, digits incl. country code)
+//
+// Privacy: the ping deliberately carries NO customer name/contact — just the
+// service/material/qty and the admin + tracking links — so customer data isn't
+// routed through the third-party notifier.
 
 import "server-only";
 import { site } from "@/lib/config";
 import type { FabricationOrder } from "./types";
 
-const GRAPH_VERSION = "v21.0";
-
 export function whatsappConfigured(): boolean {
-  return Boolean(
-    process.env.WHATSAPP_PHONE_NUMBER_ID &&
-      process.env.WHATSAPP_ACCESS_TOKEN &&
-      process.env.WHATSAPP_NOTIFY_TO
-  );
+  return Boolean(process.env.CALLMEBOT_APIKEY && process.env.WHATSAPP_NOTIFY_TO);
 }
 
 export async function notifyNewOrder(
@@ -23,39 +23,23 @@ export async function notifyNewOrder(
   token: string
 ): Promise<boolean> {
   if (!whatsappConfigured()) return false;
-  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID!;
-  const accessToken = process.env.WHATSAPP_ACCESS_TOKEN!;
-  const to = process.env.WHATSAPP_NOTIFY_TO!;
+  const raw = process.env.WHATSAPP_NOTIFY_TO!;
+  const phone = raw.startsWith("+") ? raw : `+${raw}`;
+  const apikey = process.env.CALLMEBOT_APIKEY!;
 
-  const body = [
+  const text = [
     "🆕 New fabrication order",
-    `Service: ${order.service.toUpperCase()}`,
-    `From: ${order.source === "template" ? `template (${order.templateId})` : "custom upload"}`,
-    `Material: ${order.specs.material} · ${order.specs.thickness}`,
-    `Qty: ${order.specs.quantity}`,
-    `Files: ${order.files.length}`,
-    `Contact: ${order.contact.name} · ${order.contact.whatsapp || order.contact.email}`,
-    `Open: ${site.url}/plexusadmin`,
+    `${order.service.toUpperCase()} · ${order.specs.material || "?"}${order.specs.thickness ? ` ${order.specs.thickness}` : ""} · x${order.specs.quantity}`,
+    `Admin: ${site.url}/plexusadmin`,
     `Track: ${site.url}/fabrication/track/${token}`,
   ].join("\n");
 
+  const url =
+    `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}` +
+    `&text=${encodeURIComponent(text)}&apikey=${encodeURIComponent(apikey)}`;
+
   try {
-    const res = await fetch(
-      `https://graph.facebook.com/${GRAPH_VERSION}/${phoneId}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to,
-          type: "text",
-          text: { body },
-        }),
-      }
-    );
+    const res = await fetch(url);
     return res.ok;
   } catch {
     return false;
