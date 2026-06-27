@@ -68,10 +68,15 @@ export function PortalGate({ slug }: { slug: string }) {
             <input
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              inputMode="numeric"
+              type="text"
+              inputMode="text"
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck={false}
               autoFocus
               placeholder={T("Access code", "رمز الدخول")}
-              className="w-full rounded-xl border border-ink/15 bg-white/60 px-4 py-3 text-center text-lg tracking-widest outline-none focus:border-amber"
+              className="w-full rounded-xl border border-ink/15 bg-white/60 px-4 py-3 text-center text-lg tracking-wide outline-none focus:border-amber"
             />
             <button
               type="submit"
