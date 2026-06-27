@@ -69,7 +69,10 @@ export async function getPortal(
   const doc = await db().collection(COLLECTION).doc(slug).get();
   if (!doc.exists) return null;
   const p = doc.data() as Project;
-  if (!p.passcode || p.passcode !== passcode) return null;
+  // Passcodes are client first names — match case-insensitively and ignore
+  // stray spaces / phone auto-capitalisation.
+  const norm = (s: string) => (s || "").trim().toLowerCase();
+  if (!p.passcode || norm(p.passcode) !== norm(passcode)) return null;
   return toPortal(p);
 }
 
