@@ -2,13 +2,20 @@ import { NextResponse } from "next/server";
 import { isFirebaseConfigured } from "@/lib/firebase/admin";
 import { isValidChubPasscode, CHUB_PASSCODE_HEADER } from "@/lib/chub/auth";
 import { createChubOrder, listChubOrders, newChubOrderId } from "@/lib/chub/store";
-import { MATERIAL_OPTIONS, DRAWN_BY_OPTIONS, JOB_CODE_OPTIONS } from "@/lib/chub/types";
-import type { ChubDrawnBy, ChubFile, ChubJobCode, ChubMaterial, ChubOrder } from "@/lib/chub/types";
+import { MATERIAL_OPTIONS, DRAWN_BY_OPTIONS, JOB_CODE_OPTIONS, COMPLEXITY_OPTIONS } from "@/lib/chub/types";
+import type {
+  ChubComplexity,
+  ChubDrawnBy,
+  ChubFile,
+  ChubJobCode,
+  ChubMaterial,
+  ChubOrder,
+} from "@/lib/chub/types";
+import { isChubFile, numOrNull, dateOrNull, MAX_FILES } from "@/lib/chub/validate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const MAX_FILES = 20;
 // Order ids may arrive client-generated (crypto.randomUUID(), from the
 // upload-slot flow in app/api/chub/uploads/route.ts) so files can be
 // uploaded straight to Storage before this doc exists.
@@ -36,23 +43,22 @@ type OrderBody = {
   jobType?: string;
   materials?: string[];
   materialsOther?: string;
+  color?: string;
+  width?: number | string | null;
+  depth?: number | string | null;
+  height?: number | string | null;
   specs?: string;
   cadNeeded?: boolean;
   drawnBy?: string;
   jobCode?: string;
   jobCodeCustom?: string;
+  complexity?: string;
+  deadline?: string | null;
+  urgent?: boolean;
   notes?: string;
+  suggestedPriceJOD?: number | string | null;
   files?: Partial<ChubFile>[];
 };
-
-function isChubFile(f: Partial<ChubFile>): f is ChubFile {
-  return (
-    typeof f.name === "string" &&
-    typeof f.url === "string" &&
-    typeof f.sizeKB === "number" &&
-    typeof f.type === "string"
-  );
-}
 
 // POST /api/chub/orders — create a new job order. Plain JSON only — file
 // bytes never pass through this route (or any Vercel function). Files are
@@ -98,6 +104,12 @@ export async function POST(req: Request) {
     ? (jobCodeRaw as ChubJobCode)
     : "M1";
 
+  const complexityValues = new Set(COMPLEXITY_OPTIONS.map((c) => c.value));
+  const complexityRaw = (body.complexity || "").toString();
+  const complexity: ChubComplexity = complexityValues.has(complexityRaw as ChubComplexity)
+    ? (complexityRaw as ChubComplexity)
+    : "quick";
+
   const filesRaw = Array.isArray(body.files) ? body.files : [];
   if (filesRaw.length > MAX_FILES) {
     return NextResponse.json({ error: "too_many_files" }, { status: 400 });
@@ -109,12 +121,20 @@ export async function POST(req: Request) {
     jobType,
     materials,
     materialsOther: (body.materialsOther || "").toString(),
+    color: (body.color || "").toString(),
+    width: numOrNull(body.width),
+    depth: numOrNull(body.depth),
+    height: numOrNull(body.height),
     specs: (body.specs || "").toString(),
     cadNeeded: Boolean(body.cadNeeded),
     drawnBy,
     jobCode,
     jobCodeCustom: (body.jobCodeCustom || "").toString(),
+    complexity,
+    deadline: dateOrNull(body.deadline),
+    urgent: Boolean(body.urgent),
     notes: (body.notes || "").toString(),
+    suggestedPriceJOD: numOrNull(body.suggestedPriceJOD),
     files,
   };
 

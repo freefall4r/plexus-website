@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  COMPLEXITY_OPTIONS,
   DRAWN_BY_OPTIONS,
   JOB_CODE_MEANINGS,
   JOB_CODE_OPTIONS,
   MATERIAL_OPTIONS,
   STATUS_OPTIONS,
+  type ChubComplexity,
   type ChubDrawnBy,
   type ChubFile,
   type ChubJobCode,
@@ -18,6 +20,17 @@ import { CHUB_PASSCODE_HEADER, isValidChubPasscode } from "@/lib/chub/auth";
 
 const SESSION_KEY = "chub-pass";
 const DRAFT_KEY = "chub-draft";
+
+// Capitalize the first letter of the field and the first letter after each
+// sentence-ending ". "/"! "/"? " — as-you-type, no other casing is touched
+// (never forces mid-word or mid-sentence casing). Length-preserving so the
+// cursor position in a controlled input isn't disturbed.
+function capitalizeSentences(text: string): string {
+  if (!text) return text;
+  let result = text.replace(/^(\s*)([a-z])/, (_m, ws: string, c: string) => ws + c.toUpperCase());
+  result = result.replace(/([.!?]\s+)([a-z])/g, (_m, sep: string, c: string) => sep + c.toUpperCase());
+  return result;
+}
 
 // ───────────────────────── Gate ─────────────────────────
 
@@ -71,19 +84,27 @@ function Gate({ onUnlock }: { onUnlock: (pass: string) => void }) {
   );
 }
 
-// ───────────────────────── New Order form ─────────────────────────
+// ───────────────────────── Order form (create + edit) ─────────────────────────
 
 type FormState = {
   clientName: string;
   jobType: string;
   materials: ChubMaterial[];
   materialsOther: string;
+  color: string;
+  width: string;
+  depth: string;
+  height: string;
   specs: string;
   cadNeeded: boolean;
   drawnBy: ChubDrawnBy;
   jobCode: ChubJobCode;
   jobCodeCustom: string;
+  complexity: ChubComplexity;
+  deadline: string; // "" or "YYYY-MM-DD"
+  urgent: boolean;
   notes: string;
+  suggestedPriceJOD: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -91,18 +112,51 @@ const EMPTY_FORM: FormState = {
   jobType: "",
   materials: [],
   materialsOther: "",
+  color: "",
+  width: "",
+  depth: "",
+  height: "",
   specs: "",
   cadNeeded: false,
   drawnBy: "N/A",
   jobCode: "M1",
   jobCodeCustom: "",
+  complexity: "quick",
+  deadline: "",
+  urgent: false,
   notes: "",
+  suggestedPriceJOD: "",
 };
+
+function formFromOrder(o: ChubOrderView): FormState {
+  return {
+    clientName: o.clientName ?? "",
+    jobType: o.jobType ?? "",
+    materials: o.materials ?? [],
+    materialsOther: o.materialsOther ?? "",
+    color: o.color ?? "",
+    width: o.width == null ? "" : String(o.width),
+    depth: o.depth == null ? "" : String(o.depth),
+    height: o.height == null ? "" : String(o.height),
+    specs: o.specs ?? "",
+    cadNeeded: Boolean(o.cadNeeded),
+    drawnBy: o.drawnBy ?? "N/A",
+    jobCode: o.jobCode ?? "M1",
+    jobCodeCustom: o.jobCodeCustom ?? "",
+    complexity: o.complexity ?? "quick",
+    deadline: o.deadline ?? "",
+    urgent: Boolean(o.urgent),
+    notes: o.notes ?? "",
+    suggestedPriceJOD: o.suggestedPriceJOD == null ? "" : String(o.suggestedPriceJOD),
+  };
+}
 
 // Restore a saved draft on first load, if there is one. Lazy useState
 // initializer so it only runs once, client-side, before the first paint —
 // not on every tab switch (the form no longer unmounts on tab switch, see
 // ChubApp below, but this also covers a fresh page load after a reload).
+// Only used in "create" mode — editing an existing order always starts from
+// that order's real data (see formFromOrder), never a stray draft.
 function loadDraft(): FormState {
   if (typeof window === "undefined") return EMPTY_FORM;
   try {
@@ -115,35 +169,33 @@ function loadDraft(): FormState {
   }
 }
 
-function NewOrderForm({
+function OrderForm({
   pass,
-  onCreated,
+  editing,
+  onSaved,
+  onCancel,
 }: {
   pass: string;
-  onCreated: () => void;
+  editing?: ChubOrderView | null;
+  onSaved: () => void;
+  onCancel?: () => void;
 }) {
-  const [form, setForm] = useState<FormState>(loadDraft);
-  const [files, setFiles] = useState<File[]>([]);
+  const [form, setForm] = useState<FormState>(() => (editing ? formFromOrder(editing) : loadDraft()));
+  const [existingFiles, setExistingFiles] = useState<ChubFile[]>(editing?.files ?? []);
+  const [newFiles, setNewFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Safety net for real browser-tab switches, reloads, dropped connections —
-  // debounce-save every field to localStorage as the user types. File
-  // selections can't be persisted this way (browsers won't let a File be
-  // reconstructed from a saved reference) but they no longer get wiped by
-  // switching the page's own New Order / Job List tabs either, since this
-  // form now stays mounted across that switch (see ChubApp).
+  // debounce-save every field to localStorage as the user types. Only in
+  // create mode; editing an existing order shouldn't pollute (or be
+  // overwritten by) the "new order" draft.
   useEffect(() => {
+    if (editing) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
       try {
-        // A fully-empty form (fresh load, or right after a successful
-        // submit resets it) has nothing worth restoring — remove the key
-        // outright instead of writing an empty draft over it. Without this,
-        // the reset-to-empty after submit would race this same debounced
-        // save and re-write a blank draft a moment after submit's own
-        // explicit removeItem() call.
         const isEmpty = JSON.stringify(form) === JSON.stringify(EMPTY_FORM);
         if (isEmpty) {
           localStorage.removeItem(DRAFT_KEY);
@@ -157,7 +209,7 @@ function NewOrderForm({
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [form]);
+  }, [form, editing]);
 
   function toggleMaterial(m: ChubMaterial) {
     setForm((f) => ({
@@ -173,21 +225,21 @@ function NewOrderForm({
   // Instead: sign a per-file upload URL, PUT the bytes straight to Storage,
   // then finalize (a small JSON call) before attaching the file list to the
   // order. See app/api/chub/uploads/route.ts.
-  async function uploadFiles(orderId: string): Promise<{ files: ChubFile[]; failed: string[] }> {
-    if (files.length === 0) return { files: [], failed: [] };
+  async function uploadNewFiles(orderId: string): Promise<{ files: ChubFile[]; failed: string[] }> {
+    if (newFiles.length === 0) return { files: [], failed: [] };
 
-    setMsg({ kind: "ok", text: `Uploading ${files.length} file(s)…` });
+    setMsg({ kind: "ok", text: `Uploading ${newFiles.length} file(s)…` });
 
     const signRes = await fetch("/api/chub/uploads", {
       method: "POST",
       headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
       body: JSON.stringify({
         orderId,
-        files: files.map((f) => ({ name: f.name, type: f.type, size: f.size })),
+        files: newFiles.map((f) => ({ name: f.name, type: f.type, size: f.size })),
       }),
     });
     if (!signRes.ok) {
-      return { files: [], failed: files.map((f) => f.name) };
+      return { files: [], failed: newFiles.map((f) => f.name) };
     }
     const { uploads } = (await signRes.json()) as {
       uploads: { name: string; objectPath: string; token: string; uploadUrl: string; contentType: string }[];
@@ -195,8 +247,8 @@ function NewOrderForm({
 
     const toFinalize: { objectPath: string; token: string; name: string; sizeKB: number; type: string }[] = [];
     const failed: string[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+    for (let i = 0; i < newFiles.length; i++) {
+      const file = newFiles[i];
       const slot = uploads[i];
       try {
         const putRes = await fetch(slot.uploadUrl, {
@@ -243,27 +295,44 @@ function NewOrderForm({
     setBusy(true);
     setMsg(null);
     try {
-      const orderId = crypto.randomUUID();
-      const { files: uploadedFiles, failed: failedFiles } = await uploadFiles(orderId);
+      const orderId = editing ? editing.id : crypto.randomUUID();
+      const { files: uploadedFiles, failed: failedFiles } = await uploadNewFiles(orderId);
+      const finalFiles = [...existingFiles, ...uploadedFiles];
 
-      const res = await fetch("/api/chub/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
-        body: JSON.stringify({
-          id: orderId,
-          clientName: form.clientName.trim(),
-          jobType: form.jobType.trim(),
-          materials: form.materials,
-          materialsOther: form.materialsOther,
-          specs: form.specs,
-          cadNeeded: form.cadNeeded,
-          drawnBy: form.drawnBy,
-          jobCode: form.jobCode,
-          jobCodeCustom: form.jobCodeCustom,
-          notes: form.notes,
-          files: uploadedFiles,
-        }),
-      });
+      const payload = {
+        clientName: form.clientName.trim(),
+        jobType: form.jobType.trim(),
+        materials: form.materials,
+        materialsOther: form.materialsOther,
+        color: form.color,
+        width: form.width,
+        depth: form.depth,
+        height: form.height,
+        specs: form.specs,
+        cadNeeded: form.cadNeeded,
+        drawnBy: form.drawnBy,
+        jobCode: form.jobCode,
+        jobCodeCustom: form.jobCodeCustom,
+        complexity: form.complexity,
+        deadline: form.deadline,
+        urgent: form.urgent,
+        notes: form.notes,
+        suggestedPriceJOD: form.suggestedPriceJOD,
+        files: finalFiles,
+      };
+
+      const res = editing
+        ? await fetch(`/api/chub/orders/${editing.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+            body: JSON.stringify(payload),
+          })
+        : await fetch("/api/chub/orders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+            body: JSON.stringify({ id: orderId, ...payload }),
+          });
+
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setMsg({ kind: "err", text: data.error || "Something went wrong — try again." });
@@ -272,16 +341,19 @@ function NewOrderForm({
       const failedNote = failedFiles.length
         ? ` (${failedFiles.length} file(s) failed to upload: ${failedFiles.join(", ")})`
         : "";
-      setMsg({ kind: "ok", text: `Order created.${failedNote}` });
-      setForm(EMPTY_FORM);
-      setFiles([]);
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-      try {
-        localStorage.removeItem(DRAFT_KEY);
-      } catch {
-        /* ignore */
+      setMsg({ kind: "ok", text: `${editing ? "Order updated" : "Order created"}.${failedNote}` });
+
+      if (!editing) {
+        setForm(EMPTY_FORM);
+        setNewFiles([]);
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        try {
+          localStorage.removeItem(DRAFT_KEY);
+        } catch {
+          /* ignore */
+        }
       }
-      onCreated();
+      onSaved();
     } catch {
       setMsg({ kind: "err", text: "Network error — try again." });
     } finally {
@@ -310,7 +382,7 @@ function NewOrderForm({
         <input
           className={inputCls}
           value={form.jobType}
-          onChange={(e) => setForm((f) => ({ ...f, jobType: e.target.value }))}
+          onChange={(e) => setForm((f) => ({ ...f, jobType: capitalizeSentences(e.target.value) }))}
           placeholder="e.g. custom console, mashrabiya panel…"
           required
         />
@@ -342,11 +414,58 @@ function NewOrderForm({
       </div>
 
       <div>
-        <label className={labelCls}>Specs & dimensions</label>
+        <label className={labelCls}>Color / finish</label>
+        <input
+          className={inputCls}
+          value={form.color}
+          onChange={(e) => setForm((f) => ({ ...f, color: capitalizeSentences(e.target.value) }))}
+          placeholder="e.g. walnut natural, black stain, brass polished"
+        />
+      </div>
+
+      <div>
+        <label className={labelCls}>Dimensions (cm)</label>
+        <div className="grid grid-cols-3 gap-3">
+          <input
+            type="number"
+            min={0}
+            step="0.1"
+            inputMode="decimal"
+            className={inputCls}
+            value={form.width}
+            onChange={(e) => setForm((f) => ({ ...f, width: e.target.value }))}
+            placeholder="Width"
+          />
+          <input
+            type="number"
+            min={0}
+            step="0.1"
+            inputMode="decimal"
+            className={inputCls}
+            value={form.depth}
+            onChange={(e) => setForm((f) => ({ ...f, depth: e.target.value }))}
+            placeholder="Depth"
+          />
+          <input
+            type="number"
+            min={0}
+            step="0.1"
+            inputMode="decimal"
+            className={inputCls}
+            value={form.height}
+            onChange={(e) => setForm((f) => ({ ...f, height: e.target.value }))}
+            placeholder="Height"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className={labelCls}>Other specs / notes</label>
         <textarea
-          className={`${inputCls} min-h-[100px] resize-y`}
+          className={`${inputCls} min-h-[90px] resize-y`}
           value={form.specs}
-          onChange={(e) => setForm((f) => ({ ...f, specs: e.target.value }))}
+          onChange={(e) => setForm((f) => ({ ...f, specs: capitalizeSentences(e.target.value) }))}
+          placeholder="Anything not covered above — construction details, references, constraints…"
         />
       </div>
 
@@ -415,10 +534,64 @@ function NewOrderForm({
           <input
             className={`${inputCls} mt-2`}
             value={form.jobCodeCustom}
-            onChange={(e) => setForm((f) => ({ ...f, jobCodeCustom: e.target.value }))}
+            onChange={(e) => setForm((f) => ({ ...f, jobCodeCustom: capitalizeSentences(e.target.value) }))}
             placeholder="Describe the arrangement, e.g. 70/30 split, C Hub handles finishing only"
           />
         )}
+      </div>
+
+      <div>
+        <label className={labelCls}>How fast can Layth knock this out?</label>
+        <div className="space-y-2 text-sm">
+          {COMPLEXITY_OPTIONS.map((c) => (
+            <label key={c.value} className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="complexity"
+                checked={form.complexity === c.value}
+                onChange={() => setForm((f) => ({ ...f, complexity: c.value }))}
+                className="h-4 w-4 accent-amber"
+              />
+              {c.formLabel}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label className={labelCls}>Deadline</label>
+        <input
+          type="date"
+          className={inputCls}
+          value={form.deadline}
+          onChange={(e) => setForm((f) => ({ ...f, deadline: e.target.value }))}
+        />
+      </div>
+
+      <div>
+        <label className="flex items-center gap-2.5 text-sm font-medium text-ink">
+          <input
+            type="checkbox"
+            checked={form.urgent}
+            onChange={(e) => setForm((f) => ({ ...f, urgent: e.target.checked }))}
+            className="h-4 w-4 rounded border-ink/30 accent-red-600"
+          />
+          Mark as urgent — Layth should notice this immediately in the list
+        </label>
+      </div>
+
+      <div>
+        <label className={labelCls}>Suggested price (optional, JOD)</label>
+        <input
+          type="number"
+          min={0}
+          step="0.01"
+          inputMode="decimal"
+          className={inputCls}
+          value={form.suggestedPriceJOD}
+          onChange={(e) => setForm((f) => ({ ...f, suggestedPriceJOD: e.target.value }))}
+          placeholder="Your own target price — Layth's quote is separate"
+        />
       </div>
 
       <div>
@@ -426,32 +599,63 @@ function NewOrderForm({
         <textarea
           className={`${inputCls} min-h-[80px] resize-y`}
           value={form.notes}
-          onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+          onChange={(e) => setForm((f) => ({ ...f, notes: capitalizeSentences(e.target.value) }))}
         />
       </div>
 
       <div>
         <label className={labelCls}>Files — photos, drawings, 3D files (.stl, .skp, .obj, .3dm…)</label>
+        {existingFiles.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-2">
+            {existingFiles.map((f) => (
+              <span
+                key={f.url}
+                className="flex items-center gap-1.5 rounded-lg border border-ink/15 bg-white/60 px-2.5 py-1.5 text-xs text-ink-soft"
+              >
+                {f.name}
+                <button
+                  type="button"
+                  onClick={() => setExistingFiles((prev) => prev.filter((x) => x.url !== f.url))}
+                  className="ml-1 text-ink-soft hover:text-red-600"
+                  aria-label={`Remove ${f.name}`}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
         <input
           type="file"
           multiple
-          onChange={(e) => setFiles(Array.from(e.target.files || []))}
+          onChange={(e) => setNewFiles(Array.from(e.target.files || []))}
           className="w-full rounded-xl border border-dashed border-ink/25 bg-white/40 px-4 py-3 text-sm"
         />
-        {files.length > 0 && (
+        {newFiles.length > 0 && (
           <p className="mt-1.5 text-xs text-ink-soft">
-            {files.length} file(s) selected: {files.map((f) => f.name).join(", ")}
+            {newFiles.length} new file(s) selected: {newFiles.map((f) => f.name).join(", ")}
           </p>
         )}
       </div>
 
-      <button
-        type="submit"
-        disabled={busy}
-        className="w-full rounded-xl bg-ink px-4 py-3 font-medium text-bone transition active:scale-[0.98] disabled:opacity-50"
-      >
-        {busy ? "Creating…" : "Create order"}
-      </button>
+      <div className="flex gap-3">
+        <button
+          type="submit"
+          disabled={busy}
+          className="flex-1 rounded-xl bg-ink px-4 py-3 font-medium text-bone transition active:scale-[0.98] disabled:opacity-50"
+        >
+          {busy ? (editing ? "Saving…" : "Creating…") : editing ? "Save changes" : "Create order"}
+        </button>
+        {editing && onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-xl border border-ink/15 px-4 py-3 font-medium text-ink-soft transition hover:bg-ink/5"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
 
       {msg && (
         <p className={`text-sm ${msg.kind === "ok" ? "text-sage" : "text-red-500"}`}>{msg.text}</p>
@@ -470,14 +674,42 @@ function fmtDate(iso: string): string {
   }
 }
 
+function parseDateOnly(iso: string): Date | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return null;
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
+
+function fmtDeadline(iso: string): string {
+  const d = parseDateOnly(iso);
+  if (!d) return iso;
+  return d.toLocaleDateString("en", { month: "short", day: "numeric" });
+}
+
+function isOverdue(iso: string): boolean {
+  const d = parseDateOnly(iso);
+  if (!d) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return d.getTime() < today.getTime();
+}
+
+function fmtDims(o: ChubOrderView): string | null {
+  const parts = [o.width, o.depth, o.height].filter((v): v is number => v != null);
+  if (parts.length === 0) return null;
+  return `${parts.join(" × ")} cm`;
+}
+
 function OrderCard({
   order,
   pass,
   onChanged,
+  onEdit,
 }: {
   order: ChubOrderView;
   pass: string;
   onChanged: (id: string, patch: Partial<ChubOrderView>) => void;
+  onEdit: (order: ChubOrderView) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<ChubStatus>(order.status);
@@ -517,33 +749,77 @@ function OrderCard({
     else setPrice(order.priceJOD == null ? "" : String(order.priceJOD));
   }
 
+  // Older orders (created before this field existed) won't have `complexity`
+  // set on the Firestore doc at all — default those to "quick" rather than
+  // showing a blank/"undefined" badge on a real, already-in-progress job.
+  const complexityValue: ChubComplexity = order.complexity ?? "quick";
+  const complexityMeta =
+    COMPLEXITY_OPTIONS.find((c) => c.value === complexityValue) ?? COMPLEXITY_OPTIONS[0];
+  const overdue = order.deadline ? isOverdue(order.deadline) && order.status !== "Done" : false;
+  const dims = fmtDims(order);
+
+  // Left-border accent + card tint: urgent wins (red), otherwise a quiet
+  // green/amber tint keyed to complexity so Layth can tell "quick" vs
+  // "needs calc" from color alone while scanning, before reading anything.
+  const accentCls = order.urgent
+    ? "border-l-4 border-l-red-500 border-red-200 bg-red-50/40"
+    : complexityValue === "complex"
+      ? "border-l-4 border-l-amber-400 border-ink/10 bg-white/50"
+      : "border-l-4 border-l-green-400 border-ink/10 bg-white/50";
+
   return (
-    <div className="rounded-2xl border border-ink/10 bg-white/50 p-4">
-      <button type="button" onClick={() => setOpen((o) => !o)} className="w-full text-left">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="truncate font-display text-lg leading-tight">{order.clientName}</p>
-            <p className="truncate text-sm text-ink-soft">{order.jobType}</p>
-          </div>
-          <span className="shrink-0 rounded-full bg-amber/15 px-2.5 py-1 text-xs font-medium text-amber">
+    <div className={`rounded-2xl border p-4 ${accentCls}`}>
+      {order.urgent && (
+        <div className="-mx-4 -mt-4 mb-3 rounded-t-2xl bg-red-600 px-4 py-1.5 text-center text-xs font-bold uppercase tracking-wider text-white">
+          ⚠ Urgent
+        </div>
+      )}
+
+      {/* Headline — the thing Layth reads first */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate font-display text-xl leading-tight text-ink">{order.clientName}</p>
+          <p className="truncate text-sm text-ink-soft">
+            {order.jobType}
+            {order.color && <span> · {order.color}</span>}
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          <span className="rounded-full bg-amber/15 px-2.5 py-1 text-xs font-medium text-amber">
             {order.jobCode}
           </span>
+          <span
+            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+              complexityValue === "complex" ? "bg-amber-100 text-amber-800" : "bg-green-100 text-green-800"
+            }`}
+          >
+            {complexityMeta.badge}
+          </span>
         </div>
-        <p className="mt-1 text-xs text-ink-soft">
-          {order.jobCode === "Custom" && order.jobCodeCustom
-            ? order.jobCodeCustom
-            : JOB_CODE_MEANINGS[order.jobCode]}
-        </p>
-        <p className="mt-1 text-xs text-ink-soft">{fmtDate(order.createdAt)}</p>
-      </button>
+      </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3">
+      {/* Act-on-this info: deadline chip + created date */}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        {order.deadline && (
+          <span
+            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+              overdue ? "bg-red-100 text-red-700" : "bg-ink/8 text-ink-soft"
+            }`}
+          >
+            Due {fmtDeadline(order.deadline)}
+          </span>
+        )}
+        <span className="text-xs text-ink-soft">{fmtDate(order.createdAt)}</span>
+      </div>
+
+      {/* Status + price — the block Layth actually acts on */}
+      <div className="mt-3 flex flex-wrap items-end justify-between gap-3 rounded-xl bg-ink/5 p-3">
         <div>
-          <label className="mr-1.5 text-xs text-ink-soft">Status</label>
+          <label className="mb-1 block text-xs text-ink-soft">Status</label>
           <select
             value={status}
             onChange={(e) => onStatusChange(e.target.value as ChubStatus)}
-            className="rounded-lg border border-ink/15 bg-white/70 px-2.5 py-1.5 text-sm outline-none focus:border-amber"
+            className="rounded-lg border border-ink/15 bg-white/80 px-2.5 py-1.5 text-sm outline-none focus:border-amber"
           >
             {STATUS_OPTIONS.map((s) => (
               <option key={s} value={s}>
@@ -552,27 +828,43 @@ function OrderCard({
             ))}
           </select>
         </div>
-        <div>
-          <label className="mr-1.5 text-xs text-ink-soft">Price (JOD)</label>
-          <input
-            type="number"
-            min={0}
-            step="0.01"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            onBlur={commitPrice}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-            }}
-            placeholder="—"
-            className="w-24 rounded-lg border border-ink/15 bg-white/70 px-2.5 py-1.5 text-sm outline-none focus:border-amber"
-          />
+        <div className="text-right">
+          {order.suggestedPriceJOD != null && (
+            <p className="text-xs text-ink-soft">Suggested: {order.suggestedPriceJOD} JOD</p>
+          )}
+          <div className="mt-0.5 flex items-center justify-end gap-1.5">
+            <label className="text-xs text-ink-soft">Quoted</label>
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              onBlur={commitPrice}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+              }}
+              placeholder="—"
+              className="w-24 rounded-lg border border-amber/40 bg-white px-2.5 py-1.5 text-lg font-semibold text-ink outline-none focus:border-amber"
+            />
+            <span className="text-xs text-ink-soft">JOD</span>
+          </div>
         </div>
         {saving && <span className="text-xs text-ink-soft">Saving…</span>}
       </div>
 
+      {/* Reference info — quieter, behind the toggle */}
+      <div className="mt-3 flex items-center justify-between text-sm">
+        <button type="button" onClick={() => setOpen((o) => !o)} className="text-ink-soft hover:text-ink">
+          {open ? "Hide details ▴" : "Details ▾"}
+        </button>
+        <button type="button" onClick={() => onEdit(order)} className="font-medium text-amber hover:underline">
+          Edit
+        </button>
+      </div>
+
       {open && (
-        <div className="mt-4 space-y-3 border-t border-ink/10 pt-4 text-sm">
+        <div className="mt-3 space-y-3 border-t border-ink/10 pt-4 text-sm">
           <div>
             <span className="font-medium text-ink">Materials: </span>
             <span className="text-ink-soft">
@@ -583,8 +875,14 @@ function OrderCard({
                 : "—"}
             </span>
           </div>
+          {dims && (
+            <div>
+              <span className="font-medium text-ink">Dimensions: </span>
+              <span className="text-ink-soft">{dims}</span>
+            </div>
+          )}
           <div>
-            <span className="font-medium text-ink">Specs & dimensions: </span>
+            <span className="font-medium text-ink">Other specs / notes: </span>
             <span className="whitespace-pre-wrap text-ink-soft">{order.specs || "—"}</span>
           </div>
           <div>
@@ -592,6 +890,14 @@ function OrderCard({
             <span className="text-ink-soft">{order.cadNeeded ? "Yes" : "No"}</span>
             <span className="ml-4 font-medium text-ink">Drawn by: </span>
             <span className="text-ink-soft">{order.drawnBy}</span>
+          </div>
+          <div>
+            <span className="font-medium text-ink">Job code meaning: </span>
+            <span className="text-ink-soft">
+              {order.jobCode === "Custom" && order.jobCodeCustom
+                ? order.jobCodeCustom
+                : JOB_CODE_MEANINGS[order.jobCode]}
+            </span>
           </div>
           <div>
             <span className="font-medium text-ink">Notes: </span>
@@ -623,7 +929,13 @@ function OrderCard({
   );
 }
 
-function JobList({ pass }: { pass: string }) {
+function JobList({
+  pass,
+  onEdit,
+}: {
+  pass: string;
+  onEdit: (order: ChubOrderView) => void;
+}) {
   const [orders, setOrders] = useState<ChubOrderView[] | null>(null);
   const [err, setErr] = useState("");
 
@@ -672,7 +984,7 @@ function JobList({ pass }: { pass: string }) {
         <p className="text-center text-sm text-ink-soft">No orders yet.</p>
       )}
       {orders.map((o) => (
-        <OrderCard key={o.id} order={o} pass={pass} onChanged={onChanged} />
+        <OrderCard key={o.id} order={o} pass={pass} onChanged={onChanged} onEdit={onEdit} />
       ))}
     </div>
   );
@@ -684,6 +996,7 @@ export function ChubApp() {
   const [pass, setPass] = useState<string | null>(null);
   const [tab, setTab] = useState<"new" | "list">("new");
   const [listKey, setListKey] = useState(0);
+  const [editingOrder, setEditingOrder] = useState<ChubOrderView | null>(null);
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? sessionStorage.getItem(SESSION_KEY) : null;
@@ -707,6 +1020,12 @@ export function ChubApp() {
     []
   );
 
+  function handleSaved() {
+    setEditingOrder(null);
+    setListKey((k) => k + 1);
+    setTab("list");
+  }
+
   if (!pass) return <Gate onUnlock={unlock} />;
 
   return (
@@ -715,39 +1034,61 @@ export function ChubApp() {
         <p className="overline text-amber">C Hub × Plexus</p>
         <h1 className="mt-2 font-display text-3xl leading-tight md:text-4xl">Job Sheet</h1>
 
-        <div className="mt-6 flex gap-2 rounded-xl bg-white/40 p-1">
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTab(t.id)}
-              className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition ${
-                tab === t.id ? "bg-ink text-bone" : "text-ink-soft"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        {editingOrder ? (
+          <>
+            <div className="mt-6 flex items-center justify-between">
+              <p className="text-sm text-ink-soft">
+                Editing — <span className="font-medium text-ink">{editingOrder.clientName}</span>
+              </p>
+              <button
+                type="button"
+                onClick={() => setEditingOrder(null)}
+                className="text-sm text-amber hover:underline"
+              >
+                Cancel
+              </button>
+            </div>
+            <div className="mt-6">
+              <OrderForm
+                key={editingOrder.id}
+                pass={pass}
+                editing={editingOrder}
+                onSaved={handleSaved}
+                onCancel={() => setEditingOrder(null)}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="mt-6 flex gap-2 rounded-xl bg-white/40 p-1">
+              {tabs.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setTab(t.id)}
+                  className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition ${
+                    tab === t.id ? "bg-ink text-bone" : "text-ink-soft"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
 
-        {/* Both tabs stay mounted — only visibility toggles. Conditionally
-            rendering (tab === "new" ? <NewOrderForm/> : <JobList/>) used to
-            unmount the form on every switch to Job List, wiping whatever was
-            typed. CSS-only hide keeps its state alive across tab switches. */}
-        <div className="mt-8">
-          <div className={tab === "new" ? "" : "hidden"}>
-            <NewOrderForm
-              pass={pass}
-              onCreated={() => {
-                setListKey((k) => k + 1);
-                setTab("list");
-              }}
-            />
-          </div>
-          <div className={tab === "list" ? "" : "hidden"}>
-            <JobList key={listKey} pass={pass} />
-          </div>
-        </div>
+            {/* Both tabs stay mounted — only visibility toggles. Conditionally
+                rendering used to unmount the form on every switch to Job
+                List, wiping whatever was typed. CSS-only hide keeps its
+                state alive across tab switches. */}
+            <div className="mt-8">
+              <div className={tab === "new" ? "" : "hidden"}>
+                <OrderForm key="new" pass={pass} onSaved={handleSaved} />
+              </div>
+              <div className={tab === "list" ? "" : "hidden"}>
+                <JobList key={listKey} pass={pass} onEdit={(o) => setEditingOrder(o)} />
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

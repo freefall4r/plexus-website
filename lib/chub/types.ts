@@ -40,6 +40,20 @@ export const JOB_CODE_OPTIONS: ChubJobCode[] = ["L1", "CM5", "M1", "Custom"];
 export type ChubStatus = "New" | "In Progress" | "Done";
 export const STATUS_OPTIONS: ChubStatus[] = ["New", "In Progress", "Done"];
 
+// "How fast can Layth knock this out" — scannable at a glance in the Job
+// List via a colored badge (green Quick / amber Needs calc). Defaults to
+// "quick" on a new order rather than being a hard-required, empty-by-default
+// field — every order always has one set.
+export type ChubComplexity = "quick" | "complex";
+export const COMPLEXITY_OPTIONS: {
+  value: ChubComplexity;
+  formLabel: string;
+  badge: string;
+}[] = [
+  { value: "quick", formLabel: "Quick — simple, fast to price", badge: "Quick" },
+  { value: "complex", formLabel: "Needs calculation — complex, takes more time", badge: "Needs calc" },
+];
+
 export type ChubFile = {
   name: string;
   url: string; // Firebase Storage download URL
@@ -52,15 +66,23 @@ export type ChubOrder = {
   jobType: string;
   materials: ChubMaterial[];
   materialsOther: string; // free text, only meaningful when materials includes "other"
-  specs: string; // specs & dimensions
+  color: string; // finish/material color, e.g. "walnut natural", "black stain"
+  width: number | null; // cm
+  depth: number | null; // cm
+  height: number | null; // cm
+  specs: string; // any other free-text specs/notes (dimensions live in width/depth/height)
   cadNeeded: boolean;
   drawnBy: ChubDrawnBy;
   jobCode: ChubJobCode;
   jobCodeCustom: string; // free text, only meaningful when jobCode is "Custom"
+  complexity: ChubComplexity; // default "quick"
+  deadline: string | null; // ISO date "YYYY-MM-DD", or null if none set
+  urgent: boolean; // default false — shows a banner in the Job List
   notes: string;
   files: ChubFile[];
   status: ChubStatus; // default "New"
-  priceJOD: number | null; // null until Layth quotes it
+  suggestedPriceJOD: number | null; // anahata's optional target price, set at creation
+  priceJOD: number | null; // null until Layth quotes it — the actionable one
   createdAt: string; // ISO
   updatedAt: string; // ISO
 };
@@ -72,16 +94,25 @@ export type ChubPatch = Partial<
   Pick<
     ChubOrder,
     | "status"
+    | "suggestedPriceJOD"
     | "priceJOD"
     | "clientName"
     | "jobType"
     | "materials"
     | "materialsOther"
+    | "color"
+    | "width"
+    | "depth"
+    | "height"
     | "specs"
     | "cadNeeded"
     | "drawnBy"
     | "jobCode"
     | "jobCodeCustom"
+    | "complexity"
+    | "deadline"
+    | "urgent"
     | "notes"
+    | "files"
   >
 >;
