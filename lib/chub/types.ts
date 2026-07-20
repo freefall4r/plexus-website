@@ -78,11 +78,16 @@ export type ChubOrder = {
   complexity: ChubComplexity; // default "quick"
   deadline: string | null; // ISO date "YYYY-MM-DD", or null if none set
   urgent: boolean; // default false — shows a banner in the Job List
-  notes: string;
+  notes: string; // anahata's notes, set at creation / full edit
   files: ChubFile[];
   status: ChubStatus; // default "New"
   suggestedPriceJOD: number | null; // anahata's optional target price, set at creation
   priceJOD: number | null; // null until Layth quotes it — the actionable one
+  // Layth's own fields — deliberately separate from anahata's notes/deadline
+  // above (same "whose input is whose" split as suggestedPriceJOD/priceJOD),
+  // inline-editable straight from the Job List card, not the full form.
+  laythNotes: string; // Layth's own comments — material availability, concerns, questions
+  laythLeadTime: string; // Layth's own estimate of how long the job will take, e.g. "3-4 days"
   createdAt: string; // ISO
   updatedAt: string; // ISO
 };
@@ -114,5 +119,7 @@ export type ChubPatch = Partial<
     | "urgent"
     | "notes"
     | "files"
+    | "laythNotes"
+    | "laythLeadTime"
   >
 >;

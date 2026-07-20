@@ -700,6 +700,16 @@ function fmtDims(o: ChubOrderView): string | null {
   return `${parts.join(" × ")} cm`;
 }
 
+// Photos vs. 3D/CAD/other files — Layth wants photos visible immediately
+// (to eyeball and price a job on his phone), 3D files can stay tucked under
+// Details. `type` is usually set (uploaded via a browser file input) but
+// fall back to the extension in case it's ever empty.
+const IMAGE_EXT_RE = /\.(jpe?g|png|gif|webp|heic|heif|bmp|avif)$/i;
+function isImageFile(f: ChubFile): boolean {
+  if (f.type) return f.type.startsWith("image/");
+  return IMAGE_EXT_RE.test(f.name);
+}
+
 function OrderCard({
   order,
   pass,
@@ -715,6 +725,13 @@ function OrderCard({
   const [status, setStatus] = useState<ChubStatus>(order.status);
   const [price, setPrice] = useState<string>(order.priceJOD == null ? "" : String(order.priceJOD));
   const [saving, setSaving] = useState<"status" | "price" | null>(null);
+
+  // Layth's own fields — inline-editable straight from this card, separate
+  // from anahata's Notes/Deadline (same split as suggestedPriceJOD/priceJOD
+  // above). Save-on-blur, same UX as the price field.
+  const [laythNotes, setLaythNotes] = useState<string>(order.laythNotes ?? "");
+  const [laythLeadTime, setLaythLeadTime] = useState<string>(order.laythLeadTime ?? "");
+  const [savingLayth, setSavingLayth] = useState<"notes" | "leadTime" | null>(null);
 
   async function patch(body: Record<string, unknown>) {
     const res = await fetch(`/api/chub/orders/${order.id}`, {
@@ -749,6 +766,24 @@ function OrderCard({
     else setPrice(order.priceJOD == null ? "" : String(order.priceJOD));
   }
 
+  async function commitLaythLeadTime() {
+    if (laythLeadTime === (order.laythLeadTime ?? "")) return;
+    setSavingLayth("leadTime");
+    const ok = await patch({ laythLeadTime });
+    setSavingLayth(null);
+    if (ok) onChanged(order.id, { laythLeadTime });
+    else setLaythLeadTime(order.laythLeadTime ?? "");
+  }
+
+  async function commitLaythNotes() {
+    if (laythNotes === (order.laythNotes ?? "")) return;
+    setSavingLayth("notes");
+    const ok = await patch({ laythNotes });
+    setSavingLayth(null);
+    if (ok) onChanged(order.id, { laythNotes });
+    else setLaythNotes(order.laythNotes ?? "");
+  }
+
   // Older orders (created before this field existed) won't have `complexity`
   // set on the Firestore doc at all — default those to "quick" rather than
   // showing a blank/"undefined" badge on a real, already-in-progress job.
@@ -757,6 +792,8 @@ function OrderCard({
     COMPLEXITY_OPTIONS.find((c) => c.value === complexityValue) ?? COMPLEXITY_OPTIONS[0];
   const overdue = order.deadline ? isOverdue(order.deadline) && order.status !== "Done" : false;
   const dims = fmtDims(order);
+  const imageFiles = order.files.filter(isImageFile);
+  const otherFiles = order.files.filter((f) => !isImageFile(f));
 
   // Left-border accent + card tint: urgent wins (red), otherwise a quiet
   // green/amber tint keyed to complexity so Layth can tell "quick" vs
@@ -775,12 +812,12 @@ function OrderCard({
         </div>
       )}
 
-      {/* Headline — the thing Layth reads first */}
+      {/* Headline — what the job IS first, then who it's for */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate font-display text-xl leading-tight text-ink">{order.clientName}</p>
+          <p className="truncate font-display text-xl leading-tight text-ink">{order.jobType}</p>
           <p className="truncate text-sm text-ink-soft">
-            {order.jobType}
+            {order.clientName}
             {order.color && <span> · {order.color}</span>}
           </p>
         </div>
@@ -797,6 +834,25 @@ function OrderCard({
           </span>
         </div>
       </div>
+
+      {/* Mini photo preview — visible even collapsed, so Layth can tell a
+          job has reference photos without tapping in at all. */}
+      {imageFiles.length > 0 && (
+        <div className="mt-2 flex items-center gap-1.5">
+          {imageFiles.slice(0, 5).map((f) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={f.url}
+              src={f.url}
+              alt=""
+              className="h-9 w-9 rounded-md border border-ink/10 object-cover"
+            />
+          ))}
+          {imageFiles.length > 5 && (
+            <span className="text-xs text-ink-soft">+{imageFiles.length - 5}</span>
+          )}
+        </div>
+      )}
 
       {/* Act-on-this info: deadline chip + created date */}
       <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -853,6 +909,38 @@ function OrderCard({
         {saving && <span className="text-xs text-ink-soft">Saving…</span>}
       </div>
 
+      {/* Layth's own fields — visually distinct (sage, not the ink-gray of
+          the block above) so it's obvious whose input is whose, same idea as
+          Suggested vs Quoted price. Inline from the card, no need to open
+          Edit just to jot a lead time or a note. */}
+      <div className="mt-3 rounded-xl border border-sage/30 bg-sage/10 p-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-wide text-sage">Layth's notes &amp; lead time</p>
+          {savingLayth && <span className="text-xs text-ink-soft">Saving…</span>}
+        </div>
+        <div className="mt-1.5 flex items-center gap-2">
+          <label className="shrink-0 text-xs text-ink-soft">Lead time</label>
+          <input
+            type="text"
+            value={laythLeadTime}
+            onChange={(e) => setLaythLeadTime(e.target.value)}
+            onBlur={commitLaythLeadTime}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+            }}
+            placeholder="e.g. 3–4 days"
+            className="min-w-0 flex-1 rounded-lg border border-sage/40 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-sage"
+          />
+        </div>
+        <textarea
+          value={laythNotes}
+          onChange={(e) => setLaythNotes(e.target.value)}
+          onBlur={commitLaythNotes}
+          placeholder="Material availability, concerns, questions…"
+          className="mt-1.5 min-h-[56px] w-full resize-y rounded-lg border border-sage/40 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-sage"
+        />
+      </div>
+
       {/* Reference info — quieter, behind the toggle */}
       <div className="mt-3 flex items-center justify-between text-sm">
         <button type="button" onClick={() => setOpen((o) => !o)} className="text-ink-soft hover:text-ink">
@@ -865,6 +953,25 @@ function OrderCard({
 
       {open && (
         <div className="mt-3 space-y-3 border-t border-ink/10 pt-4 text-sm">
+          {/* Photos first — the thing Layth actually wants the instant he
+              taps in, before any of the reference text below. */}
+          {imageFiles.length > 0 && (
+            <div>
+              <span className="mb-1.5 block font-medium text-ink">Photos</span>
+              <div className="flex flex-wrap gap-2">
+                {imageFiles.map((f) => (
+                  <a key={f.url} href={f.url} target="_blank" rel="noopener noreferrer">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={f.url}
+                      alt={f.name}
+                      className="h-20 w-20 rounded-lg border border-ink/10 object-cover hover:border-amber"
+                    />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
           <div>
             <span className="font-medium text-ink">Materials: </span>
             <span className="text-ink-soft">
@@ -903,13 +1010,11 @@ function OrderCard({
             <span className="font-medium text-ink">Notes: </span>
             <span className="whitespace-pre-wrap text-ink-soft">{order.notes || "—"}</span>
           </div>
-          <div>
-            <span className="font-medium text-ink">Files: </span>
-            {order.files.length === 0 ? (
-              <span className="text-ink-soft">none</span>
-            ) : (
+          {otherFiles.length > 0 && (
+            <div>
+              <span className="font-medium text-ink">3D / CAD files: </span>
               <div className="mt-2 flex flex-wrap gap-2">
-                {order.files.map((f) => (
+                {otherFiles.map((f) => (
                   <a
                     key={f.url}
                     href={f.url}
@@ -921,8 +1026,14 @@ function OrderCard({
                   </a>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
+          {order.files.length === 0 && (
+            <div>
+              <span className="font-medium text-ink">Files: </span>
+              <span className="text-ink-soft">none</span>
+            </div>
+          )}
         </div>
       )}
     </div>

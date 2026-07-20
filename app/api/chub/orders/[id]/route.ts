@@ -73,6 +73,10 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   if ("jobType" in body) patch.jobType = String(body.jobType).trim();
   if ("specs" in body) patch.specs = String(body.specs);
   if ("notes" in body) patch.notes = String(body.notes);
+  // Layth's own fields — inline-editable straight from the Job List card,
+  // deliberately separate from anahata's notes/deadline above.
+  if ("laythNotes" in body) patch.laythNotes = String(body.laythNotes);
+  if ("laythLeadTime" in body) patch.laythLeadTime = String(body.laythLeadTime);
   if ("color" in body) patch.color = String(body.color);
   if ("width" in body) patch.width = numOrNull(body.width);
   if ("depth" in body) patch.depth = numOrNull(body.depth);

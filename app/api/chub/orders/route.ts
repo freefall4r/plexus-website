@@ -135,6 +135,11 @@ export async function POST(req: Request) {
     urgent: Boolean(body.urgent),
     notes: (body.notes || "").toString(),
     suggestedPriceJOD: numOrNull(body.suggestedPriceJOD),
+    // Layth's own fields aren't on the New Order form — he fills them in
+    // inline from the Job List after the order exists — but default them
+    // here so every doc always has the keys.
+    laythNotes: "",
+    laythLeadTime: "",
     files,
   };
 
