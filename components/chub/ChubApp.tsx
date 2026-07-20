@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   DRAWN_BY_OPTIONS,
   JOB_CODE_MEANINGS,
@@ -17,6 +17,7 @@ import {
 import { CHUB_PASSCODE_HEADER, isValidChubPasscode } from "@/lib/chub/auth";
 
 const SESSION_KEY = "chub-pass";
+const DRAFT_KEY = "chub-draft";
 
 // ───────────────────────── Gate ─────────────────────────
 
@@ -98,6 +99,22 @@ const EMPTY_FORM: FormState = {
   notes: "",
 };
 
+// Restore a saved draft on first load, if there is one. Lazy useState
+// initializer so it only runs once, client-side, before the first paint —
+// not on every tab switch (the form no longer unmounts on tab switch, see
+// ChubApp below, but this also covers a fresh page load after a reload).
+function loadDraft(): FormState {
+  if (typeof window === "undefined") return EMPTY_FORM;
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return EMPTY_FORM;
+    const parsed = JSON.parse(raw);
+    return { ...EMPTY_FORM, ...parsed };
+  } catch {
+    return EMPTY_FORM;
+  }
+}
+
 function NewOrderForm({
   pass,
   onCreated,
@@ -105,10 +122,42 @@ function NewOrderForm({
   pass: string;
   onCreated: () => void;
 }) {
-  const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [form, setForm] = useState<FormState>(loadDraft);
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Safety net for real browser-tab switches, reloads, dropped connections —
+  // debounce-save every field to localStorage as the user types. File
+  // selections can't be persisted this way (browsers won't let a File be
+  // reconstructed from a saved reference) but they no longer get wiped by
+  // switching the page's own New Order / Job List tabs either, since this
+  // form now stays mounted across that switch (see ChubApp).
+  useEffect(() => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      try {
+        // A fully-empty form (fresh load, or right after a successful
+        // submit resets it) has nothing worth restoring — remove the key
+        // outright instead of writing an empty draft over it. Without this,
+        // the reset-to-empty after submit would race this same debounced
+        // save and re-write a blank draft a moment after submit's own
+        // explicit removeItem() call.
+        const isEmpty = JSON.stringify(form) === JSON.stringify(EMPTY_FORM);
+        if (isEmpty) {
+          localStorage.removeItem(DRAFT_KEY);
+        } else {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
+        }
+      } catch {
+        /* ignore (private browsing / quota) */
+      }
+    }, 400);
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, [form]);
 
   function toggleMaterial(m: ChubMaterial) {
     setForm((f) => ({
@@ -226,6 +275,12 @@ function NewOrderForm({
       setMsg({ kind: "ok", text: `Order created.${failedNote}` });
       setForm(EMPTY_FORM);
       setFiles([]);
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      try {
+        localStorage.removeItem(DRAFT_KEY);
+      } catch {
+        /* ignore */
+      }
       onCreated();
     } catch {
       setMsg({ kind: "err", text: "Network error — try again." });
@@ -675,8 +730,12 @@ export function ChubApp() {
           ))}
         </div>
 
+        {/* Both tabs stay mounted — only visibility toggles. Conditionally
+            rendering (tab === "new" ? <NewOrderForm/> : <JobList/>) used to
+            unmount the form on every switch to Job List, wiping whatever was
+            typed. CSS-only hide keeps its state alive across tab switches. */}
         <div className="mt-8">
-          {tab === "new" ? (
+          <div className={tab === "new" ? "" : "hidden"}>
             <NewOrderForm
               pass={pass}
               onCreated={() => {
@@ -684,9 +743,10 @@ export function ChubApp() {
                 setTab("list");
               }}
             />
-          ) : (
+          </div>
+          <div className={tab === "list" ? "" : "hidden"}>
             <JobList key={listKey} pass={pass} />
-          )}
+          </div>
         </div>
       </div>
     </div>
