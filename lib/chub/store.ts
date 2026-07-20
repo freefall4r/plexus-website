@@ -17,30 +17,61 @@ export function newChubOrderId(): string {
   return randomUUID();
 }
 
-/** Upload one file to Storage under chub/{orderId}/ and return its record with
- *  a public download URL. Caller must catch — Storage may not be enabled yet. */
-export async function uploadChubFile(
+// Direct-to-Storage upload (bypasses the Vercel serverless function body-size
+// cap, which sits around ~4.5 MB — too small for real phone photos or 3D
+// files). The browser never touches Firebase credentials: the server only
+// hands back a short-lived signed URL scoped to one exact object path, the
+// browser PUTs the bytes straight to Google Cloud Storage, then a second tiny
+// (byte-free) server call stamps the object with its download token. See
+// app/api/chub/uploads/route.ts.
+
+export type ChubUploadSlot = {
+  name: string;
+  objectPath: string;
+  token: string;
+  uploadUrl: string;
+  contentType: string;
+};
+
+/** Mint a signed PUT URL for one file, scoped to chub/{orderId}/. Expires in
+ *  15 minutes — plenty for a single upload, short enough to not linger. */
+export async function createChubUploadSlot(
   orderId: string,
-  file: File
-): Promise<ChubFile> {
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-120) || "file";
+  fileName: string,
+  contentType: string
+): Promise<ChubUploadSlot> {
+  const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-120) || "file";
   const objectPath = `chub/${orderId}/${randomUUID()}-${safeName}`;
-  const dlToken = randomUUID();
-  const buf = Buffer.from(await file.arrayBuffer());
+  const token = randomUUID();
+  const type = contentType || "application/octet-stream";
+  const [uploadUrl] = await bucket()
+    .file(objectPath)
+    .getSignedUrl({
+      version: "v4",
+      action: "write",
+      expires: Date.now() + 15 * 60 * 1000,
+      contentType: type,
+    });
+  return { name: fileName, objectPath, token, uploadUrl, contentType: type };
+}
+
+/** After the browser's PUT succeeds, stamp the object with its download
+ *  token (a tiny metadata call, no file bytes) and return the finished
+ *  Firebase-style download URL. Caller must catch — the PUT may have failed,
+ *  or Storage may be unavailable. */
+export async function finalizeChubUpload(
+  objectPath: string,
+  token: string,
+  name: string,
+  sizeKB: number,
+  type: string
+): Promise<ChubFile> {
   const obj = bucket().file(objectPath);
-  await obj.save(buf, {
-    contentType: file.type || "application/octet-stream",
-    metadata: { metadata: { firebaseStorageDownloadTokens: dlToken } },
-  });
+  await obj.setMetadata({ metadata: { firebaseStorageDownloadTokens: token } });
   const url = `https://firebasestorage.googleapis.com/v0/b/${bucket().name}/o/${encodeURIComponent(
     objectPath
-  )}?alt=media&token=${dlToken}`;
-  return {
-    name: file.name,
-    url,
-    sizeKB: Math.round(file.size / 1024),
-    type: file.type || "",
-  };
+  )}?alt=media&token=${token}`;
+  return { name, url, sizeKB, type };
 }
 
 /** Create the order doc at a given id (use newChubOrderId()). Always

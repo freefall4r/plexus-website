@@ -26,15 +26,16 @@ export const MATERIAL_OPTIONS: { value: ChubMaterial; label: string }[] = [
 export type ChubDrawnBy = "Plexus" | "C Hub" | "N/A";
 export const DRAWN_BY_OPTIONS: ChubDrawnBy[] = ["Plexus", "C Hub", "N/A"];
 
-export type ChubJobCode = "CH1" | "CM5" | "M1";
+export type ChubJobCode = "L1" | "CM5" | "M1" | "Custom";
 
 export const JOB_CODE_MEANINGS: Record<ChubJobCode, string> = {
-  CH1: "C Hub does all the work, they quote Plexus",
+  L1: "C Hub does all the work, they quote Plexus",
   CM5: "50/50 work & involvement between Plexus and C Hub",
   M1: "Plexus does all the work, C Hub provides space & tools only",
+  Custom: "A different process/involvement split — described per job",
 };
 
-export const JOB_CODE_OPTIONS: ChubJobCode[] = ["CH1", "CM5", "M1"];
+export const JOB_CODE_OPTIONS: ChubJobCode[] = ["L1", "CM5", "M1", "Custom"];
 
 export type ChubStatus = "New" | "In Progress" | "Done";
 export const STATUS_OPTIONS: ChubStatus[] = ["New", "In Progress", "Done"];
@@ -55,6 +56,7 @@ export type ChubOrder = {
   cadNeeded: boolean;
   drawnBy: ChubDrawnBy;
   jobCode: ChubJobCode;
+  jobCodeCustom: string; // free text, only meaningful when jobCode is "Custom"
   notes: string;
   files: ChubFile[];
   status: ChubStatus; // default "New"
@@ -79,6 +81,7 @@ export type ChubPatch = Partial<
     | "cadNeeded"
     | "drawnBy"
     | "jobCode"
+    | "jobCodeCustom"
     | "notes"
   >
 >;

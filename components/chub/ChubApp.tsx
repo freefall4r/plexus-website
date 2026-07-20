@@ -8,6 +8,7 @@ import {
   MATERIAL_OPTIONS,
   STATUS_OPTIONS,
   type ChubDrawnBy,
+  type ChubFile,
   type ChubJobCode,
   type ChubMaterial,
   type ChubOrderView,
@@ -80,6 +81,7 @@ type FormState = {
   cadNeeded: boolean;
   drawnBy: ChubDrawnBy;
   jobCode: ChubJobCode;
+  jobCodeCustom: string;
   notes: string;
 };
 
@@ -92,6 +94,7 @@ const EMPTY_FORM: FormState = {
   cadNeeded: false,
   drawnBy: "N/A",
   jobCode: "M1",
+  jobCodeCustom: "",
   notes: "",
 };
 
@@ -116,6 +119,72 @@ function NewOrderForm({
     }));
   }
 
+  // Files never pass through our own API — a Vercel serverless function body
+  // caps out around 4.5 MB, too small for a real phone photo or 3D file.
+  // Instead: sign a per-file upload URL, PUT the bytes straight to Storage,
+  // then finalize (a small JSON call) before attaching the file list to the
+  // order. See app/api/chub/uploads/route.ts.
+  async function uploadFiles(orderId: string): Promise<{ files: ChubFile[]; failed: string[] }> {
+    if (files.length === 0) return { files: [], failed: [] };
+
+    setMsg({ kind: "ok", text: `Uploading ${files.length} file(s)…` });
+
+    const signRes = await fetch("/api/chub/uploads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+      body: JSON.stringify({
+        orderId,
+        files: files.map((f) => ({ name: f.name, type: f.type, size: f.size })),
+      }),
+    });
+    if (!signRes.ok) {
+      return { files: [], failed: files.map((f) => f.name) };
+    }
+    const { uploads } = (await signRes.json()) as {
+      uploads: { name: string; objectPath: string; token: string; uploadUrl: string; contentType: string }[];
+    };
+
+    const toFinalize: { objectPath: string; token: string; name: string; sizeKB: number; type: string }[] = [];
+    const failed: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const slot = uploads[i];
+      try {
+        const putRes = await fetch(slot.uploadUrl, {
+          method: "PUT",
+          headers: { "Content-Type": slot.contentType },
+          body: file,
+        });
+        if (!putRes.ok) {
+          failed.push(file.name);
+          continue;
+        }
+        toFinalize.push({
+          objectPath: slot.objectPath,
+          token: slot.token,
+          name: file.name,
+          sizeKB: Math.round(file.size / 1024),
+          type: file.type || "",
+        });
+      } catch {
+        failed.push(file.name);
+      }
+    }
+
+    if (toFinalize.length === 0) return { files: [], failed };
+
+    const finalizeRes = await fetch("/api/chub/uploads", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+      body: JSON.stringify({ files: toFinalize }),
+    });
+    if (!finalizeRes.ok) {
+      return { files: [], failed: [...failed, ...toFinalize.map((f) => f.name)] };
+    }
+    const finalizeData = (await finalizeRes.json()) as { files: ChubFile[]; failed: string[] };
+    return { files: finalizeData.files, failed: [...failed, ...(finalizeData.failed || [])] };
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.clientName.trim() || !form.jobType.trim()) {
@@ -125,32 +194,35 @@ function NewOrderForm({
     setBusy(true);
     setMsg(null);
     try {
-      const fd = new FormData();
-      fd.set("clientName", form.clientName.trim());
-      fd.set("jobType", form.jobType.trim());
-      form.materials.forEach((m) => fd.append("materials", m));
-      fd.set("materialsOther", form.materialsOther);
-      fd.set("specs", form.specs);
-      fd.set("cadNeeded", String(form.cadNeeded));
-      fd.set("drawnBy", form.drawnBy);
-      fd.set("jobCode", form.jobCode);
-      fd.set("notes", form.notes);
-      files.forEach((f) => fd.append("files", f));
+      const orderId = crypto.randomUUID();
+      const { files: uploadedFiles, failed: failedFiles } = await uploadFiles(orderId);
 
       const res = await fetch("/api/chub/orders", {
         method: "POST",
-        headers: { [CHUB_PASSCODE_HEADER]: pass },
-        body: fd,
+        headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+        body: JSON.stringify({
+          id: orderId,
+          clientName: form.clientName.trim(),
+          jobType: form.jobType.trim(),
+          materials: form.materials,
+          materialsOther: form.materialsOther,
+          specs: form.specs,
+          cadNeeded: form.cadNeeded,
+          drawnBy: form.drawnBy,
+          jobCode: form.jobCode,
+          jobCodeCustom: form.jobCodeCustom,
+          notes: form.notes,
+          files: uploadedFiles,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setMsg({ kind: "err", text: data.error || "Something went wrong — try again." });
         return;
       }
-      const failedNote =
-        data.failedFiles && data.failedFiles.length
-          ? ` (${data.failedFiles.length} file(s) failed to upload: ${data.failedFiles.join(", ")})`
-          : "";
+      const failedNote = failedFiles.length
+        ? ` (${failedFiles.length} file(s) failed to upload: ${failedFiles.join(", ")})`
+        : "";
       setMsg({ kind: "ok", text: `Order created.${failedNote}` });
       setForm(EMPTY_FORM);
       setFiles([]);
@@ -284,6 +356,14 @@ function NewOrderForm({
             </span>
           ))}
         </p>
+        {form.jobCode === "Custom" && (
+          <input
+            className={`${inputCls} mt-2`}
+            value={form.jobCodeCustom}
+            onChange={(e) => setForm((f) => ({ ...f, jobCodeCustom: e.target.value }))}
+            placeholder="Describe the arrangement, e.g. 70/30 split, C Hub handles finishing only"
+          />
+        )}
       </div>
 
       <div>
@@ -394,7 +474,11 @@ function OrderCard({
             {order.jobCode}
           </span>
         </div>
-        <p className="mt-1 text-xs text-ink-soft">{JOB_CODE_MEANINGS[order.jobCode]}</p>
+        <p className="mt-1 text-xs text-ink-soft">
+          {order.jobCode === "Custom" && order.jobCodeCustom
+            ? order.jobCodeCustom
+            : JOB_CODE_MEANINGS[order.jobCode]}
+        </p>
         <p className="mt-1 text-xs text-ink-soft">{fmtDate(order.createdAt)}</p>
       </button>
 

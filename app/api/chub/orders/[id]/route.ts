@@ -55,6 +55,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   if ("cadNeeded" in body) patch.cadNeeded = Boolean(body.cadNeeded);
   if ("drawnBy" in body) patch.drawnBy = body.drawnBy as ChubPatch["drawnBy"];
   if ("jobCode" in body) patch.jobCode = body.jobCode as ChubPatch["jobCode"];
+  if ("jobCodeCustom" in body) patch.jobCodeCustom = String(body.jobCodeCustom);
   if ("materials" in body) patch.materials = body.materials as ChubPatch["materials"];
   if ("materialsOther" in body) patch.materialsOther = String(body.materialsOther);
 
