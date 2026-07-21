@@ -30,6 +30,21 @@ const DRAFT_KEY = "chub-draft";
 // convenience default only; the real value is always confirmed per job.
 const MARGIN_KEY = "chub-margin";
 
+// A textarea that grows to fit what's in it, so notes are read in full
+// instead of through a 3-line porthole. Height is recomputed on every value
+// change (including the first paint, once a saved note loads in) by resetting
+// to auto and taking scrollHeight — never leaves an inner scrollbar.
+function useAutoGrow(value: string) {
+  const ref = useRef<HTMLTextAreaElement | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+  return ref;
+}
+
 // Capitalize the first letter of the field and the first letter after each
 // sentence-ending ". "/"! "/"? " — as-you-type, no other casing is touched
 // (never forces mid-word or mid-sentence casing). Length-preserving so the
@@ -1019,6 +1034,7 @@ function OrderCard({
   const [laythNotes, setLaythNotes] = useState<string>(order.laythNotes ?? "");
   const [laythLeadTime, setLaythLeadTime] = useState<string>(order.laythLeadTime ?? "");
   const [savingLayth, setSavingLayth] = useState<"notes" | "leadTime" | null>(null);
+  const laythNotesRef = useAutoGrow(laythNotes);
 
   async function patch(body: Record<string, unknown>) {
     const res = await fetch(`/api/chub/orders/${order.id}`, {
@@ -1092,18 +1108,52 @@ function OrderCard({
       : "border-l-4 border-l-green-400 border-ink/10 bg-white/50";
 
   return (
-    <div className={`rounded-2xl border p-4 ${accentCls}`}>
+    <div className={`overflow-hidden rounded-2xl border ${accentCls}`}>
       {order.urgent && (
-        <div className="-mx-4 -mt-4 mb-3 rounded-t-2xl bg-red-600 px-4 py-1.5 text-center text-xs font-bold uppercase tracking-wider text-white">
+        <div className="bg-red-600 px-5 py-1.5 text-center text-xs font-bold uppercase tracking-wider text-white">
           ⚠ Urgent
         </div>
       )}
 
+      {/* Photos lead the card — a job is a thing you can see before it's a
+          row of fields. The first image runs full-bleed across the top; any
+          others sit under it as a strip. Each opens full-size. */}
+      {imageFiles.length > 0 && (
+        <div className="border-b border-ink/10">
+          <a href={imageFiles[0].url} target="_blank" rel="noopener noreferrer" className="block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageFiles[0].url}
+              alt=""
+              className="h-52 w-full object-cover transition hover:opacity-90 sm:h-60"
+            />
+          </a>
+          {imageFiles.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto px-5 py-3">
+              {imageFiles.slice(1).map((f) => (
+                <a key={f.url} href={f.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={f.url}
+                    alt=""
+                    className="h-16 w-16 rounded-lg border border-ink/10 object-cover hover:border-amber"
+                  />
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="p-5">
       {/* Headline — what the job IS first, then who it's for */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate font-display text-xl leading-tight text-ink">{order.jobType}</p>
-          <p className="truncate text-sm text-ink-soft">
+          {/* Wrap rather than truncate — a job title like "hoop tree with
+              slide-in message leaves" is the whole brief; cutting it at the
+              card edge hides the part that matters. */}
+          <p className="font-display text-xl leading-snug text-ink">{order.jobType}</p>
+          <p className="mt-1 text-sm leading-relaxed text-ink-soft">
             {order.clientName}
             {order.color && <span> · {order.color}</span>}
           </p>
@@ -1122,30 +1172,8 @@ function OrderCard({
         </div>
       </div>
 
-      {/* Mini photo preview — visible even collapsed, so Layth can tell a
-          job has reference photos without tapping in at all. Each thumbnail
-          links straight to the full image, same as the expanded grid below —
-          no need to open Details just to see a photo full-size. */}
-      {imageFiles.length > 0 && (
-        <div className="mt-2 flex items-center gap-1.5">
-          {imageFiles.slice(0, 5).map((f) => (
-            <a key={f.url} href={f.url} target="_blank" rel="noopener noreferrer">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={f.url}
-                alt=""
-                className="h-9 w-9 rounded-md border border-ink/10 object-cover hover:border-amber"
-              />
-            </a>
-          ))}
-          {imageFiles.length > 5 && (
-            <span className="text-xs text-ink-soft">+{imageFiles.length - 5}</span>
-          )}
-        </div>
-      )}
-
       {/* Act-on-this info: deadline chip + created date */}
-      <div className="mt-2 flex flex-wrap items-center gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         {order.deadline && (
           <span
             className={`rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -1159,7 +1187,7 @@ function OrderCard({
       </div>
 
       {/* Status + price — the block Layth actually acts on */}
-      <div className="mt-3 flex flex-wrap items-end justify-between gap-3 rounded-xl bg-ink/5 p-3">
+      <div className="mt-4 flex flex-wrap items-end justify-between gap-3 rounded-xl bg-ink/5 p-4">
         <div>
           <label className="mb-1 block text-xs text-ink-soft">Status</label>
           <select
@@ -1205,12 +1233,12 @@ function OrderCard({
           the block above) so it's obvious whose input is whose, same idea as
           Suggested vs Quoted price. Inline from the card, no need to open
           Edit just to jot a lead time or a note. */}
-      <div className="mt-3 rounded-xl border border-sage/30 bg-sage/10 p-3">
+      <div className="mt-4 rounded-xl border border-sage/30 bg-sage/10 p-4">
         <div className="flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-wide text-sage">Layth's notes &amp; lead time</p>
           {savingLayth && <span className="text-xs text-ink-soft">Saving…</span>}
         </div>
-        <div className="mt-1.5 flex items-center gap-2">
+        <div className="mt-3 flex items-center gap-2">
           <label className="shrink-0 text-xs text-ink-soft">Lead time</label>
           <input
             type="text"
@@ -1225,13 +1253,16 @@ function OrderCard({
             className="min-w-0 flex-1 rounded-lg border border-sage/40 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-sage disabled:opacity-60"
           />
         </div>
+        {/* Auto-grows — a note is meant to be read at a glance, not scrolled
+            inside a three-line box. */}
         <textarea
+          ref={laythNotesRef}
           value={laythNotes}
           onChange={(e) => setLaythNotes(e.target.value)}
           onBlur={commitLaythNotes}
           disabled={savingLayth === "notes"}
           placeholder="Material availability, concerns, questions…"
-          className="mt-1.5 min-h-[56px] w-full resize-y rounded-lg border border-sage/40 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-sage disabled:opacity-60"
+          className="mt-3 min-h-[96px] w-full resize-none overflow-hidden rounded-lg border border-sage/40 bg-white px-3 py-2.5 text-[15px] leading-relaxed outline-none focus:border-sage disabled:opacity-60"
         />
       </div>
 
@@ -1256,26 +1287,8 @@ function OrderCard({
       </div>
 
       {open && (
-        <div className="mt-3 space-y-3 border-t border-ink/10 pt-4 text-sm">
-          {/* Photos first — the thing Layth actually wants the instant he
-              taps in, before any of the reference text below. */}
-          {imageFiles.length > 0 && (
-            <div>
-              <span className="mb-1.5 block font-medium text-ink">Photos</span>
-              <div className="flex flex-wrap gap-2">
-                {imageFiles.map((f) => (
-                  <a key={f.url} href={f.url} target="_blank" rel="noopener noreferrer">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={f.url}
-                      alt={f.name}
-                      className="h-20 w-20 rounded-lg border border-ink/10 object-cover hover:border-amber"
-                    />
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
+        // Photos aren't repeated here — they lead the card now.
+        <div className="mt-4 space-y-3 border-t border-ink/10 pt-4 text-sm leading-relaxed">
           <div>
             <span className="font-medium text-ink">Materials: </span>
             <span className="text-ink-soft">
@@ -1340,7 +1353,87 @@ function OrderCard({
           )}
         </div>
       )}
+      </div>
     </div>
+  );
+}
+
+// ───────────────────────── Board notes ─────────────────────────
+
+// One shared scratchpad beside the whole job list — Layth's running comments
+// across jobs, not tied to any single order. Save-on-blur like every other
+// inline field in this tool. Sticky on desktop so it stays put while the list
+// scrolls; on phones it simply sits above the list.
+function BoardNotes({ pass }: { pass: string }) {
+  const [text, setText] = useState("");
+  const [saved, setSaved] = useState("");
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const [state, setState] = useState<"loading" | "idle" | "saving" | "error">("loading");
+  const ref = useAutoGrow(text);
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/chub/board", { headers: { [CHUB_PASSCODE_HEADER]: pass }, cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!alive) return;
+        setText(d?.text ?? "");
+        setSaved(d?.text ?? "");
+        setUpdatedAt(d?.updatedAt ?? null);
+        setState("idle");
+      })
+      .catch(() => alive && setState("error"));
+    return () => {
+      alive = false;
+    };
+  }, [pass]);
+
+  async function commit() {
+    if (text === saved) return;
+    setState("saving");
+    try {
+      const res = await fetch("/api/chub/board", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) throw new Error("save failed");
+      const d = await res.json();
+      setSaved(text);
+      setUpdatedAt(d?.updatedAt ?? null);
+      setState("idle");
+    } catch {
+      setState("error");
+    }
+  }
+
+  return (
+    <aside className="rounded-2xl border border-ink/10 bg-white/60 p-5 lg:sticky lg:top-28">
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Board notes</p>
+        <span className="text-xs text-ink-soft">
+          {state === "saving"
+            ? "Saving…"
+            : state === "error"
+              ? <span className="text-red-500">Not saved</span>
+              : text !== saved
+                ? "Unsaved"
+                : updatedAt
+                  ? fmtDate(updatedAt)
+                  : ""}
+        </span>
+      </div>
+      <textarea
+        ref={ref}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={commit}
+        disabled={state === "loading"}
+        placeholder="Comments for the whole board — what you're waiting on, blockers, questions across jobs…"
+        className="mt-3 min-h-[220px] w-full resize-none overflow-hidden rounded-xl border border-ink/15 bg-white px-3.5 py-3 text-[15px] leading-relaxed outline-none focus:border-amber disabled:opacity-60"
+      />
+      <p className="mt-2 text-xs text-ink-soft">Shared — anahata sees this too. Saves when you click away.</p>
+    </aside>
   );
 }
 
@@ -1393,25 +1486,34 @@ function JobList({
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-3 pb-10">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-ink-soft">{orders.length} order(s)</p>
-        <button
-          type="button"
-          onClick={load}
-          disabled={refreshing}
-          className="text-sm text-amber hover:underline disabled:opacity-60"
-        >
-          {refreshing ? "Refreshing…" : "Refresh"}
-        </button>
+    // Two columns from lg up: the job list, and the shared board scratchpad
+    // beside it. Below lg (phones — how Layth actually uses this) they stack,
+    // notes first, since a comment about the whole board is the thing you want
+    // to see before scrolling into individual jobs.
+    <div className="mx-auto grid max-w-xl gap-6 pb-10 lg:max-w-5xl lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+      <div className="order-2 space-y-4 lg:order-1">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-ink-soft">{orders.length} order(s)</p>
+          <button
+            type="button"
+            onClick={load}
+            disabled={refreshing}
+            className="text-sm text-amber hover:underline disabled:opacity-60"
+          >
+            {refreshing ? "Refreshing…" : "Refresh"}
+          </button>
+        </div>
+        {err && <p className="text-sm text-red-500">{err}</p>}
+        {orders.length === 0 && !err && (
+          <p className="text-center text-sm text-ink-soft">No orders yet.</p>
+        )}
+        {orders.map((o) => (
+          <OrderCard key={o.id} order={o} pass={pass} owner={owner} onChanged={onChanged} onEdit={onEdit} />
+        ))}
       </div>
-      {err && <p className="text-sm text-red-500">{err}</p>}
-      {orders.length === 0 && !err && (
-        <p className="text-center text-sm text-ink-soft">No orders yet.</p>
-      )}
-      {orders.map((o) => (
-        <OrderCard key={o.id} order={o} pass={pass} owner={owner} onChanged={onChanged} onEdit={onEdit} />
-      ))}
+      <div className="order-1 lg:order-2">
+        <BoardNotes pass={pass} />
+      </div>
     </div>
   );
 }
@@ -2116,7 +2218,11 @@ export function ChubApp() {
 
   return (
     <div className="min-h-screen px-5 pb-24 pt-28 md:px-10 md:pt-32">
-      <div className="mx-auto max-w-xl">
+      {/* The Job List needs room for the board-notes column beside it; every
+          other tab stays a single narrow column. */}
+      <div
+        className={`mx-auto max-w-xl ${tab === "list" && !editingOrder ? "lg:max-w-5xl" : ""}`}
+      >
         <p className="overline text-amber">C Hub × Plexus</p>
         <h1 className="mt-2 font-display text-3xl leading-tight md:text-4xl">Job Sheet</h1>
         <OwnerBar pass={pass} owner={owner} setOwner={setOwner} />
@@ -2147,7 +2253,9 @@ export function ChubApp() {
           </>
         ) : (
           <>
-            <div className="mt-6 flex gap-2 rounded-xl bg-white/40 p-1">
+            {/* max-w-xl even when the list tab widens the page — the tab bar
+                belongs over the list column, not stretched across the notes. */}
+            <div className="mt-6 flex max-w-xl gap-2 rounded-xl bg-white/40 p-1">
               {tabs.map((t) => (
                 <button
                   key={t.id}

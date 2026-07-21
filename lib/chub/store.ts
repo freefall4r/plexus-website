@@ -110,6 +110,31 @@ export async function listChubOrders(): Promise<ChubOrderView[]> {
   return snap.docs.map((d) => ({ id: d.id, ...(d.data() as ChubOrder) }));
 }
 
+// ── Board notes ──
+// One shared scratchpad for the whole job list — Layth's comments across jobs
+// ("waiting on birch ply", "khaled needs a site visit"), not tied to any one
+// order. A single fixed document rather than a collection: there is exactly
+// one board, and it should stay that way.
+
+const BOARD_COLLECTION = "chubBoard";
+const BOARD_DOC = "notes";
+
+export type ChubBoardNotes = { text: string; updatedAt: string | null };
+
+export async function getChubBoardNotes(): Promise<ChubBoardNotes> {
+  if (!isFirebaseConfigured()) return { text: "", updatedAt: null };
+  const snap = await db().collection(BOARD_COLLECTION).doc(BOARD_DOC).get();
+  if (!snap.exists) return { text: "", updatedAt: null };
+  const d = snap.data() as Partial<ChubBoardNotes>;
+  return { text: d.text ?? "", updatedAt: d.updatedAt ?? null };
+}
+
+export async function setChubBoardNotes(text: string): Promise<ChubBoardNotes> {
+  const updatedAt = new Date().toISOString();
+  await db().collection(BOARD_COLLECTION).doc(BOARD_DOC).set({ text, updatedAt }, { merge: true });
+  return { text, updatedAt };
+}
+
 /** One order by id, or null. Used by the offer route, which needs the whole
  *  job (price, dimensions, materials, photos) to build the quotation from. */
 export async function getChubOrder(id: string): Promise<ChubOrderView | null> {
