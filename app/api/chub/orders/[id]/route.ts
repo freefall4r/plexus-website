@@ -1,13 +1,21 @@
 import { NextResponse } from "next/server";
 import { isFirebaseConfigured } from "@/lib/firebase/admin";
 import { isValidChubPasscode, CHUB_PASSCODE_HEADER } from "@/lib/chub/auth";
-import { updateChubOrder } from "@/lib/chub/store";
+import {
+  updateChubOrder,
+  startChubWip,
+  updateChubWipFields,
+  addChubMaterialLogEntry,
+  addChubProcessLogEntry,
+  toggleChubProcessLogEntry,
+} from "@/lib/chub/store";
 import {
   STATUS_OPTIONS,
   COMPLEXITY_OPTIONS,
   MATERIAL_OPTIONS,
   DRAWN_BY_OPTIONS,
   JOB_CODE_OPTIONS,
+  WIP_BOARD_OPTIONS,
 } from "@/lib/chub/types";
 import type {
   ChubComplexity,
@@ -16,8 +24,12 @@ import type {
   ChubJobCode,
   ChubPatch,
   ChubStatus,
+  ChubWip,
+  ChubWipBoard,
 } from "@/lib/chub/types";
 import { isChubFile, numOrNull, dateOrNull, MAX_FILES } from "@/lib/chub/validate";
+
+const WIP_BOARD_VALUES = new Set(WIP_BOARD_OPTIONS.map((b) => b.value));
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,6 +56,76 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+
+  // ── Work-In-Progress actions — each is its own store call (dedicated
+  // dot-path Firestore writes), kept separate from the generic field-patch
+  // below so a materials-log append can never clobber the process log (or
+  // vice versa) — see lib/chub/store.ts for the field-path discipline. Each
+  // returns early; a request only ever carries one of these OR the generic
+  // patch fields below, never both.
+  if ("wipStart" in body) {
+    const raw = (body.wipStart as { board?: string } | null) || {};
+    const board = String(raw.board || "");
+    if (!WIP_BOARD_VALUES.has(board as ChubWipBoard)) {
+      return NextResponse.json({ error: "bad_wip_board" }, { status: 400 });
+    }
+    const wip = await startChubWip(id, board as ChubWipBoard);
+    if (!wip) return NextResponse.json({ error: "not_found" }, { status: 404 });
+    return NextResponse.json({ ok: true, wip });
+  }
+
+  if ("wipField" in body) {
+    const raw = (body.wipField as Record<string, unknown> | null) || {};
+    const patch: Partial<Pick<ChubWip, "active" | "board" | "startDate" | "liveLink">> = {};
+    if ("active" in raw) patch.active = Boolean(raw.active);
+    if ("board" in raw) {
+      const v = raw.board === null ? null : String(raw.board);
+      if (v !== null && !WIP_BOARD_VALUES.has(v as ChubWipBoard)) {
+        return NextResponse.json({ error: "bad_wip_board" }, { status: 400 });
+      }
+      patch.board = v as ChubWipBoard | null;
+    }
+    if ("startDate" in raw) patch.startDate = dateOrNull(raw.startDate);
+    if ("liveLink" in raw) {
+      const v = (raw.liveLink == null ? "" : String(raw.liveLink)).trim();
+      patch.liveLink = v === "" ? null : v;
+    }
+    if (Object.keys(patch).length === 0) {
+      return NextResponse.json({ error: "empty_wip_patch" }, { status: 400 });
+    }
+    const ok = await updateChubWipFields(id, patch);
+    if (!ok) return NextResponse.json({ error: "not_found" }, { status: 404 });
+    return NextResponse.json({ ok: true });
+  }
+
+  if ("wipAddMaterial" in body) {
+    const raw = (body.wipAddMaterial as { text?: string; buyer?: string } | null) || {};
+    const text = (raw.text || "").toString().trim();
+    if (!text) return NextResponse.json({ error: "missing_text" }, { status: 400 });
+    const buyer = (raw.buyer || "").toString().trim();
+    const entry = await addChubMaterialLogEntry(id, { text, buyer });
+    if (!entry) return NextResponse.json({ error: "not_found" }, { status: 404 });
+    return NextResponse.json({ ok: true, entry });
+  }
+
+  if ("wipAddProcess" in body) {
+    const raw = (body.wipAddProcess as { text?: string; who?: string } | null) || {};
+    const text = (raw.text || "").toString().trim();
+    if (!text) return NextResponse.json({ error: "missing_text" }, { status: 400 });
+    const who = (raw.who || "").toString().trim();
+    const entry = await addChubProcessLogEntry(id, { text, who });
+    if (!entry) return NextResponse.json({ error: "not_found" }, { status: 404 });
+    return NextResponse.json({ ok: true, entry });
+  }
+
+  if ("wipToggleProcess" in body) {
+    const raw = (body.wipToggleProcess as { entryId?: string; done?: boolean } | null) || {};
+    const entryId = (raw.entryId || "").toString();
+    if (!entryId) return NextResponse.json({ error: "missing_entry_id" }, { status: 400 });
+    const ok = await toggleChubProcessLogEntry(id, entryId, Boolean(raw.done));
+    if (!ok) return NextResponse.json({ error: "not_found" }, { status: 404 });
+    return NextResponse.json({ ok: true });
   }
 
   const patch: ChubPatch = {};

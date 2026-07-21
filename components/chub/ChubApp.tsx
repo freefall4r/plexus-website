@@ -4,17 +4,23 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   COMPLEXITY_OPTIONS,
   DRAWN_BY_OPTIONS,
+  EMPTY_WIP,
   JOB_CODE_MEANINGS,
   JOB_CODE_OPTIONS,
   MATERIAL_OPTIONS,
   STATUS_OPTIONS,
+  WIP_BOARD_OPTIONS,
+  boardGuessFromJobCode,
   type ChubComplexity,
   type ChubDrawnBy,
   type ChubFile,
   type ChubJobCode,
   type ChubMaterial,
+  type ChubMaterialLogEntry,
   type ChubOrderView,
+  type ChubProcessLogEntry,
   type ChubStatus,
+  type ChubWipBoard,
 } from "@/lib/chub/types";
 import { CHUB_PASSCODE_HEADER, isValidChubPasscode } from "@/lib/chub/auth";
 
@@ -710,6 +716,86 @@ function isImageFile(f: ChubFile): boolean {
   return IMAGE_EXT_RE.test(f.name);
 }
 
+// One-click (L1/M1) or inline-pick (CM5/Custom) promotion of a Job List
+// order into Work In Progress. Collapses to a quiet status pill once the
+// job is active — further WIP editing happens on the WIP tab, not here.
+function WipPromotion({
+  order,
+  pass,
+  onChanged,
+}: {
+  order: ChubOrderView;
+  pass: string;
+  onChanged: (id: string, patch: Partial<ChubOrderView>) => void;
+}) {
+  const wip = order.wip ?? EMPTY_WIP;
+  const [picking, setPicking] = useState(false);
+  const [starting, setStarting] = useState(false);
+
+  async function start(board: ChubWipBoard) {
+    setStarting(true);
+    const res = await fetch(`/api/chub/orders/${order.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+      body: JSON.stringify({ wipStart: { board } }),
+    });
+    setStarting(false);
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (data.wip) onChanged(order.id, { wip: data.wip });
+      setPicking(false);
+    }
+  }
+
+  if (wip.active) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-sage/15 px-2.5 py-1 text-xs font-medium text-sage">
+        🔧 In progress — {wip.board === "chub" ? "C Hub" : "Plexus"} WIP board
+      </span>
+    );
+  }
+
+  const guess = boardGuessFromJobCode(order.jobCode);
+
+  if (picking) {
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-ink-soft">Start work on:</span>
+        {WIP_BOARD_OPTIONS.map((b) => (
+          <button
+            key={b.value}
+            type="button"
+            onClick={() => start(b.value)}
+            disabled={starting}
+            className="rounded-lg border border-ink/15 bg-white/70 px-2.5 py-1.5 text-xs font-medium text-ink hover:border-amber disabled:opacity-60"
+          >
+            {b.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => setPicking(false)}
+          disabled={starting}
+          className="text-xs text-ink-soft hover:text-ink"
+        >
+          Cancel
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => (guess ? start(guess) : setPicking(true))}
+      disabled={starting}
+      className="rounded-lg border border-ink/15 bg-white/70 px-3 py-1.5 text-xs font-medium text-ink transition hover:border-amber disabled:opacity-60"
+    >
+      {starting ? "Starting…" : "▶ Start Work"}
+    </button>
+  );
+}
+
 function OrderCard({
   order,
   pass,
@@ -948,6 +1034,13 @@ function OrderCard({
         />
       </div>
 
+      {/* Promote into production tracking — see the "Work In Progress" tab.
+          Once started this just shows a status pill here; all further WIP
+          editing (logs, timeline, live link) happens on that tab. */}
+      <div className="mt-3">
+        <WipPromotion order={order} pass={pass} onChanged={onChanged} />
+      </div>
+
       {/* Reference info — quieter, behind the toggle */}
       <div className="mt-3 flex items-center justify-between text-sm">
         <button type="button" onClick={() => setOpen((o) => !o)} className="text-ink-soft hover:text-ink">
@@ -1117,11 +1210,560 @@ function JobList({
   );
 }
 
+// ───────────────────────── Work In Progress ─────────────────────────
+
+type WipProgress = { pct: number; overdue: boolean; daysLeft: number };
+
+// Today's position between wip.startDate and the order's deadline, as a
+// 0..1 fraction — powers both the timeline bar fill and the "X days left /
+// overdue by X days" readout. Returns null whenever either end is missing,
+// so callers never draw a false timeline off one date alone.
+function computeWipProgress(startDate: string | null, deadline: string | null): WipProgress | null {
+  if (!startDate || !deadline) return null;
+  const start = parseDateOnly(startDate);
+  const end = parseDateOnly(deadline);
+  if (!start || !end) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const totalDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000));
+  const elapsed = Math.round((today.getTime() - start.getTime()) / 86400000);
+  const pct = Math.min(1, Math.max(0, elapsed / totalDays));
+  const daysLeft = Math.round((end.getTime() - today.getTime()) / 86400000);
+  return { pct, overdue: daysLeft < 0, daysLeft };
+}
+
+// Visual start → deadline bar with today's position filled in, color-shifted
+// as the deadline nears/passes (mirrors the red-when-overdue convention the
+// Due chip already uses elsewhere). Degrades gracefully when either date is
+// missing instead of drawing a misleading bar.
+function WipTimeline({ startDate, deadline }: { startDate: string | null; deadline: string | null }) {
+  if (!startDate) {
+    return <p className="text-xs text-ink-soft">No start date yet.</p>;
+  }
+  if (!deadline) {
+    return (
+      <p className="text-xs text-ink-soft">
+        Started {fmtDeadline(startDate)} — no deadline set yet, so no timeline to show.
+      </p>
+    );
+  }
+  const progress = computeWipProgress(startDate, deadline);
+  if (!progress) return null;
+  const { pct, overdue, daysLeft } = progress;
+  const nearEnd = !overdue && daysLeft <= 2;
+  const barCls = overdue ? "bg-red-500" : nearEnd ? "bg-amber-500" : "bg-sage";
+  const statusCls = overdue ? "text-red-600" : nearEnd ? "text-amber-700" : "text-ink-soft";
+  const statusText = overdue
+    ? `Overdue by ${Math.abs(daysLeft)} day${Math.abs(daysLeft) === 1 ? "" : "s"}`
+    : daysLeft === 0
+      ? "Due today"
+      : `${daysLeft} day${daysLeft === 1 ? "" : "s"} left`;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between text-[11px] text-ink-soft">
+        <span>{fmtDeadline(startDate)}</span>
+        <span className={`font-medium ${statusCls}`}>
+          {statusText} · {Math.round(pct * 100)}%
+        </span>
+        <span>{fmtDeadline(deadline)}</span>
+      </div>
+      <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-ink/10">
+        <div
+          className={`h-full rounded-full transition-all ${barCls}`}
+          style={{ width: `${Math.round(pct * 100)}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function WipMaterialsLog({
+  orderId,
+  pass,
+  log,
+  onEntryAdded,
+}: {
+  orderId: string;
+  pass: string;
+  log: ChubMaterialLogEntry[];
+  onEntryAdded: (entry: ChubMaterialLogEntry) => void;
+}) {
+  const [text, setText] = useState("");
+  const [buyer, setBuyer] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function add() {
+    const t = text.trim();
+    if (!t || busy) return;
+    setBusy(true);
+    const res = await fetch(`/api/chub/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+      body: JSON.stringify({ wipAddMaterial: { text: t, buyer: buyer.trim() } }),
+    });
+    setBusy(false);
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (data.entry) onEntryAdded(data.entry);
+      setText("");
+      setBuyer("");
+    }
+  }
+
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
+        Materials log — what was bought, by whom
+      </p>
+      <div className="mt-2 space-y-1.5">
+        {log.length === 0 && <p className="text-xs text-ink-soft">Nothing logged yet.</p>}
+        {log.map((e) => (
+          <div key={e.id} className="rounded-lg bg-ink/5 px-2.5 py-1.5 text-xs">
+            <span className="text-ink">{e.text}</span>
+            {e.buyer && <span className="text-ink-soft"> — bought by {e.buyer}</span>}
+            <span className="ml-1.5 text-ink-soft">· {fmtDate(e.date)}</span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 flex flex-col gap-1.5 sm:flex-row">
+        <input
+          type="text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              add();
+            }
+          }}
+          placeholder="What was bought"
+          className="min-w-0 flex-1 rounded-lg border border-ink/15 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-amber"
+        />
+        <input
+          type="text"
+          value={buyer}
+          onChange={(e) => setBuyer(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              add();
+            }
+          }}
+          placeholder="Who bought it"
+          className="rounded-lg border border-ink/15 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-amber sm:w-32"
+        />
+        <button
+          type="button"
+          onClick={add}
+          disabled={busy || !text.trim()}
+          className="shrink-0 rounded-lg bg-ink px-3 py-1.5 text-sm font-medium text-bone disabled:opacity-50"
+        >
+          {busy ? "Adding…" : "Add"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function WipProcessLog({
+  orderId,
+  pass,
+  log,
+  onEntryAdded,
+  onToggled,
+}: {
+  orderId: string;
+  pass: string;
+  log: ChubProcessLogEntry[];
+  onEntryAdded: (entry: ChubProcessLogEntry) => void;
+  onToggled: (entryId: string, done: boolean) => void;
+}) {
+  const [text, setText] = useState("");
+  const [who, setWho] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  async function add() {
+    const t = text.trim();
+    if (!t || busy) return;
+    setBusy(true);
+    const res = await fetch(`/api/chub/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+      body: JSON.stringify({ wipAddProcess: { text: t, who: who.trim() } }),
+    });
+    setBusy(false);
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (data.entry) onEntryAdded(data.entry);
+      setText("");
+      setWho("");
+    }
+  }
+
+  async function toggle(entryId: string, done: boolean) {
+    setTogglingId(entryId);
+    const res = await fetch(`/api/chub/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+      body: JSON.stringify({ wipToggleProcess: { entryId, done } }),
+    });
+    setTogglingId(null);
+    if (res.ok) onToggled(entryId, done);
+  }
+
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
+        Process log — steps done / to do, and who
+      </p>
+      <div className="mt-2 space-y-1.5">
+        {log.length === 0 && <p className="text-xs text-ink-soft">No steps logged yet.</p>}
+        {log.map((e) => (
+          <label key={e.id} className="flex items-start gap-2 rounded-lg bg-ink/5 px-2.5 py-1.5 text-xs">
+            <input
+              type="checkbox"
+              checked={e.done}
+              onChange={(ev) => toggle(e.id, ev.target.checked)}
+              disabled={togglingId === e.id}
+              className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-ink/30 accent-sage"
+            />
+            <span className="min-w-0 flex-1">
+              <span className={e.done ? "text-ink-soft line-through" : "text-ink"}>{e.text}</span>
+              {e.who && <span className="text-ink-soft"> — {e.who}</span>}
+              <span className="ml-1.5 text-ink-soft">· {fmtDate(e.date)}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+      <div className="mt-2 flex flex-col gap-1.5 sm:flex-row">
+        <input
+          type="text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              add();
+            }
+          }}
+          placeholder="Step to do"
+          className="min-w-0 flex-1 rounded-lg border border-ink/15 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-amber"
+        />
+        <input
+          type="text"
+          value={who}
+          onChange={(e) => setWho(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              add();
+            }
+          }}
+          placeholder="Who's doing it"
+          className="rounded-lg border border-ink/15 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-amber sm:w-32"
+        />
+        <button
+          type="button"
+          onClick={add}
+          disabled={busy || !text.trim()}
+          className="shrink-0 rounded-lg bg-ink px-3 py-1.5 text-sm font-medium text-bone disabled:opacity-50"
+        >
+          {busy ? "Adding…" : "Add"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function LiveLinkField({
+  orderId,
+  pass,
+  liveLink,
+  onChanged,
+}: {
+  orderId: string;
+  pass: string;
+  liveLink: string | null;
+  onChanged: (link: string | null) => void;
+}) {
+  const [value, setValue] = useState(liveLink ?? "");
+  const [saving, setSaving] = useState(false);
+
+  async function commit() {
+    const trimmed = value.trim();
+    const next = trimmed === "" ? null : trimmed;
+    if (next === (liveLink ?? null)) return;
+    setSaving(true);
+    const res = await fetch(`/api/chub/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+      body: JSON.stringify({ wipField: { liveLink: next } }),
+    });
+    setSaving(false);
+    if (res.ok) onChanged(next);
+    else setValue(liveLink ?? "");
+  }
+
+  return (
+    <div>
+      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-soft">
+        Live Build link
+      </label>
+      <div className="flex items-center gap-2">
+        <input
+          type="url"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+          }}
+          disabled={saving}
+          placeholder="https://…"
+          className="min-w-0 flex-1 rounded-lg border border-ink/15 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-amber disabled:opacity-60"
+        />
+        {saving && <span className="shrink-0 text-xs text-ink-soft">Saving…</span>}
+      </div>
+      {liveLink && (
+        <a
+          href={liveLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-1.5 inline-block text-xs font-medium text-amber hover:underline"
+        >
+          View Live Build ↗
+        </a>
+      )}
+    </div>
+  );
+}
+
+function WipCard({
+  order,
+  pass,
+  onChanged,
+  onCompleted,
+}: {
+  order: ChubOrderView;
+  pass: string;
+  onChanged: (id: string, patch: Partial<ChubOrderView>) => void;
+  onCompleted: (id: string) => void;
+}) {
+  const wip = order.wip ?? EMPTY_WIP;
+  const [switchingBoard, setSwitchingBoard] = useState(false);
+  const [completing, setCompleting] = useState(false);
+  const dims = fmtDims(order);
+
+  async function switchBoard(board: ChubWipBoard) {
+    if (board === wip.board) return;
+    setSwitchingBoard(true);
+    const res = await fetch(`/api/chub/orders/${order.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+      body: JSON.stringify({ wipField: { board } }),
+    });
+    setSwitchingBoard(false);
+    if (res.ok) onChanged(order.id, { wip: { ...wip, board } });
+  }
+
+  async function markComplete() {
+    const boardLabel = wip.board === "chub" ? "C Hub" : "Plexus";
+    if (
+      !window.confirm(
+        `Mark "${order.clientName}" complete and take it off the ${boardLabel} WIP board? The materials/process log stays saved — you can restart it later if needed.`
+      )
+    ) {
+      return;
+    }
+    setCompleting(true);
+    const res = await fetch(`/api/chub/orders/${order.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+      body: JSON.stringify({ wipField: { active: false } }),
+    });
+    setCompleting(false);
+    if (res.ok) onCompleted(order.id);
+  }
+
+  return (
+    <div className="rounded-2xl border border-ink/10 bg-white/50 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate font-display text-xl leading-tight text-ink">{order.jobType}</p>
+          <p className="truncate text-sm text-ink-soft">
+            {order.clientName}
+            {dims && <span> · {dims}</span>}
+          </p>
+        </div>
+        <div className="flex shrink-0 gap-1">
+          {WIP_BOARD_OPTIONS.map((b) => (
+            <button
+              key={b.value}
+              type="button"
+              onClick={() => switchBoard(b.value)}
+              disabled={switchingBoard}
+              className={`rounded-full px-2.5 py-1 text-xs font-medium transition disabled:opacity-60 ${
+                wip.board === b.value ? "bg-ink text-bone" : "bg-ink/8 text-ink-soft hover:bg-ink/15"
+              }`}
+            >
+              {b.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-3">
+        <WipTimeline startDate={wip.startDate} deadline={order.deadline} />
+      </div>
+
+      <div className="mt-4 border-t border-ink/10 pt-3">
+        <WipMaterialsLog
+          orderId={order.id}
+          pass={pass}
+          log={wip.materialsLog}
+          onEntryAdded={(entry) =>
+            onChanged(order.id, { wip: { ...wip, materialsLog: [...wip.materialsLog, entry] } })
+          }
+        />
+      </div>
+
+      <div className="mt-4 border-t border-ink/10 pt-3">
+        <WipProcessLog
+          orderId={order.id}
+          pass={pass}
+          log={wip.processLog}
+          onEntryAdded={(entry) => onChanged(order.id, { wip: { ...wip, processLog: [...wip.processLog, entry] } })}
+          onToggled={(entryId, done) =>
+            onChanged(order.id, {
+              wip: { ...wip, processLog: wip.processLog.map((e) => (e.id === entryId ? { ...e, done } : e)) },
+            })
+          }
+        />
+      </div>
+
+      <div className="mt-4 border-t border-ink/10 pt-3">
+        <LiveLinkField
+          orderId={order.id}
+          pass={pass}
+          liveLink={wip.liveLink}
+          onChanged={(link) => onChanged(order.id, { wip: { ...wip, liveLink: link } })}
+        />
+      </div>
+
+      <div className="mt-4 flex justify-end border-t border-ink/10 pt-3">
+        <button
+          type="button"
+          onClick={markComplete}
+          disabled={completing}
+          className="rounded-lg border border-sage/40 bg-sage/10 px-3 py-1.5 text-xs font-medium text-sage transition hover:bg-sage/20 disabled:opacity-60"
+        >
+          {completing ? "Saving…" : "✓ Mark complete — remove from board"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function WorkInProgressTab({ pass }: { pass: string }) {
+  const [orders, setOrders] = useState<ChubOrderView[] | null>(null);
+  const [err, setErr] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const [board, setBoard] = useState<ChubWipBoard>("plexus");
+
+  const load = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const res = await fetch("/api/chub/orders", {
+        headers: { [CHUB_PASSCODE_HEADER]: pass },
+        cache: "no-store",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErr(data.error === "storage_not_configured" ? "Storage isn't configured yet." : "Couldn't load orders.");
+        setOrders([]);
+        return;
+      }
+      setErr("");
+      setOrders(data.orders || []);
+    } catch {
+      setErr("Network error loading orders.");
+      setOrders([]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [pass]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  function onChanged(id: string, patch: Partial<ChubOrderView>) {
+    setOrders((prev) => (prev ? prev.map((o) => (o.id === id ? { ...o, ...patch } : o)) : prev));
+  }
+
+  function onCompleted(id: string) {
+    setOrders((prev) =>
+      prev ? prev.map((o) => (o.id === id ? { ...o, wip: { ...(o.wip ?? EMPTY_WIP), active: false } } : o)) : prev
+    );
+  }
+
+  if (orders === null) {
+    return <p className="text-center text-sm text-ink-soft">Loading…</p>;
+  }
+
+  const active = orders.filter((o) => o.wip?.active);
+  const filtered = active.filter((o) => o.wip?.board === board);
+  const boardLabel = board === "chub" ? "C Hub" : "Plexus";
+
+  return (
+    <div className="mx-auto max-w-xl space-y-3 pb-10">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex gap-1.5 rounded-lg bg-white/40 p-1">
+          {WIP_BOARD_OPTIONS.map((b) => {
+            const count = active.filter((o) => o.wip?.board === b.value).length;
+            return (
+              <button
+                key={b.value}
+                type="button"
+                onClick={() => setBoard(b.value)}
+                className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                  board === b.value ? "bg-ink text-bone" : "text-ink-soft"
+                }`}
+              >
+                {b.label} WIP{count > 0 && <span className="ml-1 opacity-70">({count})</span>}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={load}
+          disabled={refreshing}
+          className="shrink-0 text-sm text-amber hover:underline disabled:opacity-60"
+        >
+          {refreshing ? "Refreshing…" : "Refresh"}
+        </button>
+      </div>
+      {err && <p className="text-sm text-red-500">{err}</p>}
+      {filtered.length === 0 && !err && (
+        <p className="rounded-xl border border-dashed border-ink/15 bg-white/30 px-4 py-6 text-center text-sm text-ink-soft">
+          {`Nothing on the ${boardLabel} board yet — promote a job from the Job List with "Start Work".`}
+        </p>
+      )}
+      {filtered.map((o) => (
+        <WipCard key={o.id} order={o} pass={pass} onChanged={onChanged} onCompleted={onCompleted} />
+      ))}
+    </div>
+  );
+}
+
 // ───────────────────────── App ─────────────────────────
 
 export function ChubApp() {
   const [pass, setPass] = useState<string | null>(null);
-  const [tab, setTab] = useState<"new" | "list">("new");
+  const [tab, setTab] = useState<"new" | "list" | "wip">("new");
   const [listKey, setListKey] = useState(0);
   const [editingOrder, setEditingOrder] = useState<ChubOrderView | null>(null);
 
@@ -1143,6 +1785,7 @@ export function ChubApp() {
     () => [
       { id: "new" as const, label: "New Order" },
       { id: "list" as const, label: "Job List" },
+      { id: "wip" as const, label: "Work In Progress" },
     ],
     []
   );
@@ -1193,7 +1836,7 @@ export function ChubApp() {
                   key={t.id}
                   type="button"
                   onClick={() => setTab(t.id)}
-                  className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition ${
+                  className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
                     tab === t.id ? "bg-ink text-bone" : "text-ink-soft"
                   }`}
                 >
@@ -1202,16 +1845,19 @@ export function ChubApp() {
               ))}
             </div>
 
-            {/* Both tabs stay mounted — only visibility toggles. Conditionally
+            {/* All tabs stay mounted — only visibility toggles. Conditionally
                 rendering used to unmount the form on every switch to Job
-                List, wiping whatever was typed. CSS-only hide keeps its
-                state alive across tab switches. */}
+                List, wiping whatever was typed. CSS-only hide keeps state
+                alive across tab switches. */}
             <div className="mt-8">
               <div className={tab === "new" ? "" : "hidden"}>
                 <OrderForm key="new" pass={pass} onSaved={handleSaved} />
               </div>
               <div className={tab === "list" ? "" : "hidden"}>
                 <JobList key={listKey} pass={pass} onEdit={(o) => setEditingOrder(o)} />
+              </div>
+              <div className={tab === "wip" ? "" : "hidden"}>
+                <WorkInProgressTab pass={pass} />
               </div>
             </div>
           </>

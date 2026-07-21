@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { isFirebaseConfigured } from "@/lib/firebase/admin";
 import { isValidChubPasscode, CHUB_PASSCODE_HEADER } from "@/lib/chub/auth";
 import { createChubOrder, listChubOrders, newChubOrderId } from "@/lib/chub/store";
-import { MATERIAL_OPTIONS, DRAWN_BY_OPTIONS, JOB_CODE_OPTIONS, COMPLEXITY_OPTIONS } from "@/lib/chub/types";
+import { MATERIAL_OPTIONS, DRAWN_BY_OPTIONS, JOB_CODE_OPTIONS, COMPLEXITY_OPTIONS, EMPTY_WIP } from "@/lib/chub/types";
 import type {
   ChubComplexity,
   ChubDrawnBy,
@@ -141,6 +141,10 @@ export async function POST(req: Request) {
     laythNotes: "",
     laythLeadTime: "",
     files,
+    // Production tracking starts inactive — a job is promoted into WIP
+    // later via the "Start Work" button (app/api/chub/orders/[id]/route.ts
+    // wipStart action), never at creation.
+    wip: { ...EMPTY_WIP },
   };
 
   try {

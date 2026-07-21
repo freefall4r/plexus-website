@@ -6,8 +6,18 @@
 
 import "server-only";
 import { randomUUID } from "node:crypto";
+import { FieldValue } from "firebase-admin/firestore";
 import { isFirebaseConfigured, db, bucket } from "@/lib/firebase/admin";
-import type { ChubFile, ChubOrder, ChubOrderView, ChubPatch } from "./types";
+import type {
+  ChubFile,
+  ChubMaterialLogEntry,
+  ChubOrder,
+  ChubOrderView,
+  ChubPatch,
+  ChubProcessLogEntry,
+  ChubWip,
+  ChubWipBoard,
+} from "./types";
 
 const COLLECTION = "chubOrders";
 
@@ -112,5 +122,118 @@ export async function updateChubOrder(id: string, patch: ChubPatch): Promise<boo
 export async function deleteChubOrder(id: string): Promise<boolean> {
   if (!isFirebaseConfigured()) return false;
   await db().collection(COLLECTION).doc(id).delete();
+  return true;
+}
+
+// ── Work-In-Progress ──
+// Every write below touches `wip` via dot-path field updates (`ref.update({
+// "wip.x": ... })`) rather than replacing the whole `wip` map, so a
+// materials-log append can never clobber the process log (or board,
+// startDate, liveLink) and vice versa — same "only touch what's given"
+// discipline as updateChubOrder above, just enforced at the Firestore field
+// level instead of the JS-object level since `wip` is a nested map.
+
+function todayISODate(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** Promote an order onto a WIP board. Preserves an existing startDate/logs
+ *  if the job was started once before and later marked complete — reopening
+ *  a completed job shouldn't wipe its history, just reactivate it. */
+export async function startChubWip(id: string, board: ChubWipBoard): Promise<ChubWip | null> {
+  if (!isFirebaseConfigured()) return null;
+  const ref = db().collection(COLLECTION).doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return null;
+  const existing = (snap.data() as ChubOrder).wip;
+  const startDate = existing?.startDate ?? todayISODate();
+  await ref.update({
+    "wip.active": true,
+    "wip.board": board,
+    "wip.startDate": startDate,
+    updatedAt: new Date().toISOString(),
+  });
+  return {
+    active: true,
+    board,
+    startDate,
+    materialsLog: existing?.materialsLog ?? [],
+    processLog: existing?.processLog ?? [],
+    liveLink: existing?.liveLink ?? null,
+  };
+}
+
+/** Simple wip field patch — active (e.g. "mark complete"), board (correct a
+ *  mis-guess), startDate, or liveLink. Dot-path update so materialsLog/
+ *  processLog are never touched. */
+export async function updateChubWipFields(
+  id: string,
+  patch: Partial<Pick<ChubWip, "active" | "board" | "startDate" | "liveLink">>
+): Promise<boolean> {
+  if (!isFirebaseConfigured()) return false;
+  const ref = db().collection(COLLECTION).doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return false;
+  const update: Record<string, unknown> = { updatedAt: new Date().toISOString() };
+  for (const [k, v] of Object.entries(patch)) update[`wip.${k}`] = v;
+  await ref.update(update);
+  return true;
+}
+
+/** Append one materials-log entry (arrayUnion — a single atomic op that
+ *  only ever touches wip.materialsLog). */
+export async function addChubMaterialLogEntry(
+  id: string,
+  entry: { text: string; buyer: string }
+): Promise<ChubMaterialLogEntry | null> {
+  if (!isFirebaseConfigured()) return null;
+  const ref = db().collection(COLLECTION).doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return null;
+  const item: ChubMaterialLogEntry = {
+    id: randomUUID(),
+    text: entry.text,
+    buyer: entry.buyer,
+    date: new Date().toISOString(),
+  };
+  await ref.update({ "wip.materialsLog": FieldValue.arrayUnion(item), updatedAt: new Date().toISOString() });
+  return item;
+}
+
+/** Append one process-log entry (arrayUnion — only ever touches
+ *  wip.processLog). Starts as not-done. */
+export async function addChubProcessLogEntry(
+  id: string,
+  entry: { text: string; who: string }
+): Promise<ChubProcessLogEntry | null> {
+  if (!isFirebaseConfigured()) return null;
+  const ref = db().collection(COLLECTION).doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return null;
+  const item: ChubProcessLogEntry = {
+    id: randomUUID(),
+    text: entry.text,
+    who: entry.who,
+    date: new Date().toISOString(),
+    done: false,
+  };
+  await ref.update({ "wip.processLog": FieldValue.arrayUnion(item), updatedAt: new Date().toISOString() });
+  return item;
+}
+
+/** Flip one process-log entry's done flag. Reads the current array, flips
+ *  the matching entry, writes the whole array back through the single
+ *  wip.processLog field path — sibling fields (materialsLog, board, etc.)
+ *  are never touched. */
+export async function toggleChubProcessLogEntry(id: string, entryId: string, done: boolean): Promise<boolean> {
+  if (!isFirebaseConfigured()) return false;
+  const ref = db().collection(COLLECTION).doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return false;
+  const list = (snap.data() as ChubOrder).wip?.processLog ?? [];
+  if (!list.some((e) => e.id === entryId)) return false;
+  const next = list.map((e) => (e.id === entryId ? { ...e, done } : e));
+  await ref.update({ "wip.processLog": next, updatedAt: new Date().toISOString() });
   return true;
 }

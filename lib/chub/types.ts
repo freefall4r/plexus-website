@@ -88,9 +88,67 @@ export type ChubOrder = {
   // inline-editable straight from the Job List card, not the full form.
   laythNotes: string; // Layth's own comments — material availability, concerns, questions
   laythLeadTime: string; // Layth's own estimate of how long the job will take, e.g. "3-4 days"
+  wip: ChubWip; // production-tracking layer — see below. Older docs won't have
+  // this field at all; every read site defaults with `order.wip ?? EMPTY_WIP`.
   createdAt: string; // ISO
   updatedAt: string; // ISO
 };
+
+// ── Work-In-Progress — a production-tracking layer over an order ──
+// 1:1 with a ChubOrder (not a separate collection): once a job moves from
+// "quoted/agreed" into actual production, it gets promoted onto one of two
+// boards (who's actively building it) with a start date, then accrues a
+// materials log and a process log as work happens. `deadline` above doubles
+// as the WIP end date — no separate field for it.
+
+export type ChubWipBoard = "plexus" | "chub";
+export const WIP_BOARD_OPTIONS: { value: ChubWipBoard; label: string }[] = [
+  { value: "plexus", label: "Plexus" },
+  { value: "chub", label: "C Hub" },
+];
+
+export type ChubMaterialLogEntry = {
+  id: string;
+  text: string; // what was bought
+  buyer: string; // who bought it
+  date: string; // ISO, set server-side when logged
+};
+
+export type ChubProcessLogEntry = {
+  id: string;
+  text: string; // the step
+  who: string; // who did / will do it
+  date: string; // ISO, set server-side when logged
+  done: boolean;
+};
+
+export type ChubWip = {
+  active: boolean;
+  board: ChubWipBoard | null;
+  startDate: string | null; // "YYYY-MM-DD"
+  materialsLog: ChubMaterialLogEntry[];
+  processLog: ChubProcessLogEntry[];
+  liveLink: string | null;
+};
+
+export const EMPTY_WIP: ChubWip = {
+  active: false,
+  board: null,
+  startDate: null,
+  materialsLog: [],
+  processLog: [],
+  liveLink: null,
+};
+
+// "Start Work" board guess from the job code — L1 is entirely C Hub's
+// build, M1 is entirely Plexus's, CM5 is a genuine 50/50 split and Custom
+// is arrangement-specific, so both of those return null ("ask the user")
+// rather than a false guess.
+export function boardGuessFromJobCode(jobCode: ChubJobCode): ChubWipBoard | null {
+  if (jobCode === "L1") return "chub";
+  if (jobCode === "M1") return "plexus";
+  return null;
+}
 
 export type ChubOrderView = ChubOrder & { id: string };
 
