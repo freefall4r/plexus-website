@@ -26,6 +26,9 @@ import { CHUB_PASSCODE_HEADER, isValidChubPasscode } from "@/lib/chub/auth";
 
 const SESSION_KEY = "chub-pass";
 const DRAFT_KEY = "chub-draft";
+// Last margin % anahata used when turning a job into a client offer — a
+// convenience default only; the real value is always confirmed per job.
+const MARGIN_KEY = "chub-margin";
 
 // Capitalize the first letter of the field and the first letter after each
 // sentence-ending ". "/"! "/"? " — as-you-type, no other casing is touched
@@ -796,14 +799,145 @@ function WipPromotion({
   );
 }
 
+// ───────────────────────── Offer (owner only) ─────────────────────────
+
+// Layth's quoted price is Plexus's COST. This block turns it into a client
+// Quotation: cost + margin → a real document in the Plexus documents system,
+// prefilled from the job. Only ever rendered in owner mode, and the API
+// behind it is owner-gated too — Layth never sees a margin.
+function OfferBlock({
+  order,
+  pass,
+  onChanged,
+}: {
+  order: ChubOrderView;
+  pass: string;
+  onChanged: (id: string, patch: Partial<ChubOrderView>) => void;
+}) {
+  const [margin, setMargin] = useState<string>("40");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(MARGIN_KEY);
+      if (saved) setMargin(saved);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const cost = order.priceJOD;
+  const m = Number(margin);
+  const preview =
+    cost != null && Number.isFinite(m) && m >= 0 ? Math.round(cost * (1 + m / 100)) : null;
+
+  async function create() {
+    setBusy(true);
+    setErr("");
+    try {
+      const res = await fetch("/api/chub/offer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+        body: JSON.stringify({ orderId: order.id, marginPct: Number.isFinite(m) ? m : 0 }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.offer) {
+        setErr(
+          data.error === "owner_only"
+            ? "Owner mode expired — unlock again."
+            : data.error === "no_price_yet"
+              ? "Layth hasn't priced this yet."
+              : "Couldn't create the offer."
+        );
+        return;
+      }
+      try {
+        localStorage.setItem(MARGIN_KEY, margin);
+      } catch {
+        /* ignore */
+      }
+      onChanged(order.id, { offer: data.offer });
+    } catch {
+      setErr("Network error.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (cost == null) return null;
+
+  return (
+    <div className="mt-3 rounded-xl border border-amber/40 bg-amber/5 p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-amber">Client offer</p>
+      {order.offer ? (
+        <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-ink">
+            <span className="font-medium">{order.offer.number}</span>
+            <span className="text-ink-soft">
+              {" "}
+              · {order.offer.priceJOD} JOD (cost {cost} + {order.offer.marginPct}%)
+            </span>
+          </p>
+          {/* Relative href on purpose: resolves on chub.plexusworkshop.com
+              (the proxy only rewrites that host's root path, so /plexusadmin/**
+              is untouched there) and on localhost during development. */}
+          <a
+            href={`/plexusadmin/doc/${order.offer.docId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-amber hover:underline"
+          >
+            Open quotation →
+          </a>
+        </div>
+      ) : (
+        <>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            <span className="text-sm text-ink-soft">Cost {cost} JOD</span>
+            <span className="text-ink-soft">+</span>
+            <input
+              type="number"
+              min={0}
+              max={500}
+              step="1"
+              value={margin}
+              onChange={(e) => setMargin(e.target.value)}
+              className="w-16 rounded-lg border border-amber/40 bg-white px-2 py-1.5 text-sm outline-none focus:border-amber"
+            />
+            <span className="text-sm text-ink-soft">%</span>
+            {preview != null && (
+              <span className="text-sm font-semibold text-ink">= {preview} JOD</span>
+            )}
+            <button
+              type="button"
+              onClick={create}
+              disabled={busy || preview == null}
+              className="ml-auto rounded-lg bg-ink px-3 py-1.5 text-sm font-medium text-bone disabled:opacity-60"
+            >
+              {busy ? "Creating…" : "Create offer"}
+            </button>
+          </div>
+          <p className="mt-1.5 text-xs text-ink-soft">
+            Makes a Plexus Quotation prefilled from this job — editable and printable in the admin.
+          </p>
+        </>
+      )}
+      {err && <p className="mt-1.5 text-xs text-red-500">{err}</p>}
+    </div>
+  );
+}
+
 function OrderCard({
   order,
   pass,
+  owner,
   onChanged,
   onEdit,
 }: {
   order: ChubOrderView;
   pass: string;
+  owner: boolean;
   onChanged: (id: string, patch: Partial<ChubOrderView>) => void;
   onEdit: (order: ChubOrderView) => void;
 }) {
@@ -1034,6 +1168,9 @@ function OrderCard({
         />
       </div>
 
+      {/* Client offer — owner only, and only once Layth has priced the job. */}
+      {owner && <OfferBlock order={order} pass={pass} onChanged={onChanged} />}
+
       {/* Promote into production tracking — see the "Work In Progress" tab.
           Once started this just shows a status pill here; all further WIP
           editing (logs, timeline, live link) happens on that tab. */}
@@ -1142,9 +1279,11 @@ function OrderCard({
 
 function JobList({
   pass,
+  owner,
   onEdit,
 }: {
   pass: string;
+  owner: boolean;
   onEdit: (order: ChubOrderView) => void;
 }) {
   const [orders, setOrders] = useState<ChubOrderView[] | null>(null);
@@ -1204,7 +1343,7 @@ function JobList({
         <p className="text-center text-sm text-ink-soft">No orders yet.</p>
       )}
       {orders.map((o) => (
-        <OrderCard key={o.id} order={o} pass={pass} onChanged={onChanged} onEdit={onEdit} />
+        <OrderCard key={o.id} order={o} pass={pass} owner={owner} onChanged={onChanged} onEdit={onEdit} />
       ))}
     </div>
   );
@@ -1761,8 +1900,102 @@ function WorkInProgressTab({ pass }: { pass: string }) {
 
 // ───────────────────────── App ─────────────────────────
 
+// ───────────────────────── Owner mode ─────────────────────────
+
+// Unlocks anahata-only controls (currently: turning a job into a client
+// offer) with the /plexusadmin passcode — see lib/chub/owner.ts. Deliberately
+// quiet in the UI: to Layth it's a single small "Plexus" link he has no
+// passcode for, not a visible second door.
+function OwnerBar({
+  pass,
+  owner,
+  setOwner,
+}: {
+  pass: string;
+  owner: boolean;
+  setOwner: (v: boolean) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function unlock(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setErr("");
+    try {
+      const res = await fetch("/api/chub/owner", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+        body: JSON.stringify({ passcode: code }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.owner) {
+        setErr("Wrong passcode.");
+        return;
+      }
+      setOwner(true);
+      setOpen(false);
+      setCode("");
+    } catch {
+      setErr("Network error.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function lock() {
+    await fetch("/api/chub/owner", {
+      method: "DELETE",
+      headers: { [CHUB_PASSCODE_HEADER]: pass },
+    }).catch(() => null);
+    setOwner(false);
+  }
+
+  if (owner) {
+    return (
+      <div className="mt-2 flex items-center gap-2 text-xs">
+        <span className="rounded-full bg-amber/15 px-2 py-0.5 font-medium text-amber">Plexus owner mode</span>
+        <button type="button" onClick={lock} className="text-ink-soft hover:text-ink">
+          Lock
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2 text-xs">
+      {open ? (
+        <form onSubmit={unlock} className="flex items-center gap-2">
+          <input
+            type="password"
+            autoFocus
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="Plexus passcode"
+            className="w-40 rounded-lg border border-ink/15 bg-white px-2.5 py-1.5 outline-none focus:border-amber"
+          />
+          <button type="submit" disabled={busy} className="font-medium text-amber disabled:opacity-60">
+            {busy ? "…" : "Unlock"}
+          </button>
+          <button type="button" onClick={() => setOpen(false)} className="text-ink-soft">
+            Cancel
+          </button>
+          {err && <span className="text-red-500">{err}</span>}
+        </form>
+      ) : (
+        <button type="button" onClick={() => setOpen(true)} className="text-ink-soft/70 hover:text-ink">
+          Plexus
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function ChubApp() {
   const [pass, setPass] = useState<string | null>(null);
+  const [owner, setOwner] = useState(false);
   const [tab, setTab] = useState<"new" | "list" | "wip">("new");
   const [listKey, setListKey] = useState(0);
   const [editingOrder, setEditingOrder] = useState<ChubOrderView | null>(null);
@@ -1771,6 +2004,22 @@ export function ChubApp() {
     const saved = typeof window !== "undefined" ? sessionStorage.getItem(SESSION_KEY) : null;
     if (saved && isValidChubPasscode(saved)) setPass(saved);
   }, []);
+
+  // Owner mode lives in an httpOnly cookie, so the browser can't read it
+  // directly — ask the server once the C Hub passcode is in hand.
+  useEffect(() => {
+    if (!pass) return;
+    let alive = true;
+    fetch("/api/chub/owner", { headers: { [CHUB_PASSCODE_HEADER]: pass }, cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (alive) setOwner(Boolean(d?.owner));
+      })
+      .catch(() => null);
+    return () => {
+      alive = false;
+    };
+  }, [pass]);
 
   const unlock = useCallback((p: string) => {
     setPass(p);
@@ -1803,6 +2052,7 @@ export function ChubApp() {
       <div className="mx-auto max-w-xl">
         <p className="overline text-amber">C Hub × Plexus</p>
         <h1 className="mt-2 font-display text-3xl leading-tight md:text-4xl">Job Sheet</h1>
+        <OwnerBar pass={pass} owner={owner} setOwner={setOwner} />
 
         {editingOrder ? (
           <>
@@ -1854,7 +2104,7 @@ export function ChubApp() {
                 <OrderForm key="new" pass={pass} onSaved={handleSaved} />
               </div>
               <div className={tab === "list" ? "" : "hidden"}>
-                <JobList key={listKey} pass={pass} onEdit={(o) => setEditingOrder(o)} />
+                <JobList key={listKey} pass={pass} owner={owner} onEdit={(o) => setEditingOrder(o)} />
               </div>
               <div className={tab === "wip" ? "" : "hidden"}>
                 <WorkInProgressTab pass={pass} />

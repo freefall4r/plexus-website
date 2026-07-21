@@ -90,8 +90,27 @@ export type ChubOrder = {
   laythLeadTime: string; // Layth's own estimate of how long the job will take, e.g. "3-4 days"
   wip: ChubWip; // production-tracking layer — see below. Older docs won't have
   // this field at all; every read site defaults with `order.wip ?? EMPTY_WIP`.
+  offer?: ChubOffer | null; // set only once anahata turns Layth's price into a
+  // client quotation (see below). Absent on every order that hasn't been
+  // offered yet, and on every doc written before this feature existed.
   createdAt: string; // ISO
   updatedAt: string; // ISO
+};
+
+// ── The offer link — a job's client-facing quotation ──
+// `priceJOD` above is what C Hub charges Plexus (a cost). The client sees a
+// Plexus Quotation built on top of it with anahata's margin. That document
+// lives in the normal Plexus documents system (Firestore `documents`,
+// lib/docs/*), NOT here — this is only the pointer back to it, so the job
+// card can show "Offer PLX-Q-2607-01 →" and never create a second one.
+// Written by app/api/chub/offer, which is owner-gated: Layth can neither see
+// nor set any of this.
+export type ChubOffer = {
+  docId: string; // BizDoc id → /plexusadmin/doc/<docId>
+  number: string; // e.g. "PLX-Q-2607-01"
+  priceJOD: number; // the client-facing price at creation time
+  marginPct: number; // margin applied over priceJOD at creation time
+  createdAt: string; // ISO
 };
 
 // ── Work-In-Progress — a production-tracking layer over an order ──

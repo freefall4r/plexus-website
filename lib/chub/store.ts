@@ -11,6 +11,7 @@ import { isFirebaseConfigured, db, bucket } from "@/lib/firebase/admin";
 import type {
   ChubFile,
   ChubMaterialLogEntry,
+  ChubOffer,
   ChubOrder,
   ChubOrderView,
   ChubPatch,
@@ -106,6 +107,29 @@ export async function listChubOrders(): Promise<ChubOrderView[]> {
   if (!isFirebaseConfigured()) return [];
   const snap = await db().collection(COLLECTION).orderBy("createdAt", "desc").get();
   return snap.docs.map((d) => ({ id: d.id, ...(d.data() as ChubOrder) }));
+}
+
+/** One order by id, or null. Used by the offer route, which needs the whole
+ *  job (price, dimensions, materials, photos) to build the quotation from. */
+export async function getChubOrder(id: string): Promise<ChubOrderView | null> {
+  if (!isFirebaseConfigured()) return null;
+  const doc = await db().collection(COLLECTION).doc(id).get();
+  if (!doc.exists) return null;
+  return { id: doc.id, ...(doc.data() as ChubOrder) };
+}
+
+/** Link a created client quotation back onto the job. Deliberately its own
+ *  function rather than a ChubPatch field: ChubPatch is what the shared-
+ *  passcode inline-edit route accepts, and the offer (Plexus's margin) must
+ *  never be writable from Layth's side. Only the owner-gated offer route
+ *  calls this. */
+export async function setChubOffer(id: string, offer: ChubOffer): Promise<boolean> {
+  if (!isFirebaseConfigured()) return false;
+  const ref = db().collection(COLLECTION).doc(id);
+  const doc = await ref.get();
+  if (!doc.exists) return false;
+  await ref.set({ offer, updatedAt: new Date().toISOString() }, { merge: true });
+  return true;
 }
 
 /** Inline edits — status, price, or any other field — merge-patched. */
