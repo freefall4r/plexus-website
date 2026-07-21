@@ -829,7 +829,9 @@ function OfferBlock({
   }, []);
 
   const cost = order.priceJOD;
-  const m = Number(margin);
+  // An empty margin box must not quietly mean "0% — sell at cost": leave the
+  // preview (and the button) off until a real number is typed.
+  const m = margin.trim() === "" ? NaN : Number(margin);
   const preview =
     cost != null && Number.isFinite(m) && m >= 0 ? Math.round(cost * (1 + m / 100)) : null;
 
@@ -840,7 +842,7 @@ function OfferBlock({
       const res = await fetch("/api/chub/offer", {
         method: "POST",
         headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
-        body: JSON.stringify({ orderId: order.id, marginPct: Number.isFinite(m) ? m : 0 }),
+        body: JSON.stringify({ orderId: order.id, marginPct: m }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.offer) {
@@ -909,7 +911,8 @@ function OfferBlock({
               <span className="font-medium">{order.offer.number}</span>
               <span className="text-ink-soft">
                 {" "}
-                · {order.offer.priceJOD} JOD (cost {cost} + {order.offer.marginPct}%)
+                · {order.offer.priceJOD} JOD (cost {order.offer.costJOD ?? cost} +{" "}
+                {order.offer.marginPct}%)
               </span>
             </p>
             <a

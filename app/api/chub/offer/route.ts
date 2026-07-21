@@ -68,10 +68,20 @@ export async function POST(req: Request) {
   const orderId = (body.orderId || "").toString();
   if (!orderId) return NextResponse.json({ error: "bad_request" }, { status: 400 });
 
+  // A margin can legitimately be 0 (sell at cost), but a missing or unparseable
+  // one must NOT silently become 0 — that would quote the client at cost. It's
+  // an error. A typo'd 4000% is clamped rather than quoted.
+  // Guard the empty cases BEFORE Number(): Number(null) and Number("") are
+  // both 0, which would sail through a plain isFinite check and quote the
+  // client at cost.
+  if (body.marginPct == null || body.marginPct === "") {
+    return NextResponse.json({ error: "bad_margin" }, { status: 400 });
+  }
   const marginRaw = Number(body.marginPct);
-  // A margin can legitimately be 0 (sell at cost) but never negative, and a
-  // typo'd 4000% shouldn't silently become a quotation.
-  const marginPct = Number.isFinite(marginRaw) ? Math.min(Math.max(marginRaw, 0), 500) : 0;
+  if (!Number.isFinite(marginRaw) || marginRaw < 0) {
+    return NextResponse.json({ error: "bad_margin" }, { status: 400 });
+  }
+  const marginPct = Math.min(marginRaw, 500);
 
   const order = await getChubOrder(orderId);
   if (!order) return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -156,7 +166,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "save_failed", detail: String(e) }, { status: 500 });
   }
 
-  const offer = { docId: id, number, priceJOD: clientPrice, marginPct, createdAt: now };
+  const offer = {
+    docId: id,
+    number,
+    priceJOD: clientPrice,
+    costJOD: order.priceJOD,
+    marginPct,
+    createdAt: now,
+  };
   await setChubOffer(orderId, offer);
 
   return NextResponse.json({ ok: true, existing: false, offer });

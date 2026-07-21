@@ -111,7 +111,11 @@ export type ChubOffer = {
   docId: string; // BizDoc id → /plexusadmin/doc/<docId>
   number: string; // e.g. "PLX-Q-2607-01"
   priceJOD: number; // the client-facing price at creation time
-  marginPct: number; // margin applied over priceJOD at creation time
+  costJOD: number; // Layth's price at creation time — snapshotted, because he
+  // can still edit priceJOD afterwards and the card must keep showing the
+  // arithmetic the offer was actually built on, not a later cost against an
+  // older price (which reads as wrong maths).
+  marginPct: number; // margin applied over costJOD at creation time
   createdAt: string; // ISO
 };
 
