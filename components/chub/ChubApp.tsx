@@ -836,17 +836,20 @@ function OrderCard({
       </div>
 
       {/* Mini photo preview — visible even collapsed, so Layth can tell a
-          job has reference photos without tapping in at all. */}
+          job has reference photos without tapping in at all. Each thumbnail
+          links straight to the full image, same as the expanded grid below —
+          no need to open Details just to see a photo full-size. */}
       {imageFiles.length > 0 && (
         <div className="mt-2 flex items-center gap-1.5">
           {imageFiles.slice(0, 5).map((f) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={f.url}
-              src={f.url}
-              alt=""
-              className="h-9 w-9 rounded-md border border-ink/10 object-cover"
-            />
+            <a key={f.url} href={f.url} target="_blank" rel="noopener noreferrer">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={f.url}
+                alt=""
+                className="h-9 w-9 rounded-md border border-ink/10 object-cover hover:border-amber"
+              />
+            </a>
           ))}
           {imageFiles.length > 5 && (
             <span className="text-xs text-ink-soft">+{imageFiles.length - 5}</span>
@@ -875,7 +878,8 @@ function OrderCard({
           <select
             value={status}
             onChange={(e) => onStatusChange(e.target.value as ChubStatus)}
-            className="rounded-lg border border-ink/15 bg-white/80 px-2.5 py-1.5 text-sm outline-none focus:border-amber"
+            disabled={saving === "status"}
+            className="rounded-lg border border-ink/15 bg-white/80 px-2.5 py-1.5 text-sm outline-none focus:border-amber disabled:opacity-60"
           >
             {STATUS_OPTIONS.map((s) => (
               <option key={s} value={s}>
@@ -900,8 +904,9 @@ function OrderCard({
               onKeyDown={(e) => {
                 if (e.key === "Enter") (e.target as HTMLInputElement).blur();
               }}
+              disabled={saving === "price"}
               placeholder="—"
-              className="w-24 rounded-lg border border-amber/40 bg-white px-2.5 py-1.5 text-lg font-semibold text-ink outline-none focus:border-amber"
+              className="w-24 rounded-lg border border-amber/40 bg-white px-2.5 py-1.5 text-lg font-semibold text-ink outline-none focus:border-amber disabled:opacity-60"
             />
             <span className="text-xs text-ink-soft">JOD</span>
           </div>
@@ -928,16 +933,18 @@ function OrderCard({
             onKeyDown={(e) => {
               if (e.key === "Enter") (e.target as HTMLInputElement).blur();
             }}
+            disabled={savingLayth === "leadTime"}
             placeholder="e.g. 3–4 days"
-            className="min-w-0 flex-1 rounded-lg border border-sage/40 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-sage"
+            className="min-w-0 flex-1 rounded-lg border border-sage/40 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-sage disabled:opacity-60"
           />
         </div>
         <textarea
           value={laythNotes}
           onChange={(e) => setLaythNotes(e.target.value)}
           onBlur={commitLaythNotes}
+          disabled={savingLayth === "notes"}
           placeholder="Material availability, concerns, questions…"
-          className="mt-1.5 min-h-[56px] w-full resize-y rounded-lg border border-sage/40 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-sage"
+          className="mt-1.5 min-h-[56px] w-full resize-y rounded-lg border border-sage/40 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-sage disabled:opacity-60"
         />
       </div>
 
@@ -1049,8 +1056,10 @@ function JobList({
 }) {
   const [orders, setOrders] = useState<ChubOrderView[] | null>(null);
   const [err, setErr] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
+    setRefreshing(true);
     try {
       const res = await fetch("/api/chub/orders", {
         headers: { [CHUB_PASSCODE_HEADER]: pass },
@@ -1067,6 +1076,8 @@ function JobList({
     } catch {
       setErr("Network error loading orders.");
       setOrders([]);
+    } finally {
+      setRefreshing(false);
     }
   }, [pass]);
 
@@ -1086,8 +1097,13 @@ function JobList({
     <div className="mx-auto max-w-xl space-y-3 pb-10">
       <div className="flex items-center justify-between">
         <p className="text-sm text-ink-soft">{orders.length} order(s)</p>
-        <button type="button" onClick={load} className="text-sm text-amber hover:underline">
-          Refresh
+        <button
+          type="button"
+          onClick={load}
+          disabled={refreshing}
+          className="text-sm text-amber hover:underline disabled:opacity-60"
+        >
+          {refreshing ? "Refreshing…" : "Refresh"}
         </button>
       </div>
       {err && <p className="text-sm text-red-500">{err}</p>}
