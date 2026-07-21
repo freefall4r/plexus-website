@@ -93,6 +93,8 @@ export type ChubOrder = {
   offer?: ChubOffer | null; // set only once anahata turns Layth's price into a
   // client quotation (see below). Absent on every order that hasn't been
   // offered yet, and on every doc written before this feature existed.
+  invoice?: ChubInvoice | null; // set only once the offer is converted to an
+  // invoice (Phase 2). Requires `offer` to exist first.
   createdAt: string; // ISO
   updatedAt: string; // ISO
 };
@@ -110,6 +112,17 @@ export type ChubOffer = {
   number: string; // e.g. "PLX-Q-2607-01"
   priceJOD: number; // the client-facing price at creation time
   marginPct: number; // margin applied over priceJOD at creation time
+  createdAt: string; // ISO
+};
+
+// The invoice link — a job's offer, converted to a bill (Phase 2). Same
+// pointer-only pattern as ChubOffer: the actual Invoice BizDoc lives in the
+// documents system; this just lets the card jump to it and blocks a second
+// conversion. Built by app/api/chub/invoice (owner-gated) by copying the
+// quotation, so any edits anahata made to the offer carry over.
+export type ChubInvoice = {
+  docId: string; // BizDoc id → /plexusadmin/doc/<docId>
+  number: string; // e.g. "PLX-INV-2607-01"
   createdAt: string; // ISO
 };
 

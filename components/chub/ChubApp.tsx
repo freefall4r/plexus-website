@@ -816,6 +816,7 @@ function OfferBlock({
 }) {
   const [margin, setMargin] = useState<string>("40");
   const [busy, setBusy] = useState(false);
+  const [invBusy, setInvBusy] = useState(false);
   const [err, setErr] = useState("");
 
   useEffect(() => {
@@ -865,31 +866,94 @@ function OfferBlock({
     }
   }
 
+  async function convertToInvoice() {
+    setInvBusy(true);
+    setErr("");
+    try {
+      const res = await fetch("/api/chub/invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+        body: JSON.stringify({ orderId: order.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.invoice) {
+        setErr(
+          data.error === "owner_only"
+            ? "Owner mode expired — unlock again."
+            : data.error === "offer_missing"
+              ? "The quotation was deleted — create the offer again first."
+              : "Couldn't create the invoice."
+        );
+        return;
+      }
+      onChanged(order.id, { invoice: data.invoice });
+    } catch {
+      setErr("Network error.");
+    } finally {
+      setInvBusy(false);
+    }
+  }
+
   if (cost == null) return null;
 
   return (
     <div className="mt-3 rounded-xl border border-amber/40 bg-amber/5 p-3">
       <p className="text-xs font-semibold uppercase tracking-wide text-amber">Client offer</p>
       {order.offer ? (
-        <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm text-ink">
-            <span className="font-medium">{order.offer.number}</span>
-            <span className="text-ink-soft">
-              {" "}
-              · {order.offer.priceJOD} JOD (cost {cost} + {order.offer.marginPct}%)
-            </span>
-          </p>
-          {/* Relative href on purpose: resolves on chub.plexusworkshop.com
-              (the proxy only rewrites that host's root path, so /plexusadmin/**
-              is untouched there) and on localhost during development. */}
-          <a
-            href={`/plexusadmin/doc/${order.offer.docId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-medium text-amber hover:underline"
-          >
-            Open quotation →
-          </a>
+        <div className="mt-1.5 space-y-2">
+          {/* The quotation. Relative href on purpose: resolves on
+              chub.plexusworkshop.com (the proxy only rewrites that host's root
+              path, so /plexusadmin/** is untouched) and on localhost. */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-ink">
+              <span className="font-medium">{order.offer.number}</span>
+              <span className="text-ink-soft">
+                {" "}
+                · {order.offer.priceJOD} JOD (cost {cost} + {order.offer.marginPct}%)
+              </span>
+            </p>
+            <a
+              href={`/plexusadmin/doc/${order.offer.docId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-medium text-amber hover:underline"
+            >
+              Open quotation →
+            </a>
+          </div>
+
+          {/* Phase 2 — convert the accepted offer to an invoice. Once
+              invoiced, the row becomes a link to the bill instead. */}
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-amber/25 pt-2">
+            {order.invoice ? (
+              <>
+                <p className="text-sm text-ink">
+                  <span className="font-medium">{order.invoice.number}</span>
+                  <span className="text-ink-soft"> · invoice</span>
+                </p>
+                <a
+                  href={`/plexusadmin/doc/${order.invoice.docId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium text-amber hover:underline"
+                >
+                  Open invoice →
+                </a>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-ink-soft">Client accepted? Turn the quotation into an invoice.</p>
+                <button
+                  type="button"
+                  onClick={convertToInvoice}
+                  disabled={invBusy}
+                  className="rounded-lg bg-ink px-3 py-1.5 text-sm font-medium text-bone disabled:opacity-60"
+                >
+                  {invBusy ? "Creating…" : "Convert to invoice"}
+                </button>
+              </>
+            )}
+          </div>
         </div>
       ) : (
         <>

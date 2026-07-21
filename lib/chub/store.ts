@@ -10,6 +10,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { isFirebaseConfigured, db, bucket } from "@/lib/firebase/admin";
 import type {
   ChubFile,
+  ChubInvoice,
   ChubMaterialLogEntry,
   ChubOffer,
   ChubOrder,
@@ -129,6 +130,17 @@ export async function setChubOffer(id: string, offer: ChubOffer): Promise<boolea
   const doc = await ref.get();
   if (!doc.exists) return false;
   await ref.set({ offer, updatedAt: new Date().toISOString() }, { merge: true });
+  return true;
+}
+
+/** Link a created invoice back onto the job (Phase 2). Same owner-only
+ *  reasoning as setChubOffer — never a ChubPatch field. */
+export async function setChubInvoice(id: string, invoice: ChubInvoice): Promise<boolean> {
+  if (!isFirebaseConfigured()) return false;
+  const ref = db().collection(COLLECTION).doc(id);
+  const doc = await ref.get();
+  if (!doc.exists) return false;
+  await ref.set({ invoice, updatedAt: new Date().toISOString() }, { merge: true });
   return true;
 }
 
