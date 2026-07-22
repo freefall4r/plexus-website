@@ -33,7 +33,21 @@ export type BizDoc = {
   linkedBuild: string;    // optional /live project slug
   createdAt: string;
   updatedAt: string;
+
+  // ── Alhambra-style presentation (all optional; sheet degrades gracefully) ──
+  subject?: string;       // the piece / project title shown in the doc heading
+  orderType?: string;     // e.g. "Custom commission", "Production run"
+  quantity?: string;      // e.g. "1 piece", "1,000 pieces"
+  intro?: string;         // opening paragraph under the meta row
+  imageUrl?: string;      // optional visual-reference photo (uploaded)
+  imageCaption?: string;  // bold caption under the image
+  imageTag?: string;      // small copper tag on the image card, e.g. "BESPOKE"
+  imageNote?: string;     // grey italic note under the image
+  specs?: SpecRow[];      // optional specification grid
+  signature?: boolean;    // show the client / Plexus signature block
 };
+
+export type SpecRow = { id: string; label: string; value: string };
 
 export const DOC_LABEL: Record<DocType, string> = {
   invoice: "Invoice",
