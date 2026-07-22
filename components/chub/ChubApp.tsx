@@ -28,6 +28,7 @@ import {
   type ChubWipBoard,
 } from "@/lib/chub/types";
 import { CHUB_PASSCODE_HEADER, isValidChubPasscode } from "@/lib/chub/auth";
+import { PushBell } from "@/components/chub/PushBell";
 
 const SESSION_KEY = "chub-pass";
 const DRAFT_KEY = "chub-draft";
@@ -2434,6 +2435,7 @@ export function ChubApp() {
       >
         <p className="overline text-amber">C Hub × Plexus</p>
         <h1 className="mt-2 font-display text-3xl leading-tight md:text-4xl">Job Sheet</h1>
+        <PushBell pass={pass} />
         <OwnerBar pass={pass} owner={owner} setOwner={setOwner} />
 
         {editingOrder ? (

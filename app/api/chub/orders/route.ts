@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { isFirebaseConfigured } from "@/lib/firebase/admin";
+import { sendChubPush } from "@/lib/chub/push";
 import { isValidChubPasscode, CHUB_PASSCODE_HEADER } from "@/lib/chub/auth";
 import { createChubOrder, listChubOrders, newChubOrderId } from "@/lib/chub/store";
 import { MATERIAL_OPTIONS, DRAWN_BY_OPTIONS, JOB_CODE_OPTIONS, COMPLEXITY_OPTIONS, EMPTY_WIP } from "@/lib/chub/types";
@@ -152,6 +153,17 @@ export async function POST(req: Request) {
   } catch (e) {
     return NextResponse.json({ error: "save_failed", detail: String(e) }, { status: 500 });
   }
+
+  // Ping every subscribed device (Layth's phone) — after() runs once the
+  // response is sent, so the notification never slows down or breaks the
+  // save itself. sendChubPush swallows its own errors.
+  after(() =>
+    sendChubPush({
+      title: "New job on C Hub",
+      body: `${clientName} — ${jobType}`,
+      url: "/chub",
+    })
+  );
 
   return NextResponse.json({ ok: true, id });
 }

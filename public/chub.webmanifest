@@ -1,0 +1,31 @@
+{
+  "name": "C Hub — Job Sheet",
+  "short_name": "C Hub",
+  "description": "Plexus × C Hub shared job order sheet.",
+  "start_url": "/chub",
+  "scope": "/chub",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4efe6",
+  "theme_color": "#2c271e",
+  "icons": [
+    {
+      "src": "/chub-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/chub-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/chub-icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
