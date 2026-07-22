@@ -170,6 +170,17 @@ export async function setChubOfferSent(id: string, sentAt: string | null): Promi
   return true;
 }
 
+/** Mark (or unmark) a job's invoice as paid — the money actually landing. */
+export async function setChubInvoicePaid(id: string, paidAt: string | null): Promise<boolean> {
+  if (!isFirebaseConfigured()) return false;
+  const ref = db().collection(COLLECTION).doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return false;
+  if (!(snap.data() as ChubOrder).invoice) return false;
+  await ref.update({ "invoice.paidAt": paidAt, updatedAt: new Date().toISOString() });
+  return true;
+}
+
 /** Link a created invoice back onto the job (Phase 2). Same owner-only
  *  reasoning as setChubOffer — never a ChubPatch field. */
 export async function setChubInvoice(id: string, invoice: ChubInvoice): Promise<boolean> {

@@ -134,6 +134,10 @@ export type ChubOffer = {
 export type ChubInvoice = {
   docId: string; // BizDoc id → /plexusadmin/doc/<docId>
   number: string; // e.g. "PLX-INV-2607-01"
+  amountJOD: number; // the invoice total at conversion — snapshotted so the
+  // money view can add up without fetching every document. The document
+  // itself stays the source of truth if it's edited afterwards.
+  paidAt?: string | null; // ISO, set when the money actually lands
   createdAt: string; // ISO
 };
 
@@ -204,7 +208,15 @@ export type ChubOrderView = ChubOrder & { id: string };
 // `archived` is the exception: it's the one stage set by hand (the Archive
 // button), and it wins over everything, because clearing a card off the board
 // is a decision, not a consequence.
-export type ChubStage = "archived" | "production" | "sent" | "quoted" | "priced" | "new";
+export type ChubStage =
+  | "archived"
+  | "paid"
+  | "invoiced"
+  | "production"
+  | "sent"
+  | "quoted"
+  | "priced"
+  | "new";
 
 export const STAGE_META: Record<ChubStage, { label: string; chip: string; badge: string }> = {
   new: { label: "Needs price", chip: "Needs price", badge: "bg-ink/10 text-ink-soft" },
@@ -212,19 +224,64 @@ export const STAGE_META: Record<ChubStage, { label: string; chip: string; badge:
   quoted: { label: "Quotation ready", chip: "Quote ready", badge: "bg-amber/20 text-amber" },
   sent: { label: "Quotation sent", chip: "Sent", badge: "bg-amber text-white" },
   production: { label: "In production", chip: "In production", badge: "bg-green-600 text-white" },
+  invoiced: { label: "Invoiced — unpaid", chip: "Unpaid", badge: "bg-red-100 text-red-700" },
+  paid: { label: "Paid", chip: "Paid", badge: "bg-green-700 text-white" },
   archived: { label: "Archived", chip: "Archived", badge: "bg-ink/15 text-ink-soft" },
 };
 
 // Chip order = the order a job actually travels in.
-export const STAGE_ORDER: ChubStage[] = ["new", "priced", "quoted", "sent", "production", "archived"];
+export const STAGE_ORDER: ChubStage[] = [
+  "new",
+  "priced",
+  "quoted",
+  "sent",
+  "production",
+  "invoiced",
+  "paid",
+  "archived",
+];
 
+// Money outranks production: once a job is invoiced, "has this been paid?" is
+// the live question about it, not whether the bench work is still open.
 export function jobStage(o: ChubOrderView): ChubStage {
   if (o.archived) return "archived";
+  if (o.invoice?.paidAt) return "paid";
+  if (o.invoice) return "invoiced";
   if (o.wip?.active) return "production";
   if (o.offer?.sentAt) return "sent";
   if (o.offer) return "quoted";
   if (o.priceJOD != null) return "priced";
   return "new";
+}
+
+// ── The money view ──
+// What the board is worth, owner-side. Deliberately counts DIFFERENT things
+// in each bucket so nothing is double-counted: a job contributes to exactly
+// one of collected / outstanding / quoted, in that order of precedence.
+export type ChubMoney = {
+  collected: number; // paid invoices
+  outstanding: number; // invoices issued, money not in yet
+  quoted: number; // offers made but not yet invoiced — the pipeline
+  cost: number; // what C Hub charges Plexus on everything invoiced
+  margin: number; // invoiced value minus that cost
+};
+
+export function boardMoney(orders: ChubOrderView[]): ChubMoney {
+  const m: ChubMoney = { collected: 0, outstanding: 0, quoted: 0, cost: 0, margin: 0 };
+  for (const o of orders) {
+    if (o.archived) continue; // cleared jobs don't count toward a live board
+    if (o.invoice) {
+      const amount = o.invoice.amountJOD || o.offer?.priceJOD || 0;
+      if (o.invoice.paidAt) m.collected += amount;
+      else m.outstanding += amount;
+      const cost = o.offer?.costJOD ?? o.priceJOD ?? 0;
+      m.cost += cost;
+      m.margin += amount - cost;
+    } else if (o.offer) {
+      m.quoted += o.offer.priceJOD || 0;
+    }
+  }
+  return m;
 }
 
 // Fields that inline-edit is allowed to PATCH.

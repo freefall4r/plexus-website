@@ -11,9 +11,9 @@ import { randomUUID } from "node:crypto";
 import { isFirebaseConfigured } from "@/lib/firebase/admin";
 import { isValidChubPasscode, CHUB_PASSCODE_HEADER } from "@/lib/chub/auth";
 import { isOwner } from "@/lib/chub/owner";
-import { getChubOrder, setChubInvoice } from "@/lib/chub/store";
+import { getChubOrder, setChubInvoice, setChubInvoicePaid } from "@/lib/chub/store";
 import { getDoc, saveDoc, nextNumber } from "@/lib/docs/store";
-import type { BizDoc } from "@/lib/docs/types";
+import { grandTotal, type BizDoc } from "@/lib/docs/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +21,33 @@ export const dynamic = "force-dynamic";
 function todayISODate(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// PATCH { orderId, paid } — the money landed (or didn't). Owner-only: what's
+// been collected is Plexus's business, not the workshop's.
+export async function PATCH(req: Request) {
+  if (!isValidChubPasscode(req.headers.get(CHUB_PASSCODE_HEADER))) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+  if (!(await isOwner())) {
+    return NextResponse.json({ error: "owner_only" }, { status: 403 });
+  }
+  if (!isFirebaseConfigured()) {
+    return NextResponse.json({ error: "storage_not_configured" }, { status: 503 });
+  }
+  let body: { orderId?: string; paid?: boolean };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+  const orderId = (body.orderId || "").toString();
+  if (!orderId) return NextResponse.json({ error: "bad_request" }, { status: 400 });
+
+  const paidAt = body.paid ? new Date().toISOString() : null;
+  const ok = await setChubInvoicePaid(orderId, paidAt);
+  if (!ok) return NextResponse.json({ error: "not_found_or_no_invoice" }, { status: 400 });
+  return NextResponse.json({ ok: true, paidAt });
 }
 
 export async function POST(req: Request) {
@@ -92,7 +119,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "save_failed", detail: String(e) }, { status: 500 });
   }
 
-  const invoice = { docId: id, number, createdAt: now };
+  // Snapshot the total so the money view can add the board up without
+  // fetching every document. The document stays the source of truth if it's
+  // edited later — this is a running tally, not an accounting ledger.
+  const invoice = { docId: id, number, amountJOD: grandTotal(invoiceDoc), paidAt: null, createdAt: now };
   await setChubInvoice(orderId, invoice);
 
   return NextResponse.json({ ok: true, existing: false, invoice });

@@ -13,6 +13,7 @@ import {
   STATUS_OPTIONS,
   WIP_BOARD_OPTIONS,
   boardGuessFromJobCode,
+  boardMoney,
   jobStage,
   type ChubStage,
   type ChubComplexity,
@@ -837,6 +838,7 @@ function OfferBlock({
   const [busy, setBusy] = useState(false);
   const [invBusy, setInvBusy] = useState(false);
   const [sentBusy, setSentBusy] = useState(false);
+  const [paidBusy, setPaidBusy] = useState(false);
   const [err, setErr] = useState("");
 
   useEffect(() => {
@@ -908,6 +910,29 @@ function OfferBlock({
       setErr("Network error.");
     } finally {
       setSentBusy(false);
+    }
+  }
+
+  async function markPaid(paid: boolean) {
+    if (!order.invoice) return;
+    setPaidBusy(true);
+    setErr("");
+    try {
+      const res = await fetch("/api/chub/invoice", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+        body: JSON.stringify({ orderId: order.id, paid }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErr(data.error === "owner_only" ? "Owner mode expired — unlock again." : "Couldn't save.");
+        return;
+      }
+      onChanged(order.id, { invoice: { ...order.invoice, paidAt: data.paidAt ?? null } });
+    } catch {
+      setErr("Network error.");
+    } finally {
+      setPaidBusy(false);
     }
   }
 
@@ -988,7 +1013,10 @@ function OfferBlock({
               <>
                 <p className="text-sm text-ink">
                   <span className="font-medium">{order.invoice.number}</span>
-                  <span className="text-ink-soft"> · invoice</span>
+                  <span className="text-ink-soft">
+                    {" "}
+                    · {order.invoice.amountJOD ?? order.offer.priceJOD} JOD
+                  </span>
                 </p>
                 <a
                   href={`/plexusadmin/doc/${order.invoice.docId}`}
@@ -998,6 +1026,24 @@ function OfferBlock({
                 >
                   Open invoice →
                 </a>
+                {/* Did the money actually land? The one question an invoice
+                    exists to answer. */}
+                <label className="flex w-full items-center gap-2 text-sm text-ink-soft">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(order.invoice.paidAt)}
+                    onChange={(e) => markPaid(e.target.checked)}
+                    disabled={paidBusy}
+                    className="h-4 w-4 rounded border-ink/30 accent-green-600"
+                  />
+                  {order.invoice.paidAt ? (
+                    <span className="font-medium text-green-700">
+                      Paid {fmtDate(order.invoice.paidAt)}
+                    </span>
+                  ) : (
+                    "Mark as paid"
+                  )}
+                </label>
               </>
             ) : (
               <>
@@ -1427,6 +1473,39 @@ function OrderCard({
   );
 }
 
+// ───────────────────────── Money ─────────────────────────
+
+// What the board is worth — owner-only, because it's Plexus's margin and
+// Plexus's collections, not the workshop's business. Answers the one question
+// the whole quote→invoice flow exists for: who owes me what.
+function MoneyStrip({ orders }: { orders: ChubOrderView[] }) {
+  const m = useMemo(() => boardMoney(orders), [orders]);
+  if (!m.collected && !m.outstanding && !m.quoted) return null;
+
+  const cell = (label: string, value: number, cls = "text-ink") => (
+    <div>
+      <p className="text-xs uppercase tracking-wide text-ink-soft">{label}</p>
+      <p className={`font-display text-2xl leading-tight ${cls}`}>{Math.round(value)} <span className="text-sm">JOD</span></p>
+    </div>
+  );
+
+  return (
+    <div className="rounded-2xl border border-ink/10 bg-white/60 p-5">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        {cell("Outstanding", m.outstanding, m.outstanding > 0 ? "text-red-600" : "text-ink")}
+        {cell("Collected", m.collected, "text-green-700")}
+        {cell("Out on quotes", m.quoted)}
+      </div>
+      {(m.collected > 0 || m.outstanding > 0) && (
+        <p className="mt-3 border-t border-ink/10 pt-3 text-xs text-ink-soft">
+          Invoiced work: {Math.round(m.cost)} JOD to C Hub · your margin{" "}
+          <span className="font-medium text-ink">{Math.round(m.margin)} JOD</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
 // ───────────────────────── Board notes ─────────────────────────
 
 // One shared scratchpad beside the whole job list — Layth's running comments
@@ -1638,7 +1717,8 @@ function JobList({
           ))}
         </div>
       </div>
-      <div className="order-1 lg:order-2">
+      <div className="order-1 space-y-4 lg:order-2">
+        {owner && <MoneyStrip orders={orders} />}
         <BoardNotes pass={pass} />
       </div>
     </div>
