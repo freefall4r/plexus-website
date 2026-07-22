@@ -71,12 +71,14 @@ const layoutPattern: Layout[] = [
   },
 ];
 
-/** Default tiles — the local images paired with the first eight layout slots. */
+/** Default tiles — the local images paired with the first eight layout slots.
+ *  Slots 1–4 are REAL workshop photos (PLEXUS WIRED, 2026-07-22); 5–8 remain
+ *  concept renders until real shots exist for them. */
 const defaultImages: string[] = [
-  "/brand/hangers.jpg",
-  "/brand/bench-sage.jpg",
-  "/brand/table-stone.jpg",
-  "/brand/relief.jpg",
+  "/brand/real-hangboard.jpg",
+  "/brand/real-pallet-bench.jpg",
+  "/brand/real-oak-table.jpg",
+  "/brand/real-radiator-shelf.jpg",
   "/brand/console.jpg",
   "/brand/side-table.jpg",
   "/brand/branch-rack.jpg",
