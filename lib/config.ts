@@ -17,7 +17,7 @@ export const contact = {
   whatsapp: "962791792129", // WhatsApp / mobile (intl, digits only)
   phoneDisplay: "+962 7 9179 2129", // shown to humans
   phoneTel: "+962791792129", // tel: link
-  email: "hello@plexusworkshop.com", // PLACEHOLDER — swap in the real address
+  email: "mofakhori@gmail.com", // real address (anahata, 2026-07-22) — JSON-LD picks it up automatically
   instagram: "plexus.workshop", // real handle (no @) — instagram.com/plexus.workshop
   street: "Waela Bent Al Askaa", // street, used in structured data + maps
   addressLine: "Waela Bent Al Askaa, Amman",
