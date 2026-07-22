@@ -158,6 +158,18 @@ export async function setChubOffer(id: string, offer: ChubOffer): Promise<boolea
   return true;
 }
 
+/** Mark (or unmark) a job's quotation as sent to the client. Writes the one
+ *  nested field so nothing else on the offer is touched. */
+export async function setChubOfferSent(id: string, sentAt: string | null): Promise<boolean> {
+  if (!isFirebaseConfigured()) return false;
+  const ref = db().collection(COLLECTION).doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return false;
+  if (!(snap.data() as ChubOrder).offer) return false;
+  await ref.update({ "offer.sentAt": sentAt, updatedAt: new Date().toISOString() });
+  return true;
+}
+
 /** Link a created invoice back onto the job (Phase 2). Same owner-only
  *  reasoning as setChubOffer — never a ChubPatch field. */
 export async function setChubInvoice(id: string, invoice: ChubInvoice): Promise<boolean> {

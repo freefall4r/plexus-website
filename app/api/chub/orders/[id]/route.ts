@@ -165,6 +165,13 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   if ("height" in body) patch.height = numOrNull(body.height);
   if ("cadNeeded" in body) patch.cadNeeded = Boolean(body.cadNeeded);
   if ("urgent" in body) patch.urgent = Boolean(body.urgent);
+  // Clearing a card off the board — by hand only, and reversible. Stamps the
+  // date on archive, clears it on restore, so the Archived chip can show when
+  // something was put away.
+  if ("archived" in body) {
+    patch.archived = Boolean(body.archived);
+    patch.archivedAt = patch.archived ? new Date().toISOString() : null;
+  }
   if ("deadline" in body) patch.deadline = dateOrNull(body.deadline);
 
   if ("drawnBy" in body) {

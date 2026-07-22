@@ -95,6 +95,10 @@ export type ChubOrder = {
   // offered yet, and on every doc written before this feature existed.
   invoice?: ChubInvoice | null; // set only once the offer is converted to an
   // invoice (Phase 2). Requires `offer` to exist first.
+  archived?: boolean; // cleared off the board BY HAND — never automatically,
+  // and never deleted. Archived jobs are hidden from every other filter and
+  // live under the Archived chip, where they can be restored.
+  archivedAt?: string | null;
   createdAt: string; // ISO
   updatedAt: string; // ISO
 };
@@ -111,6 +115,9 @@ export type ChubOffer = {
   docId: string; // BizDoc id → /plexusadmin/doc/<docId>
   number: string; // e.g. "PLX-Q-2607-01"
   priceJOD: number; // the client-facing price at creation time
+  sentAt?: string | null; // ISO, set when anahata marks the quotation as sent
+  // to the client. Owner-set (only he sends quotes), but the resulting stage
+  // IS shown to Layth — knowing a quote went out isn't price-sensitive.
   costJOD: number; // Layth's price at creation time — snapshotted, because he
   // can still edit priceJOD afterwards and the card must keep showing the
   // arithmetic the offer was actually built on, not a later cost against an
@@ -188,6 +195,38 @@ export function boardGuessFromJobCode(jobCode: ChubJobCode): ChubWipBoard | null
 
 export type ChubOrderView = ChubOrder & { id: string };
 
+// ── Where a job sits in the pipeline ──
+// Derived from the data the job already carries rather than stored as its own
+// editable field, so a job's stage can never disagree with its price, offer or
+// WIP state. ONE definition, used by both the filter chips and the badge on
+// the card — they can't drift apart.
+//
+// `archived` is the exception: it's the one stage set by hand (the Archive
+// button), and it wins over everything, because clearing a card off the board
+// is a decision, not a consequence.
+export type ChubStage = "archived" | "production" | "sent" | "quoted" | "priced" | "new";
+
+export const STAGE_META: Record<ChubStage, { label: string; chip: string; badge: string }> = {
+  new: { label: "Needs price", chip: "Needs price", badge: "bg-ink/10 text-ink-soft" },
+  priced: { label: "Priced — no offer yet", chip: "Priced", badge: "bg-sage/25 text-sage" },
+  quoted: { label: "Quotation ready", chip: "Quote ready", badge: "bg-amber/20 text-amber" },
+  sent: { label: "Quotation sent", chip: "Sent", badge: "bg-amber text-white" },
+  production: { label: "In production", chip: "In production", badge: "bg-green-600 text-white" },
+  archived: { label: "Archived", chip: "Archived", badge: "bg-ink/15 text-ink-soft" },
+};
+
+// Chip order = the order a job actually travels in.
+export const STAGE_ORDER: ChubStage[] = ["new", "priced", "quoted", "sent", "production", "archived"];
+
+export function jobStage(o: ChubOrderView): ChubStage {
+  if (o.archived) return "archived";
+  if (o.wip?.active) return "production";
+  if (o.offer?.sentAt) return "sent";
+  if (o.offer) return "quoted";
+  if (o.priceJOD != null) return "priced";
+  return "new";
+}
+
 // Fields that inline-edit is allowed to PATCH.
 export type ChubPatch = Partial<
   Pick<
@@ -215,5 +254,7 @@ export type ChubPatch = Partial<
     | "files"
     | "laythNotes"
     | "laythLeadTime"
+    | "archived"
+    | "archivedAt"
   >
 >;

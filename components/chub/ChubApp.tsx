@@ -8,9 +8,13 @@ import {
   JOB_CODE_MEANINGS,
   JOB_CODE_OPTIONS,
   MATERIAL_OPTIONS,
+  STAGE_META,
+  STAGE_ORDER,
   STATUS_OPTIONS,
   WIP_BOARD_OPTIONS,
   boardGuessFromJobCode,
+  jobStage,
+  type ChubStage,
   type ChubComplexity,
   type ChubDrawnBy,
   type ChubFile,
@@ -832,6 +836,7 @@ function OfferBlock({
   const [margin, setMargin] = useState<string>("40");
   const [busy, setBusy] = useState(false);
   const [invBusy, setInvBusy] = useState(false);
+  const [sentBusy, setSentBusy] = useState(false);
   const [err, setErr] = useState("");
 
   useEffect(() => {
@@ -880,6 +885,29 @@ function OfferBlock({
       setErr("Network error.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function markSent(sent: boolean) {
+    if (!order.offer) return;
+    setSentBusy(true);
+    setErr("");
+    try {
+      const res = await fetch("/api/chub/offer", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+        body: JSON.stringify({ orderId: order.id, sent }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErr(data.error === "owner_only" ? "Owner mode expired — unlock again." : "Couldn't save.");
+        return;
+      }
+      onChanged(order.id, { offer: { ...order.offer, sentAt: data.sentAt ?? null } });
+    } catch {
+      setErr("Network error.");
+    } finally {
+      setSentBusy(false);
     }
   }
 
@@ -939,6 +967,19 @@ function OfferBlock({
               Open quotation →
             </a>
           </div>
+
+          {/* Sent to the client? This is what moves the job to the "Sent"
+              stage — Layth sees the stage, never the numbers above it. */}
+          <label className="flex items-center gap-2 text-sm text-ink-soft">
+            <input
+              type="checkbox"
+              checked={Boolean(order.offer.sentAt)}
+              onChange={(e) => markSent(e.target.checked)}
+              disabled={sentBusy}
+              className="h-4 w-4 rounded border-ink/30 accent-amber"
+            />
+            {order.offer.sentAt ? `Quotation sent ${fmtDate(order.offer.sentAt)}` : "Mark quotation as sent"}
+          </label>
 
           {/* Phase 2 — convert the accepted offer to an invoice. Once
               invoiced, the row becomes a link to the bill instead. */}
@@ -1035,6 +1076,7 @@ function OrderCard({
   const [laythLeadTime, setLaythLeadTime] = useState<string>(order.laythLeadTime ?? "");
   const [savingLayth, setSavingLayth] = useState<"notes" | "leadTime" | null>(null);
   const laythNotesRef = useAutoGrow(laythNotes);
+  const [archiving, setArchiving] = useState(false);
 
   async function patch(body: Record<string, unknown>) {
     const res = await fetch(`/api/chub/orders/${order.id}`, {
@@ -1043,6 +1085,14 @@ function OrderCard({
       body: JSON.stringify(body),
     });
     return res.ok;
+  }
+
+  async function toggleArchived() {
+    const next = !order.archived;
+    setArchiving(true);
+    const ok = await patch({ archived: next });
+    setArchiving(false);
+    if (ok) onChanged(order.id, { archived: next, archivedAt: next ? new Date().toISOString() : null });
   }
 
   async function onStatusChange(v: ChubStatus) {
@@ -1095,6 +1145,7 @@ function OrderCard({
     COMPLEXITY_OPTIONS.find((c) => c.value === complexityValue) ?? COMPLEXITY_OPTIONS[0];
   const overdue = order.deadline ? isOverdue(order.deadline) && order.status !== "Done" : false;
   const dims = fmtDims(order);
+  const stage = jobStage(order);
   const imageFiles = order.files.filter(isImageFile);
   const otherFiles = order.files.filter((f) => !isImageFile(f));
 
@@ -1159,6 +1210,12 @@ function OrderCard({
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1.5">
+          {/* Where this job is in the pipeline — same source as the chips. */}
+          <span
+            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STAGE_META[stage].badge}`}
+          >
+            {STAGE_META[stage].label}
+          </span>
           <span className="rounded-full bg-amber/15 px-2.5 py-1 text-xs font-medium text-amber">
             {order.jobCode}
           </span>
@@ -1277,13 +1334,25 @@ function OrderCard({
       </div>
 
       {/* Reference info — quieter, behind the toggle */}
-      <div className="mt-3 flex items-center justify-between text-sm">
+      <div className="mt-4 flex items-center justify-between gap-3 text-sm">
         <button type="button" onClick={() => setOpen((o) => !o)} className="text-ink-soft hover:text-ink">
           {open ? "Hide details ▴" : "Details ▾"}
         </button>
-        <button type="button" onClick={() => onEdit(order)} className="font-medium text-amber hover:underline">
-          Edit
-        </button>
+        <div className="flex items-center gap-4">
+          {/* Clearing the board is manual and reversible — a job is never
+              deleted, just put away where it stops taking up attention. */}
+          <button
+            type="button"
+            onClick={toggleArchived}
+            disabled={archiving}
+            className="text-ink-soft hover:text-ink disabled:opacity-60"
+          >
+            {archiving ? "…" : order.archived ? "Restore" : "Clear"}
+          </button>
+          <button type="button" onClick={() => onEdit(order)} className="font-medium text-amber hover:underline">
+            Edit
+          </button>
+        </div>
       </div>
 
       {open && (
@@ -1449,6 +1518,10 @@ function JobList({
   const [orders, setOrders] = useState<ChubOrderView[] | null>(null);
   const [err, setErr] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  // null = "All" — everything except archived. Archived is only ever reached
+  // by asking for it: the point of clearing a card is not meeting it again by
+  // accident.
+  const [filter, setFilter] = useState<ChubStage | null>(null);
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -1481,6 +1554,22 @@ function JobList({
     setOrders((prev) => (prev ? prev.map((o) => (o.id === id ? { ...o, ...patch } : o)) : prev));
   }
 
+  // Computed before the loading early-return — hooks must run every render.
+  const { counts, shown } = useMemo(() => {
+    const list = orders ?? [];
+    const byStage = Object.fromEntries(STAGE_ORDER.map((s) => [s, 0])) as Record<ChubStage, number>;
+    for (const o of list) byStage[jobStage(o)] += 1;
+    return {
+      // "All" is the live board — counting archived jobs in the headline
+      // number would defeat the point of having cleared them.
+      counts: { all: list.length - byStage.archived, byStage },
+      shown: list.filter((o) => {
+        const stage = jobStage(o);
+        return filter === null ? stage !== "archived" : stage === filter;
+      }),
+    };
+  }, [orders, filter]);
+
   if (orders === null) {
     return <p className="text-center text-sm text-ink-soft">Loading…</p>;
   }
@@ -1493,7 +1582,9 @@ function JobList({
     <div className="mx-auto grid max-w-xl gap-6 pb-10 lg:max-w-5xl lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
       <div className="order-2 space-y-4 lg:order-1">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-ink-soft">{orders.length} order(s)</p>
+          <p className="text-sm text-ink-soft">
+            {shown.length} of {counts.all} job{counts.all === 1 ? "" : "s"}
+          </p>
           <button
             type="button"
             onClick={load}
@@ -1503,13 +1594,49 @@ function JobList({
             {refreshing ? "Refreshing…" : "Refresh"}
           </button>
         </div>
+
+        {/* Stage chips — where every job is, and a way to look at one stage
+            at a time. Counts come from the same jobStage() the card badge
+            uses, so a chip can never say something the card contradicts. */}
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setFilter(null)}
+            className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+              filter === null ? "bg-ink text-bone" : "bg-white/60 text-ink-soft hover:text-ink"
+            }`}
+          >
+            All {counts.all}
+          </button>
+          {STAGE_ORDER.map((s) =>
+            counts.byStage[s] === 0 && s !== filter ? null : (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setFilter(s === filter ? null : s)}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                  filter === s ? "bg-ink text-bone" : "bg-white/60 text-ink-soft hover:text-ink"
+                }`}
+              >
+                {STAGE_META[s].chip} {counts.byStage[s]}
+              </button>
+            )
+          )}
+        </div>
+
         {err && <p className="text-sm text-red-500">{err}</p>}
-        {orders.length === 0 && !err && (
-          <p className="text-center text-sm text-ink-soft">No orders yet.</p>
+        {shown.length === 0 && !err && (
+          <p className="py-8 text-center text-sm text-ink-soft">
+            {orders.length === 0 ? "No orders yet." : "Nothing in this stage."}
+          </p>
         )}
-        {orders.map((o) => (
-          <OrderCard key={o.id} order={o} pass={pass} owner={owner} onChanged={onChanged} onEdit={onEdit} />
-        ))}
+
+        {/* Two cards per row once there's room for them. */}
+        <div className="grid gap-4 xl:grid-cols-2">
+          {shown.map((o) => (
+            <OrderCard key={o.id} order={o} pass={pass} owner={owner} onChanged={onChanged} onEdit={onEdit} />
+          ))}
+        </div>
       </div>
       <div className="order-1 lg:order-2">
         <BoardNotes pass={pass} />
@@ -2221,7 +2348,9 @@ export function ChubApp() {
       {/* The Job List needs room for the board-notes column beside it; every
           other tab stays a single narrow column. */}
       <div
-        className={`mx-auto max-w-xl ${tab === "list" && !editingOrder ? "lg:max-w-5xl" : ""}`}
+        className={`mx-auto max-w-xl ${
+          tab === "list" && !editingOrder ? "lg:max-w-5xl xl:max-w-7xl" : ""
+        }`}
       >
         <p className="overline text-amber">C Hub × Plexus</p>
         <h1 className="mt-2 font-display text-3xl leading-tight md:text-4xl">Job Sheet</h1>

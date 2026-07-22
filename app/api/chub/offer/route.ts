@@ -14,7 +14,7 @@ import { randomUUID } from "node:crypto";
 import { isFirebaseConfigured } from "@/lib/firebase/admin";
 import { isValidChubPasscode, CHUB_PASSCODE_HEADER } from "@/lib/chub/auth";
 import { isOwner } from "@/lib/chub/owner";
-import { getChubOrder, setChubOffer } from "@/lib/chub/store";
+import { getChubOrder, setChubOffer, setChubOfferSent } from "@/lib/chub/store";
 import { MATERIAL_OPTIONS, type ChubOrderView } from "@/lib/chub/types";
 import { getDoc, saveDoc, nextNumber } from "@/lib/docs/store";
 import type { BizDoc, SpecRow } from "@/lib/docs/types";
@@ -45,6 +45,34 @@ function firstImageUrl(o: ChubOrderView): string {
 function todayISODate(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// PATCH { orderId, sent } — mark the quotation as sent to the client (or undo
+// it). Owner-only like the rest of this route: anahata is the one who sends
+// quotes. The resulting stage is visible to Layth, but setting it isn't his.
+export async function PATCH(req: Request) {
+  if (!isValidChubPasscode(req.headers.get(CHUB_PASSCODE_HEADER))) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+  if (!(await isOwner())) {
+    return NextResponse.json({ error: "owner_only" }, { status: 403 });
+  }
+  if (!isFirebaseConfigured()) {
+    return NextResponse.json({ error: "storage_not_configured" }, { status: 503 });
+  }
+  let body: { orderId?: string; sent?: boolean };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+  const orderId = (body.orderId || "").toString();
+  if (!orderId) return NextResponse.json({ error: "bad_request" }, { status: 400 });
+
+  const sentAt = body.sent ? new Date().toISOString() : null;
+  const ok = await setChubOfferSent(orderId, sentAt);
+  if (!ok) return NextResponse.json({ error: "not_found_or_no_offer" }, { status: 400 });
+  return NextResponse.json({ ok: true, sentAt });
 }
 
 export async function POST(req: Request) {
