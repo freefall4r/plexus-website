@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { brand, contact, waLink, mailLink, igLink } from "@/lib/config";
+import { PlexusMark } from "@/components/brand/PlexusMark";
 import { useLang } from "@/lib/i18n/context";
 import type { DictKey } from "@/lib/i18n/dict";
 
@@ -89,7 +90,8 @@ export function Footer() {
         </div>
 
         <div className="mt-6 flex flex-col gap-2 border-t border-bone/10 pt-6 text-xs text-bone/50 md:flex-row md:items-center md:justify-between">
-          <p>
+          <p className="flex items-center gap-2">
+            <PlexusMark className="h-4 w-4" />
             © {new Date().getFullYear()} {brand.full}. {t("footer.rights")}
           </p>
           <p className="font-mono">{t("hero.tagline")}</p>

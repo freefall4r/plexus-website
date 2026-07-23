@@ -7,6 +7,7 @@ import {
   grandTotal,
   money,
 } from "@/lib/docs/types";
+import { PlexusMark } from "@/components/brand/PlexusMark";
 
 // The Plexus house style, lifted from the /invoice skill's shell-template.html
 // so documents match exactly. Screen shows a fit-to-width A4; print is true A4.
@@ -73,9 +74,12 @@ export function DocumentSheet({ doc }: { doc: BizDoc }) {
   return (
     <div className="page">
       <div className="head">
-        <div className="brand">
-          Plexus
-          <small>Workshop · Solid Wood, Amman</small>
+        <div className="brand" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <PlexusMark size={42} />
+          <div>
+            Plexus
+            <small>Workshop · Solid Wood, Amman</small>
+          </div>
         </div>
         <div className="head-right">
           <b>{DOC_LABEL[doc.type]}</b>

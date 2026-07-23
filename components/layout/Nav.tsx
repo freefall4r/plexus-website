@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { brand } from "@/lib/config";
 import { useLang } from "@/lib/i18n/context";
 import { useCart } from "@/lib/cart";
+import { PlexusMark } from "@/components/brand/PlexusMark";
 import type { DictKey } from "@/lib/i18n/dict";
 
 const items: { href: string; key: DictKey }[] = [
@@ -92,6 +93,7 @@ export function Nav() {
       >
         <div className="mx-auto flex max-w-[1500px] items-center justify-between px-5 py-4 md:px-10">
           <Link href="/" className="group flex items-baseline gap-2" aria-label="Plexus Workshop home">
+            <PlexusMark className="h-6 w-6 self-center transition-transform duration-500 group-hover:rotate-[30deg] md:h-7 md:w-7" />
             <span className="font-display text-2xl leading-none tracking-tight md:text-3xl">
               {brand.name}
             </span>
