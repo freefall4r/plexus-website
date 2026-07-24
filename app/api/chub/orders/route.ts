@@ -59,6 +59,7 @@ type OrderBody = {
   notes?: string;
   suggestedPriceJOD?: number | string | null;
   files?: Partial<ChubFile>[];
+  quoteRequest?: boolean;
 };
 
 // POST /api/chub/orders — create a new job order. Plain JSON only — file
@@ -141,6 +142,11 @@ export async function POST(req: Request) {
     // here so every doc always has the keys.
     laythNotes: "",
     laythLeadTime: "",
+    priceLines: [],
+    // Design-first cards ("For pricing" — Plexus designed it, Layth prices
+    // it) arrive with this flag set, usually posted via the offer-building
+    // flow rather than the New Order form.
+    quoteRequest: Boolean(body.quoteRequest),
     files,
     // Production tracking starts inactive — a job is promoted into WIP
     // later via the "Start Work" button (app/api/chub/orders/[id]/route.ts
@@ -159,8 +165,10 @@ export async function POST(req: Request) {
   // save itself. sendChubPush swallows its own errors.
   after(() =>
     sendChubPush({
-      title: "New job on C Hub",
-      body: `${clientName} — ${jobType}`,
+      title: order.quoteRequest ? "Plexus design to price on C Hub" : "New job on C Hub",
+      body: order.quoteRequest
+        ? `${clientName} — ${jobType} · add your price`
+        : `${clientName} — ${jobType}`,
       url: "/chub",
     })
   );

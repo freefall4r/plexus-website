@@ -17,6 +17,11 @@ import type {
   ChubOrderView,
   ChubPatch,
   ChubProcessLogEntry,
+  ChubTallyEntry,
+  ChubTallyKind,
+  ChubTallyPeriod,
+  ChubTallySide,
+  ChubTodoItem,
   ChubWip,
   ChubWipBoard,
 } from "./types";
@@ -133,6 +138,140 @@ export async function setChubBoardNotes(text: string): Promise<ChubBoardNotes> {
   const updatedAt = new Date().toISOString();
   await db().collection(BOARD_COLLECTION).doc(BOARD_DOC).set({ text, updatedAt }, { merge: true });
   return { text, updatedAt };
+}
+
+// ── To-Do & Tally ──
+// Two more fixed documents beside the board notes — one shared checklist and
+// one settlement ledger between anahata and Layth. Same single-doc reasoning:
+// there is exactly one board between the two of them. All writes are
+// read-modify-write on the one doc (same pattern as toggleChubProcessLogEntry)
+// — contention between two people on a scratchpad is not a real concern.
+
+const TODO_DOC = "todo";
+const TALLY_DOC = "tally";
+
+export type ChubTodoData = { items: ChubTodoItem[]; updatedAt: string | null };
+export type ChubTallyData = {
+  entries: ChubTallyEntry[];
+  settled: ChubTallyPeriod[];
+  updatedAt: string | null;
+};
+
+export async function getChubTodo(): Promise<ChubTodoData> {
+  if (!isFirebaseConfigured()) return { items: [], updatedAt: null };
+  const snap = await db().collection(BOARD_COLLECTION).doc(TODO_DOC).get();
+  if (!snap.exists) return { items: [], updatedAt: null };
+  const d = snap.data() as Partial<ChubTodoData>;
+  return { items: d.items ?? [], updatedAt: d.updatedAt ?? null };
+}
+
+export async function addChubTodoItem(text: string): Promise<ChubTodoItem> {
+  const item: ChubTodoItem = {
+    id: randomUUID(),
+    text,
+    done: false,
+    createdAt: new Date().toISOString(),
+    doneAt: null,
+  };
+  await db()
+    .collection(BOARD_COLLECTION)
+    .doc(TODO_DOC)
+    .set(
+      { items: FieldValue.arrayUnion(item), updatedAt: new Date().toISOString() },
+      { merge: true }
+    );
+  return item;
+}
+
+export async function toggleChubTodoItem(
+  id: string,
+  done: boolean
+): Promise<{ doneAt: string | null } | null> {
+  const ref = db().collection(BOARD_COLLECTION).doc(TODO_DOC);
+  const snap = await ref.get();
+  if (!snap.exists) return null;
+  const items = ((snap.data() as Partial<ChubTodoData>).items ?? []) as ChubTodoItem[];
+  if (!items.some((i) => i.id === id)) return null;
+  const doneAt = done ? new Date().toISOString() : null;
+  const next = items.map((i) => (i.id === id ? { ...i, done, doneAt } : i));
+  await ref.set({ items: next, updatedAt: new Date().toISOString() }, { merge: true });
+  return { doneAt };
+}
+
+export async function removeChubTodoItem(id: string): Promise<boolean> {
+  const ref = db().collection(BOARD_COLLECTION).doc(TODO_DOC);
+  const snap = await ref.get();
+  if (!snap.exists) return false;
+  const items = ((snap.data() as Partial<ChubTodoData>).items ?? []) as ChubTodoItem[];
+  if (!items.some((i) => i.id === id)) return false;
+  await ref.set(
+    { items: items.filter((i) => i.id !== id), updatedAt: new Date().toISOString() },
+    { merge: true }
+  );
+  return true;
+}
+
+export async function getChubTally(): Promise<ChubTallyData> {
+  if (!isFirebaseConfigured()) return { entries: [], settled: [], updatedAt: null };
+  const snap = await db().collection(BOARD_COLLECTION).doc(TALLY_DOC).get();
+  if (!snap.exists) return { entries: [], settled: [], updatedAt: null };
+  const d = snap.data() as Partial<ChubTallyData>;
+  return { entries: d.entries ?? [], settled: d.settled ?? [], updatedAt: d.updatedAt ?? null };
+}
+
+export async function addChubTallyEntry(entry: {
+  side: ChubTallySide;
+  kind: ChubTallyKind;
+  text: string;
+  amountJOD: number | null;
+}): Promise<ChubTallyEntry> {
+  const item: ChubTallyEntry = { id: randomUUID(), ...entry, date: new Date().toISOString() };
+  await db()
+    .collection(BOARD_COLLECTION)
+    .doc(TALLY_DOC)
+    .set(
+      { entries: FieldValue.arrayUnion(item), updatedAt: new Date().toISOString() },
+      { merge: true }
+    );
+  return item;
+}
+
+export async function removeChubTallyEntry(id: string): Promise<boolean> {
+  const ref = db().collection(BOARD_COLLECTION).doc(TALLY_DOC);
+  const snap = await ref.get();
+  if (!snap.exists) return false;
+  const entries = ((snap.data() as Partial<ChubTallyData>).entries ?? []) as ChubTallyEntry[];
+  if (!entries.some((e) => e.id === id)) return false;
+  await ref.set(
+    { entries: entries.filter((e) => e.id !== id), updatedAt: new Date().toISOString() },
+    { merge: true }
+  );
+  return true;
+}
+
+/** "Settled ✓" — move the live entries into an archived period (kept forever,
+ *  viewable under History) and start a fresh tally. Nothing is deleted. */
+export async function settleChubTally(): Promise<ChubTallyPeriod | null> {
+  const ref = db().collection(BOARD_COLLECTION).doc(TALLY_DOC);
+  const snap = await ref.get();
+  const entries = snap.exists
+    ? (((snap.data() as Partial<ChubTallyData>).entries ?? []) as ChubTallyEntry[])
+    : [];
+  if (entries.length === 0) return null;
+  const period: ChubTallyPeriod = {
+    id: randomUUID(),
+    settledAt: new Date().toISOString(),
+    entries,
+  };
+  await ref.set(
+    {
+      entries: [],
+      settled: FieldValue.arrayUnion(period),
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
+  return period;
 }
 
 /** One order by id, or null. Used by the offer route, which needs the whole

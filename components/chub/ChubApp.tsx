@@ -15,6 +15,7 @@ import {
   boardGuessFromJobCode,
   boardMoney,
   jobStage,
+  tallyBalance,
   type ChubStage,
   type ChubComplexity,
   type ChubDrawnBy,
@@ -23,8 +24,14 @@ import {
   type ChubMaterial,
   type ChubMaterialLogEntry,
   type ChubOrderView,
+  type ChubPriceLine,
   type ChubProcessLogEntry,
   type ChubStatus,
+  type ChubTallyEntry,
+  type ChubTallyKind,
+  type ChubTallyPeriod,
+  type ChubTallySide,
+  type ChubTodoItem,
   type ChubWipBoard,
 } from "@/lib/chub/types";
 import { CHUB_PASSCODE_HEADER, isValidChubPasscode } from "@/lib/chub/auth";
@@ -135,6 +142,7 @@ type FormState = {
   urgent: boolean;
   notes: string;
   suggestedPriceJOD: string;
+  quoteRequest: boolean;
 };
 
 const EMPTY_FORM: FormState = {
@@ -156,6 +164,7 @@ const EMPTY_FORM: FormState = {
   urgent: false,
   notes: "",
   suggestedPriceJOD: "",
+  quoteRequest: false,
 };
 
 function formFromOrder(o: ChubOrderView): FormState {
@@ -178,6 +187,7 @@ function formFromOrder(o: ChubOrderView): FormState {
     urgent: Boolean(o.urgent),
     notes: o.notes ?? "",
     suggestedPriceJOD: o.suggestedPriceJOD == null ? "" : String(o.suggestedPriceJOD),
+    quoteRequest: Boolean(o.quoteRequest),
   };
 }
 
@@ -348,6 +358,7 @@ function OrderForm({
         urgent: form.urgent,
         notes: form.notes,
         suggestedPriceJOD: form.suggestedPriceJOD,
+        quoteRequest: form.quoteRequest,
         files: finalFiles,
       };
 
@@ -611,6 +622,21 @@ function OrderForm({
       </div>
 
       <div>
+        <label className="flex items-center gap-2.5 text-sm font-medium text-ink">
+          <input
+            type="checkbox"
+            checked={form.quoteRequest}
+            onChange={(e) => setForm((f) => ({ ...f, quoteRequest: e.target.checked }))}
+            className="h-4 w-4 rounded border-ink/30 accent-violet-600"
+          />
+          Quotation request — a Plexus design that needs Layth&apos;s price
+        </label>
+        <p className="mt-1 pl-6 text-xs text-ink-soft">
+          Pins the job in a &ldquo;For pricing&rdquo; section at the top of the Job List until it&apos;s priced.
+        </p>
+      </div>
+
+      <div>
         <label className={labelCls}>Suggested price (optional, JOD)</label>
         <input
           type="number"
@@ -817,6 +843,118 @@ function WipPromotion({
     >
       {starting ? "Starting…" : "▶ Start Work"}
     </button>
+  );
+}
+
+// ───────────────────────── Price options (Layth's) ─────────────────────────
+
+// One piece can genuinely carry several prices — "beech 500", "with brass
+// inlay 620" — on top of the single headline Quoted price the offer flow
+// builds on. Lives inside Layth's sage block; whole-list save per change,
+// same as files.
+function PriceLinesEditor({
+  order,
+  pass,
+  onChanged,
+}: {
+  order: ChubOrderView;
+  pass: string;
+  onChanged: (id: string, patch: Partial<ChubOrderView>) => void;
+}) {
+  const [lines, setLines] = useState<ChubPriceLine[]>(order.priceLines ?? []);
+  const [label, setLabel] = useState("");
+  const [amount, setAmount] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function save(next: ChubPriceLine[]): Promise<boolean> {
+    setBusy(true);
+    const res = await fetch(`/api/chub/orders/${order.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+      body: JSON.stringify({ priceLines: next }),
+    });
+    setBusy(false);
+    if (!res.ok) return false;
+    setLines(next);
+    onChanged(order.id, { priceLines: next });
+    return true;
+  }
+
+  async function add() {
+    const l = label.trim();
+    const n = Number(amount);
+    if (!l || amount.trim() === "" || !Number.isFinite(n) || n < 0 || busy) return;
+    const ok = await save([...lines, { id: crypto.randomUUID(), label: l, amountJOD: n }]);
+    if (ok) {
+      setLabel("");
+      setAmount("");
+    }
+  }
+
+  return (
+    <div className="mt-3 border-t border-sage/25 pt-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-sage">
+        Price options — if there&apos;s more than one price
+      </p>
+      {lines.length > 0 && (
+        <div className="mt-2 space-y-1.5">
+          {lines.map((l) => (
+            <div key={l.id} className="flex items-center gap-2 rounded-lg bg-white/70 px-2.5 py-1.5 text-sm">
+              <span className="min-w-0 flex-1 text-ink">{l.label}</span>
+              <span className="shrink-0 font-semibold text-ink">{l.amountJOD} JOD</span>
+              <button
+                type="button"
+                onClick={() => save(lines.filter((x) => x.id !== l.id))}
+                disabled={busy}
+                className="shrink-0 text-ink-soft hover:text-red-600 disabled:opacity-60"
+                aria-label={`Remove ${l.label}`}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="mt-2 flex gap-1.5">
+        <input
+          type="text"
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              add();
+            }
+          }}
+          placeholder="Option — e.g. beech / with brass"
+          className="min-w-0 flex-1 rounded-lg border border-sage/40 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-sage"
+        />
+        <input
+          type="number"
+          min={0}
+          step="0.01"
+          inputMode="decimal"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              add();
+            }
+          }}
+          placeholder="JOD"
+          className="w-20 rounded-lg border border-sage/40 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-sage"
+        />
+        <button
+          type="button"
+          onClick={add}
+          disabled={busy || !label.trim() || amount.trim() === ""}
+          className="shrink-0 rounded-lg bg-ink px-3 py-1.5 text-sm font-medium text-bone disabled:opacity-50"
+        >
+          {busy ? "…" : "Add"}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -1111,7 +1249,9 @@ function OrderCard({
   onChanged: (id: string, patch: Partial<ChubOrderView>) => void;
   onEdit: (order: ChubOrderView) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  // Quotation-request cards ARE their spec — open the details by default so
+  // Layth reads the whole sheet without an extra tap.
+  const [open, setOpen] = useState(Boolean(order.quoteRequest));
   const [status, setStatus] = useState<ChubStatus>(order.status);
   const [price, setPrice] = useState<string>(order.priceJOD == null ? "" : String(order.priceJOD));
   const [saving, setSaving] = useState<"status" | "price" | null>(null);
@@ -1201,15 +1341,24 @@ function OrderCard({
   // "needs calc" from color alone while scanning, before reading anything.
   const accentCls = order.urgent
     ? "border-l-4 border-l-red-500 border-red-200 bg-red-50/40"
-    : complexityValue === "complex"
-      ? "border-l-4 border-l-amber-400 border-ink/10 bg-white/50"
-      : "border-l-4 border-l-green-400 border-ink/10 bg-white/50";
+    : order.quoteRequest
+      ? "border-l-4 border-l-violet-400 border-violet-200 bg-violet-50/40"
+      : complexityValue === "complex"
+        ? "border-l-4 border-l-amber-400 border-ink/10 bg-white/50"
+        : "border-l-4 border-l-green-400 border-ink/10 bg-white/50";
 
   return (
     <div className={`overflow-hidden rounded-2xl border ${accentCls}`}>
       {order.urgent && (
         <div className="bg-red-600 px-5 py-1.5 text-center text-xs font-bold uppercase tracking-wider text-white">
           ⚠ Urgent
+        </div>
+      )}
+      {/* A design-first card waiting on Layth's number — the banner drops
+          once a price is in, but the violet badge below stays. */}
+      {order.quoteRequest && order.priceJOD == null && !order.urgent && (
+        <div className="bg-violet-600 px-5 py-1.5 text-center text-xs font-bold uppercase tracking-wider text-white">
+          ✏️ Plexus design — add your price
         </div>
       )}
 
@@ -1263,6 +1412,11 @@ function OrderCard({
           >
             {STAGE_META[stage].label}
           </span>
+          {order.quoteRequest && (
+            <span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-semibold text-violet-700">
+              Plexus design
+            </span>
+          )}
           <span className="rounded-full bg-amber/15 px-2.5 py-1 text-xs font-medium text-amber">
             {order.jobCode}
           </span>
@@ -1368,6 +1522,12 @@ function OrderCard({
           placeholder="Material availability, concerns, questions…"
           className="mt-3 min-h-[96px] w-full resize-none overflow-hidden rounded-lg border border-sage/40 bg-white px-3 py-2.5 text-[15px] leading-relaxed outline-none focus:border-sage disabled:opacity-60"
         />
+        {/* Multiple labeled prices — always there on quotation requests
+            (that's their whole point), and kept visible on any job that
+            already has some. */}
+        {(order.quoteRequest || (order.priceLines?.length ?? 0) > 0) && (
+          <PriceLinesEditor order={order} pass={pass} onChanged={onChanged} />
+        )}
       </div>
 
       {/* Client offer — owner only, and only once Layth has priced the job. */}
@@ -1635,18 +1795,23 @@ function JobList({
   }
 
   // Computed before the loading early-return — hooks must run every render.
-  const { counts, shown } = useMemo(() => {
+  const { counts, shown, pricing } = useMemo(() => {
     const list = orders ?? [];
     const byStage = Object.fromEntries(STAGE_ORDER.map((s) => [s, 0])) as Record<ChubStage, number>;
     for (const o of list) byStage[jobStage(o)] += 1;
+    const visible = list.filter((o) => {
+      const stage = jobStage(o);
+      return filter === null ? stage !== "archived" : stage === filter;
+    });
+    // Unpriced quotation requests get pinned in their own "For pricing"
+    // section on the default view (and pulled out of the main grid so they
+    // never show twice). Stage filters show them like any other job — the
+    // pinning is a grouping, not a second stage definition.
+    const pinning = filter === null;
     return {
-      // "All" is the live board — counting archived jobs in the headline
-      // number would defeat the point of having cleared them.
       counts: { all: list.length - byStage.archived, byStage },
-      shown: list.filter((o) => {
-        const stage = jobStage(o);
-        return filter === null ? stage !== "archived" : stage === filter;
-      }),
+      pricing: pinning ? visible.filter((o) => o.quoteRequest && jobStage(o) === "new") : [],
+      shown: pinning ? visible.filter((o) => !(o.quoteRequest && jobStage(o) === "new")) : visible,
     };
   }, [orders, filter]);
 
@@ -1663,7 +1828,7 @@ function JobList({
       <div className="order-2 space-y-4 lg:order-1">
         <div className="flex items-center justify-between">
           <p className="text-sm text-ink-soft">
-            {shown.length} of {counts.all} job{counts.all === 1 ? "" : "s"}
+            {shown.length + pricing.length} of {counts.all} job{counts.all === 1 ? "" : "s"}
           </p>
           <button
             type="button"
@@ -1705,7 +1870,23 @@ function JobList({
         </div>
 
         {err && <p className="text-sm text-red-500">{err}</p>}
-        {shown.length === 0 && !err && (
+
+        {/* Designed-by-Plexus quotation requests waiting on Layth's number —
+            pinned above everything so pricing them is the first thing seen. */}
+        {pricing.length > 0 && (
+          <div className="rounded-2xl border border-violet-200 bg-violet-50/60 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">
+              ✏️ For pricing — Plexus designs waiting on your number
+            </p>
+            <div className="mt-3 grid gap-4 xl:grid-cols-2">
+              {pricing.map((o) => (
+                <OrderCard key={o.id} order={o} pass={pass} owner={owner} onChanged={onChanged} onEdit={onEdit} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {shown.length === 0 && pricing.length === 0 && !err && (
           <p className="py-8 text-center text-sm text-ink-soft">
             {orders.length === 0 ? "No orders yet." : "Nothing in this stage."}
           </p>
@@ -2275,6 +2456,466 @@ function WorkInProgressTab({ pass }: { pass: string }) {
   );
 }
 
+// ───────────────────────── To-Do & Tally ─────────────────────────
+
+// The shared checklist — "visit Muthanna" level items between the two of
+// them. Checked items stay visible under a collapsed Done section with the
+// date they were finished; removal is explicit and confirmed.
+function TodoList({ pass }: { pass: string }) {
+  const [items, setItems] = useState<ChubTodoItem[] | null>(null);
+  const [err, setErr] = useState("");
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [workingId, setWorkingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/chub/todo", { headers: { [CHUB_PASSCODE_HEADER]: pass }, cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!alive) return;
+        setItems(Array.isArray(d?.items) ? d.items : []);
+      })
+      .catch(() => alive && setErr("Couldn't load the to-do list."));
+    return () => {
+      alive = false;
+    };
+  }, [pass]);
+
+  async function post(body: Record<string, unknown>) {
+    const res = await fetch("/api/chub/todo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, data };
+  }
+
+  async function add() {
+    const t = text.trim();
+    if (!t || busy) return;
+    setBusy(true);
+    const { ok, data } = await post({ add: { text: t } });
+    setBusy(false);
+    if (ok && data.item) {
+      setItems((prev) => [...(prev ?? []), data.item]);
+      setText("");
+    } else {
+      setErr("Couldn't add that — try again.");
+    }
+  }
+
+  async function toggle(id: string, done: boolean) {
+    setWorkingId(id);
+    const { ok, data } = await post({ toggle: { id, done } });
+    setWorkingId(null);
+    if (ok) {
+      setItems((prev) =>
+        prev ? prev.map((i) => (i.id === id ? { ...i, done, doneAt: data.doneAt ?? null } : i)) : prev
+      );
+    }
+  }
+
+  async function remove(item: ChubTodoItem) {
+    if (!window.confirm(`Remove "${item.text}" from the list?`)) return;
+    setWorkingId(item.id);
+    const { ok } = await post({ remove: { id: item.id } });
+    setWorkingId(null);
+    if (ok) setItems((prev) => (prev ? prev.filter((i) => i.id !== item.id) : prev));
+  }
+
+  const openItems = (items ?? []).filter((i) => !i.done);
+  const doneItems = (items ?? []).filter((i) => i.done);
+
+  function row(item: ChubTodoItem) {
+    return (
+      <label
+        key={item.id}
+        className="flex items-start gap-2.5 rounded-lg bg-white/70 px-3 py-2 text-sm"
+      >
+        <input
+          type="checkbox"
+          checked={item.done}
+          onChange={(e) => toggle(item.id, e.target.checked)}
+          disabled={workingId === item.id}
+          className="mt-0.5 h-4 w-4 shrink-0 rounded border-ink/30 accent-amber"
+        />
+        <span className="min-w-0 flex-1">
+          <span className={item.done ? "text-ink-soft line-through" : "text-ink"}>{item.text}</span>
+          <span className="ml-2 text-xs text-ink-soft">
+            {item.done && item.doneAt ? `done ${fmtDate(item.doneAt)}` : fmtDate(item.createdAt)}
+          </span>
+        </span>
+        <button
+          type="button"
+          onClick={() => remove(item)}
+          disabled={workingId === item.id}
+          className="shrink-0 text-ink-soft hover:text-red-600 disabled:opacity-60"
+          aria-label={`Remove ${item.text}`}
+        >
+          ×
+        </button>
+      </label>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-ink/10 bg-white/60 p-5">
+      <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">To-do</p>
+      <div className="mt-3 flex gap-1.5">
+        <input
+          type="text"
+          value={text}
+          onChange={(e) => setText(capitalizeSentences(e.target.value))}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              add();
+            }
+          }}
+          placeholder="e.g. Make a visit to Muthanna"
+          className="min-w-0 flex-1 rounded-xl border border-ink/15 bg-white px-3.5 py-2.5 text-[15px] outline-none focus:border-amber"
+        />
+        <button
+          type="button"
+          onClick={add}
+          disabled={busy || !text.trim()}
+          className="shrink-0 rounded-xl bg-ink px-4 py-2.5 text-sm font-medium text-bone disabled:opacity-50"
+        >
+          {busy ? "…" : "Add"}
+        </button>
+      </div>
+      {err && <p className="mt-2 text-xs text-red-500">{err}</p>}
+      <div className="mt-3 space-y-1.5">
+        {items === null && <p className="text-sm text-ink-soft">Loading…</p>}
+        {items !== null && openItems.length === 0 && doneItems.length === 0 && (
+          <p className="py-3 text-center text-sm text-ink-soft">Nothing on the list yet.</p>
+        )}
+        {openItems.map(row)}
+      </div>
+      {doneItems.length > 0 && (
+        <details className="mt-3">
+          <summary className="cursor-pointer text-xs font-medium text-ink-soft hover:text-ink">
+            Done ({doneItems.length})
+          </summary>
+          <div className="mt-2 space-y-1.5">{doneItems.map(row)}</div>
+        </details>
+      )}
+      <p className="mt-3 text-xs text-ink-soft">Shared — you both see and check the same list.</p>
+    </div>
+  );
+}
+
+// One column of the tally — entries plus its own add form, so each side adds
+// straight into their own column.
+function TallyColumn({
+  side,
+  title,
+  entries,
+  onAdd,
+  onRemove,
+  busy,
+}: {
+  side: ChubTallySide;
+  title: string;
+  entries: ChubTallyEntry[];
+  onAdd: (side: ChubTallySide, kind: ChubTallyKind, text: string, amount: string) => Promise<boolean>;
+  onRemove: (entry: ChubTallyEntry) => void;
+  busy: boolean;
+}) {
+  const [text, setText] = useState("");
+  const [amount, setAmount] = useState("");
+  const [kind, setKind] = useState<ChubTallyKind>("took");
+
+  async function add() {
+    if (!text.trim() || busy) return;
+    const ok = await onAdd(side, kind, text.trim(), amount.trim());
+    if (ok) {
+      setText("");
+      setAmount("");
+      setKind("took");
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-ink/10 bg-white/70 p-4">
+      <p className="font-display text-lg text-ink">{title}</p>
+      <div className="mt-2.5 space-y-1.5">
+        {entries.length === 0 && <p className="text-xs text-ink-soft">Nothing here yet.</p>}
+        {entries.map((e) => (
+          <div key={e.id} className="rounded-lg bg-ink/5 px-2.5 py-2 text-sm">
+            <div className="flex items-start gap-2">
+              <span
+                className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                  e.kind === "paid" ? "bg-green-100 text-green-700" : "bg-amber/20 text-amber"
+                }`}
+              >
+                {e.kind === "paid" ? "Paid" : "Took"}
+              </span>
+              <span className="min-w-0 flex-1 leading-snug text-ink">{e.text}</span>
+              <button
+                type="button"
+                onClick={() => onRemove(e)}
+                className="shrink-0 text-ink-soft hover:text-red-600"
+                aria-label="Remove entry"
+              >
+                ×
+              </button>
+            </div>
+            <div className="mt-1 flex items-center justify-between pl-1 text-xs text-ink-soft">
+              <span>{fmtDate(e.date)}</span>
+              {e.amountJOD != null && (
+                <span className="font-semibold text-ink">{e.amountJOD} JOD</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 space-y-1.5 border-t border-ink/10 pt-3">
+        <input
+          type="text"
+          value={text}
+          onChange={(e) => setText(capitalizeSentences(e.target.value))}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              add();
+            }
+          }}
+          placeholder={side === "anahata" ? "e.g. Took a maple piece from C Hub" : "e.g. Took the sander for the weekend"}
+          className="w-full rounded-lg border border-ink/15 bg-white px-2.5 py-2 text-sm outline-none focus:border-amber"
+        />
+        <div className="flex gap-1.5">
+          <div className="flex shrink-0 gap-1 rounded-lg bg-ink/5 p-0.5">
+            {(["took", "paid"] as const).map((k) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setKind(k)}
+                className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
+                  kind === k ? "bg-ink text-bone" : "text-ink-soft"
+                }`}
+              >
+                {k === "took" ? "Took" : "Paid"}
+              </button>
+            ))}
+          </div>
+          <input
+            type="number"
+            min={0}
+            step="0.01"
+            inputMode="decimal"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                add();
+              }
+            }}
+            placeholder="JOD (optional)"
+            className="min-w-0 flex-1 rounded-lg border border-ink/15 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-amber"
+          />
+          <button
+            type="button"
+            onClick={add}
+            disabled={busy || !text.trim()}
+            className="shrink-0 rounded-lg bg-ink px-3 py-1.5 text-sm font-medium text-bone disabled:opacity-50"
+          >
+            Add
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// The settlement ledger — two columns (anahata | Layth) of "took X / paid Y"
+// with a live who-owes-who line, a "Settled" reset that archives the period,
+// and a History of past periods. Deliberately NOT owner-gated: this is their
+// own money between each other, the one money surface both sides should see.
+function TallyBoard({ pass }: { pass: string }) {
+  const [entries, setEntries] = useState<ChubTallyEntry[] | null>(null);
+  const [settled, setSettled] = useState<ChubTallyPeriod[]>([]);
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [settling, setSettling] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/chub/tally", { headers: { [CHUB_PASSCODE_HEADER]: pass }, cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!alive) return;
+        setEntries(Array.isArray(d?.entries) ? d.entries : []);
+        setSettled(Array.isArray(d?.settled) ? d.settled : []);
+      })
+      .catch(() => alive && setErr("Couldn't load the tally."));
+    return () => {
+      alive = false;
+    };
+  }, [pass]);
+
+  async function post(body: Record<string, unknown>) {
+    const res = await fetch("/api/chub/tally", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, data };
+  }
+
+  async function add(side: ChubTallySide, kind: ChubTallyKind, text: string, amount: string): Promise<boolean> {
+    setBusy(true);
+    setErr("");
+    const { ok, data } = await post({
+      add: { side, kind, text, amountJOD: amount === "" ? null : amount },
+    });
+    setBusy(false);
+    if (ok && data.entry) {
+      setEntries((prev) => [...(prev ?? []), data.entry]);
+      return true;
+    }
+    setErr(data.error === "bad_amount" ? "That amount isn't a number." : "Couldn't save — try again.");
+    return false;
+  }
+
+  async function remove(entry: ChubTallyEntry) {
+    if (!window.confirm(`Remove "${entry.text}"?`)) return;
+    const { ok } = await post({ remove: { id: entry.id } });
+    if (ok) setEntries((prev) => (prev ? prev.filter((e) => e.id !== entry.id) : prev));
+  }
+
+  async function settle() {
+    if (
+      !window.confirm(
+        "Mark this period as settled? The entries move into History (nothing is deleted) and the tally starts fresh."
+      )
+    ) {
+      return;
+    }
+    setSettling(true);
+    const { ok, data } = await post({ settle: true });
+    setSettling(false);
+    if (ok && data.period) {
+      setSettled((prev) => [...prev, data.period]);
+      setEntries([]);
+    }
+  }
+
+  const live = entries ?? [];
+  const balance = tallyBalance(live);
+  const netLine =
+    balance.net > 0
+      ? `anahata owes Layth ${Math.round(balance.net * 100) / 100} JOD`
+      : balance.net < 0
+        ? `Layth owes anahata ${Math.round(-balance.net * 100) / 100} JOD`
+        : "All square ✓";
+
+  return (
+    <div className="rounded-2xl border border-ink/10 bg-white/60 p-5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">
+          The tally — who took what, who paid what
+        </p>
+        {live.length > 0 && (
+          <button
+            type="button"
+            onClick={settle}
+            disabled={settling}
+            className="rounded-lg border border-sage/40 bg-sage/10 px-3 py-1.5 text-xs font-medium text-sage transition hover:bg-sage/20 disabled:opacity-60"
+          >
+            {settling ? "Saving…" : "✓ Settled — start fresh"}
+          </button>
+        )}
+      </div>
+
+      {/* The one number the ledger exists to answer. */}
+      <p
+        className={`mt-3 rounded-xl px-4 py-3 text-center font-display text-xl ${
+          balance.net === 0 ? "bg-sage/10 text-sage" : "bg-amber/10 text-ink"
+        }`}
+      >
+        {netLine}
+      </p>
+
+      {err && <p className="mt-2 text-xs text-red-500">{err}</p>}
+      {entries === null ? (
+        <p className="mt-3 text-sm text-ink-soft">Loading…</p>
+      ) : (
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <TallyColumn
+            side="anahata"
+            title="anahata"
+            entries={live.filter((e) => e.side === "anahata")}
+            onAdd={add}
+            onRemove={remove}
+            busy={busy}
+          />
+          <TallyColumn
+            side="layth"
+            title="Layth"
+            entries={live.filter((e) => e.side === "layth")}
+            onAdd={add}
+            onRemove={remove}
+            busy={busy}
+          />
+        </div>
+      )}
+
+      <p className="mt-3 text-xs text-ink-soft">
+        &ldquo;Took&rdquo; adds to what that person owes; &ldquo;Paid&rdquo; takes it back off. Entries without an
+        amount are notes only.
+      </p>
+
+      {settled.length > 0 && (
+        <details className="mt-4 border-t border-ink/10 pt-3">
+          <summary className="cursor-pointer text-xs font-medium text-ink-soft hover:text-ink">
+            History — settled periods ({settled.length})
+          </summary>
+          <div className="mt-2 space-y-3">
+            {[...settled].reverse().map((p) => {
+              const b = tallyBalance(p.entries);
+              return (
+                <div key={p.id} className="rounded-lg bg-ink/5 px-3 py-2.5 text-xs">
+                  <p className="font-medium text-ink">
+                    Settled {fmtDate(p.settledAt)} —{" "}
+                    {b.net > 0
+                      ? `anahata owed Layth ${Math.round(b.net * 100) / 100} JOD`
+                      : b.net < 0
+                        ? `Layth owed anahata ${Math.round(-b.net * 100) / 100} JOD`
+                        : "all square"}
+                  </p>
+                  <div className="mt-1.5 space-y-1">
+                    {p.entries.map((e) => (
+                      <p key={e.id} className="text-ink-soft">
+                        <span className="font-medium text-ink">{e.side === "anahata" ? "anahata" : "Layth"}</span>{" "}
+                        {e.kind === "paid" ? "paid" : "took"} · {e.text}
+                        {e.amountJOD != null && <span> · {e.amountJOD} JOD</span>}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </details>
+      )}
+    </div>
+  );
+}
+
+function TodoTallyTab({ pass }: { pass: string }) {
+  return (
+    <div className="mx-auto max-w-xl space-y-6 pb-10 lg:max-w-3xl">
+      <TodoList pass={pass} />
+      <TallyBoard pass={pass} />
+    </div>
+  );
+}
+
 // ───────────────────────── App ─────────────────────────
 
 // ───────────────────────── Owner mode ─────────────────────────
@@ -2373,7 +3014,7 @@ function OwnerBar({
 export function ChubApp() {
   const [pass, setPass] = useState<string | null>(null);
   const [owner, setOwner] = useState(false);
-  const [tab, setTab] = useState<"new" | "list" | "wip">("new");
+  const [tab, setTab] = useState<"new" | "list" | "wip" | "todo">("new");
   const [listKey, setListKey] = useState(0);
   const [editingOrder, setEditingOrder] = useState<ChubOrderView | null>(null);
 
@@ -2412,6 +3053,7 @@ export function ChubApp() {
       { id: "new" as const, label: "New Order" },
       { id: "list" as const, label: "Job List" },
       { id: "wip" as const, label: "Work In Progress" },
+      { id: "todo" as const, label: "To-Do" },
     ],
     []
   );
@@ -2430,7 +3072,11 @@ export function ChubApp() {
           other tab stays a single narrow column. */}
       <div
         className={`mx-auto max-w-xl ${
-          tab === "list" && !editingOrder ? "lg:max-w-5xl xl:max-w-7xl" : ""
+          tab === "list" && !editingOrder
+            ? "lg:max-w-5xl xl:max-w-7xl"
+            : tab === "todo" && !editingOrder
+              ? "lg:max-w-3xl"
+              : ""
         }`}
       >
         <p className="overline text-amber">C Hub × Plexus</p>
@@ -2494,6 +3140,9 @@ export function ChubApp() {
               </div>
               <div className={tab === "wip" ? "" : "hidden"}>
                 <WorkInProgressTab pass={pass} />
+              </div>
+              <div className={tab === "todo" ? "" : "hidden"}>
+                <TodoTallyTab pass={pass} />
               </div>
             </div>
           </>

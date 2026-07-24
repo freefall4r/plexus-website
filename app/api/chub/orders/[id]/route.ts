@@ -1,7 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { isFirebaseConfigured } from "@/lib/firebase/admin";
 import { isValidChubPasscode, CHUB_PASSCODE_HEADER } from "@/lib/chub/auth";
+import { sendChubPush } from "@/lib/chub/push";
 import {
+  getChubOrder,
   updateChubOrder,
   startChubWip,
   updateChubWipFields,
@@ -23,11 +25,12 @@ import type {
   ChubFile,
   ChubJobCode,
   ChubPatch,
+  ChubPriceLine,
   ChubStatus,
   ChubWip,
   ChubWipBoard,
 } from "@/lib/chub/types";
-import { isChubFile, numOrNull, dateOrNull, MAX_FILES } from "@/lib/chub/validate";
+import { isChubFile, isChubPriceLine, numOrNull, dateOrNull, MAX_FILES, MAX_PRICE_LINES } from "@/lib/chub/validate";
 
 const WIP_BOARD_VALUES = new Set(WIP_BOARD_OPTIONS.map((b) => b.value));
 
@@ -128,6 +131,15 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     return NextResponse.json({ ok: true });
   }
 
+  // A job getting its first price is the moment the whole flow waits on —
+  // notify subscribed devices (anahata's, mainly) when it happens. Needs the
+  // pre-patch doc to tell "first price" from "price edited"; read it before
+  // the write, and never let this lookup break the save itself.
+  let before: Awaited<ReturnType<typeof getChubOrder>> = null;
+  if ("priceJOD" in body) {
+    before = await getChubOrder(id).catch(() => null);
+  }
+
   const patch: ChubPatch = {};
 
   if ("status" in body) {
@@ -159,6 +171,19 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   // deliberately separate from anahata's notes/deadline above.
   if ("laythNotes" in body) patch.laythNotes = String(body.laythNotes);
   if ("laythLeadTime" in body) patch.laythLeadTime = String(body.laythLeadTime);
+  // Layth's labeled price options — whole-array replace, like files.
+  if ("priceLines" in body) {
+    const raw = Array.isArray(body.priceLines) ? (body.priceLines as Partial<ChubPriceLine>[]) : [];
+    if (raw.length > MAX_PRICE_LINES) {
+      return NextResponse.json({ error: "too_many_price_lines" }, { status: 400 });
+    }
+    patch.priceLines = raw.filter(isChubPriceLine).map((l) => ({
+      id: l.id,
+      label: l.label.slice(0, 120),
+      amountJOD: l.amountJOD,
+    }));
+  }
+  if ("quoteRequest" in body) patch.quoteRequest = Boolean(body.quoteRequest);
   if ("color" in body) patch.color = String(body.color);
   if ("width" in body) patch.width = numOrNull(body.width);
   if ("depth" in body) patch.depth = numOrNull(body.depth);
@@ -220,5 +245,19 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
 
   const ok = await updateChubOrder(id, patch);
   if (!ok) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
+  // First price landed → ping. after() runs post-response and sendChubPush
+  // swallows its own errors, so this can never slow or break the save.
+  if (before && before.priceJOD == null && patch.priceJOD != null) {
+    const priced = before;
+    const amount = patch.priceJOD;
+    after(() =>
+      sendChubPush({
+        title: "💰 Priced on C Hub",
+        body: `${priced.clientName} — ${priced.jobType}: ${amount} JOD`,
+        url: "/chub",
+      })
+    );
+  }
   return NextResponse.json({ ok: true });
 }

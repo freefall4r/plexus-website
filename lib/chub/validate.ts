@@ -3,9 +3,23 @@
 // app/api/chub/orders/[id]/route.ts (inline-edit patch) so the same rules
 // apply whichever route a field comes in through.
 
-import type { ChubFile } from "./types";
+import type { ChubFile, ChubPriceLine } from "./types";
 
 export const MAX_FILES = 20;
+export const MAX_PRICE_LINES = 12;
+
+/** One of Layth's labeled price options. The client sends the whole list on
+ *  every save (array-replace, like files) so each row must stand alone. */
+export function isChubPriceLine(l: Partial<ChubPriceLine>): l is ChubPriceLine {
+  return (
+    typeof l.id === "string" &&
+    l.id.length > 0 &&
+    typeof l.label === "string" &&
+    typeof l.amountJOD === "number" &&
+    Number.isFinite(l.amountJOD) &&
+    l.amountJOD >= 0
+  );
+}
 
 export function isChubFile(f: Partial<ChubFile>): f is ChubFile {
   return (

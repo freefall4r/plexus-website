@@ -61,6 +61,15 @@ export type ChubFile = {
   type: string;
 };
 
+// One labeled price option from Layth — a job can carry several ("beech 500",
+// "with brass inlay 620") on top of the single headline priceJOD, which stays
+// the actionable number the offer flow builds on.
+export type ChubPriceLine = {
+  id: string;
+  label: string;
+  amountJOD: number;
+};
+
 export type ChubOrder = {
   clientName: string;
   jobType: string;
@@ -88,6 +97,13 @@ export type ChubOrder = {
   // inline-editable straight from the Job List card, not the full form.
   laythNotes: string; // Layth's own comments — material availability, concerns, questions
   laythLeadTime: string; // Layth's own estimate of how long the job will take, e.g. "3-4 days"
+  priceLines?: ChubPriceLine[]; // Layth's labeled price options beyond the
+  // headline priceJOD — one piece can genuinely have several prices
+  // (materials, tiers). Absent on docs written before this existed.
+  quoteRequest?: boolean; // a design-first card: Plexus designed the piece
+  // (renders, dimensions, spec) and posted it here FOR Layth to price —
+  // the reverse of the usual client-photo → job flow. Shown pinned in a
+  // "For pricing" section until priced. Absent on older docs.
   wip: ChubWip; // production-tracking layer — see below. Older docs won't have
   // this field at all; every read site defaults with `order.wip ?? EMPTY_WIP`.
   offer?: ChubOffer | null; // set only once anahata turns Layth's price into a
@@ -284,6 +300,61 @@ export function boardMoney(orders: ChubOrderView[]): ChubMoney {
   return m;
 }
 
+// ── To-Do & Tally — the shared board's second surface ──
+// Same trust level as board notes: one checklist and one running settlement
+// ledger between anahata and Layth, both behind the plain chub passcode.
+// Nothing here is price-sensitive (it's their OWN money between each other,
+// not client pricing or margin).
+
+export type ChubTodoItem = {
+  id: string;
+  text: string;
+  done: boolean;
+  createdAt: string; // ISO
+  doneAt: string | null; // ISO, stamped when checked off
+};
+
+export type ChubTallySide = "anahata" | "layth";
+
+// "took" = took something of value from the other side (owes for it).
+// "paid" = handed the other side money (reduces what they owe).
+export type ChubTallyKind = "took" | "paid";
+
+export type ChubTallyEntry = {
+  id: string;
+  side: ChubTallySide;
+  kind: ChubTallyKind;
+  text: string;
+  amountJOD: number | null; // null = note only, doesn't count in the balance
+  date: string; // ISO
+};
+
+// A settled period — the "settled ✓" button archives the live entries here
+// (never deletes them) and starts a fresh tally.
+export type ChubTallyPeriod = {
+  id: string;
+  settledAt: string; // ISO
+  entries: ChubTallyEntry[];
+};
+
+// net > 0 → anahata owes Layth `net` JOD; net < 0 → Layth owes anahata.
+// Per side: took adds to what that side owes, paid subtracts from it.
+export function tallyBalance(entries: ChubTallyEntry[]): {
+  anahata: number;
+  layth: number;
+  net: number;
+} {
+  let anahata = 0;
+  let layth = 0;
+  for (const e of entries) {
+    if (e.amountJOD == null) continue;
+    const signed = e.kind === "took" ? e.amountJOD : -e.amountJOD;
+    if (e.side === "anahata") anahata += signed;
+    else layth += signed;
+  }
+  return { anahata, layth, net: anahata - layth };
+}
+
 // Fields that inline-edit is allowed to PATCH.
 export type ChubPatch = Partial<
   Pick<
@@ -311,6 +382,8 @@ export type ChubPatch = Partial<
     | "files"
     | "laythNotes"
     | "laythLeadTime"
+    | "priceLines"
+    | "quoteRequest"
     | "archived"
     | "archivedAt"
   >
