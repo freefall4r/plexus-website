@@ -31,6 +31,7 @@ export type Project = {
   nowProgress: string;   // current sub-progress
   accent: string;        // hex, card accent
   heroUrl: string | null;// hero image (Storage URL)
+  model3dUrl?: string | null; // interactive 3D showcase page (portal-only)
   visible: boolean;      // show on the public /live grid
   passcode: string;      // PRIVATE — client portal access code
   stages: Stage[];
@@ -66,6 +67,7 @@ export type PortalView = {
   updated: string;
   stages: Stage[];
   messages: Message[];
+  model3d?: string | null; // interactive 3D showcase page
 };
 
 export function toPublic(p: Project): PublicBuild {
@@ -87,5 +89,6 @@ export function toPortal(p: Project): PortalView {
     ...toPublic(p),
     stages: p.stages || [],
     messages: p.messages || [],
+    model3d: p.model3dUrl || null,
   };
 }

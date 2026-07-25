@@ -117,6 +117,36 @@ export function PortalGate({ slug }: { slug: string }) {
             />
           )}
 
+          {/* interactive 3D model */}
+          {p.model3d && (
+            <a
+              href={p.model3d}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 block rounded-2xl border border-ink/10 bg-[#17130e] p-6 text-bone transition hover:border-amber/60"
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="overline text-amber">
+                    {T("New — your piece in 3D", "جديد — قطعتك بالأبعاد الثلاثة")}
+                  </p>
+                  <p className="mt-2 font-display text-2xl leading-tight">
+                    {T("Spin it. Explode it. Measure it.", "دوّرها. فكّكها. قِسها.")}
+                  </p>
+                  <p className="mt-2 text-sm text-bone/70">
+                    {T(
+                      "An interactive model of your exact piece — orbit it, pull it apart layer by layer, tap any part for its real measurements.",
+                      "نموذج تفاعلي لقطعتك بالضبط — دوّره، فكّكه طبقة طبقة، واضغط على أي جزء لترى قياساته الحقيقية."
+                    )}
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-xl bg-amber px-4 py-3 text-sm font-medium text-ink">
+                  {T("Open 3D", "افتح 3D")}
+                </span>
+              </div>
+            </a>
+          )}
+
           {/* progress */}
           <div className="mt-8">
             <div className="flex items-end justify-between">
