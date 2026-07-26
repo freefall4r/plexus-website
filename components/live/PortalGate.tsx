@@ -128,7 +128,7 @@ export function PortalGate({ slug }: { slug: string }) {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="overline text-amber">
-                    {T("New — your piece in 3D", "جديد — قطعتك بالأبعاد الثلاثة")}
+                    {T("Fayakun — your piece in 3D", "فيكون — قطعتك بالأبعاد الثلاثة")}
                   </p>
                   <p className="mt-2 font-display text-2xl leading-tight">
                     {T("Spin it. Explode it. Measure it.", "دوّرها. فكّكها. قِسها.")}
