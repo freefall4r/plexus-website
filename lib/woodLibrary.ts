@@ -82,7 +82,7 @@ export const explainers: Explainer[] = [
     slug: "hardwood-vs-softwood",
     title: "Hardwood vs Softwood — the difference everyone gets wrong",
     title_ar: "الخشب الصلب مقابل الخشب اللين — الفرق الذي يخطئ فيه الجميع",
-    image: "/wood-library/explainer-hardwood-softwood.png",
+    image: "/wood-library/explainer-hardwood-softwood.jpg",
     summary:
       "It is not about how hard the wood feels. It is about the tree. Here is what really separates hardwood from softwood — and which to choose for a home in Jordan.",
     summary_ar:
@@ -118,7 +118,7 @@ export const explainers: Explainer[] = [
     slug: "engineered-wood-explained",
     title: "Engineered wood, explained — plywood, latte, MDF & HDF",
     title_ar: "الأخشاب المصنّعة بوضوح — أبلكاش، لاتيه، MDF وHDF",
-    image: "/wood-library/explainer-engineered.png",
+    image: "/wood-library/explainer-engineered.jpg",
     summary:
       "أبلكاش، لاتيه, MDF, HDF — you hear these words at every carpenter, but what are you really paying for? A plain-language guide to engineered wood and where each one is the smart choice.",
     summary_ar:
@@ -176,7 +176,7 @@ export const woodEntries: WoodEntry[] = [
     name: "Oak",
     name_ar: "البلوط",
     botanical: "Quercus",
-    image: "/wood-library/oak.png",
+    image: "/wood-library/oak.jpg",
     tagline: "Hard · open grain · classic",
     tagline_ar: "صلب · عروق مفتوحة · كلاسيكي",
     intro:
@@ -206,7 +206,7 @@ export const woodEntries: WoodEntry[] = [
     name: "Walnut",
     name_ar: "الجوز",
     botanical: "Juglans",
-    image: "/wood-library/walnut.png",
+    image: "/wood-library/walnut.jpg",
     tagline: "Rich · stable · premium",
     tagline_ar: "غني · ثابت · فاخر",
     intro:
@@ -236,7 +236,7 @@ export const woodEntries: WoodEntry[] = [
     name: "Beech",
     name_ar: "الزان",
     botanical: "Fagus",
-    image: "/wood-library/beech.png",
+    image: "/wood-library/beech.jpg",
     tagline: "Hard · pale · workhorse",
     tagline_ar: "صلب · فاتح · عملي",
     intro:
@@ -266,7 +266,7 @@ export const woodEntries: WoodEntry[] = [
     name: "Ash",
     name_ar: "الدردار",
     botanical: "Fraxinus",
-    image: "/wood-library/ash.png",
+    image: "/wood-library/ash.jpg",
     tagline: "Tough · springy · bold grain",
     tagline_ar: "متين · مرن · عروق جريئة",
     intro:
@@ -296,7 +296,7 @@ export const woodEntries: WoodEntry[] = [
     name: "Cherry",
     name_ar: "الكرز",
     botanical: "Prunus",
-    image: "/wood-library/cherry.png",
+    image: "/wood-library/cherry.jpg",
     tagline: "Warm · smooth · ages richly",
     tagline_ar: "دافئ · ناعم · يتعتّق بغنى",
     intro:
@@ -326,7 +326,7 @@ export const woodEntries: WoodEntry[] = [
     name: "Maple",
     name_ar: "القيقب",
     botanical: "Acer",
-    image: "/wood-library/maple.png",
+    image: "/wood-library/maple.jpg",
     tagline: "Very hard · bright · fine grain",
     tagline_ar: "صلب جداً · ساطع · ناعم العروق",
     intro:
@@ -356,7 +356,7 @@ export const woodEntries: WoodEntry[] = [
     name: "Birch",
     name_ar: "البتولا",
     botanical: "Betula",
-    image: "/wood-library/birch.png",
+    image: "/wood-library/birch.jpg",
     tagline: "Pale · even · great value",
     tagline_ar: "فاتح · متجانس · قيمة ممتازة",
     intro:
@@ -388,7 +388,7 @@ export const woodEntries: WoodEntry[] = [
     name: "Pine",
     name_ar: "الصنوبر",
     botanical: "Pinus",
-    image: "/wood-library/pine.png",
+    image: "/wood-library/pine.jpg",
     tagline: "Light · cheap · easy to work",
     tagline_ar: "خفيف · رخيص · سهل التشغيل",
     intro:
@@ -418,7 +418,7 @@ export const woodEntries: WoodEntry[] = [
     name: "Spruce",
     name_ar: "التنوب",
     botanical: "Picea",
-    image: "/wood-library/spruce.png",
+    image: "/wood-library/spruce.jpg",
     tagline: "Light · strong-for-weight",
     tagline_ar: "خفيف · قوي بالنسبة لوزنه",
     intro:
@@ -448,7 +448,7 @@ export const woodEntries: WoodEntry[] = [
     name: "Cedar",
     name_ar: "الأرز",
     botanical: "Cedrus / Thuja",
-    image: "/wood-library/cedar.png",
+    image: "/wood-library/cedar.jpg",
     tagline: "Aromatic · rot-resistant · outdoor",
     tagline_ar: "عطري · مقاوم للتعفّن · خارجي",
     intro:
@@ -480,7 +480,7 @@ export const woodEntries: WoodEntry[] = [
     name: "Plywood",
     name_ar: "أبلكاش",
     localName_ar: "أبلكاش / خشب رقائقي",
-    image: "/wood-library/plywood.png",
+    image: "/wood-library/plywood.jpg",
     tagline: "Strong · light · stable",
     tagline_ar: "قوي · خفيف · ثابت",
     intro:
@@ -510,7 +510,7 @@ export const woodEntries: WoodEntry[] = [
     name: "Blockboard (Latte)",
     name_ar: "لاتيه",
     localName_ar: "لاتيه / خشب لاتيه",
-    image: "/wood-library/blockboard.png",
+    image: "/wood-library/blockboard.jpg",
     tagline: "Rigid · light · long spans",
     tagline_ar: "صلب · خفيف · مسافات طويلة",
     intro:
@@ -540,7 +540,7 @@ export const woodEntries: WoodEntry[] = [
     name: "MDF",
     name_ar: "إم دي إف",
     localName_ar: "MDF / لوح ليفي متوسط الكثافة",
-    image: "/wood-library/mdf.png",
+    image: "/wood-library/mdf.jpg",
     tagline: "Smooth · grain-free · paint & CNC",
     tagline_ar: "أملس · بلا عروق · للدهان والـ CNC",
     intro:
@@ -570,7 +570,7 @@ export const woodEntries: WoodEntry[] = [
     name: "HDF",
     name_ar: "إتش دي إف",
     localName_ar: "HDF / لوح ليفي عالي الكثافة",
-    image: "/wood-library/hdf.png",
+    image: "/wood-library/hdf.jpg",
     tagline: "Denser · harder · hard-wearing",
     tagline_ar: "أكثف · أصلب · عالي التحمّل",
     intro:
@@ -600,7 +600,7 @@ export const woodEntries: WoodEntry[] = [
     name: "Chipboard",
     name_ar: "الخشب المضغوط",
     localName_ar: "خشب مضغوط / لوح حبيبي",
-    image: "/wood-library/chipboard.png",
+    image: "/wood-library/chipboard.jpg",
     tagline: "Cheapest · flat-pack · keep dry",
     tagline_ar: "الأرخص · فلات-باك · أبقِه جافاً",
     intro:

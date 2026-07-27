@@ -31,13 +31,13 @@ Write EXACTLY ONE new file: content/wood-articles/<slug>.json where <slug> is a 
 - body_ar must be a natural Modern Standard Arabic translation (not literal machine style), using common Jordanian workshop terms in parentheses where useful.
 - The final section is always a personal engineer's take.
 - Choose the image from these existing files (path exactly as written):
-  /wood-library/articles/journal-pool-1.png  (workshop bench, tools and shavings)
-  /wood-library/articles/journal-pool-2.png  (stacked boards in a timber yard)
-  /wood-library/articles/journal-pool-3.png  (hand plane on a board, close up)
-  /wood-library/articles/journal-pool-4.png  (clamps and glue-up on a bench)
-  /wood-library/articles/journal-pool-5.png  (finishing — oiled surface and cloth)
-  /wood-library/articles/journal-pool-6.png  (veneer sheets and engineered boards)
-  — or any species swatch under /wood-library/ (oak.png, walnut.png, beech.png, ash.png, cherry.png, maple.png, birch.png, pine.png, spruce.png, cedar.png, plywood.png, blockboard.png, mdf.png, hdf.png, chipboard.png) if the article is clearly about that material.
+  /wood-library/articles/journal-pool-1.jpg  (workshop bench, tools and shavings)
+  /wood-library/articles/journal-pool-2.jpg  (stacked boards in a timber yard)
+  /wood-library/articles/journal-pool-3.jpg  (hand plane on a board, close up)
+  /wood-library/articles/journal-pool-4.jpg  (clamps and glue-up on a bench)
+  /wood-library/articles/journal-pool-5.jpg  (finishing — oiled surface and cloth)
+  /wood-library/articles/journal-pool-6.jpg  (veneer sheets and engineered boards)
+  — or any species swatch under /wood-library/ (oak.jpg, walnut.jpg, beech.jpg, ash.jpg, cherry.jpg, maple.jpg, birch.jpg, pine.jpg, spruce.jpg, cedar.jpg, plywood.jpg, blockboard.jpg, mdf.jpg, hdf.jpg, chipboard.jpg) if the article is clearly about that material.
 
 ## Step 4 — stop
 Write only that one file. Do not edit any other file, do not commit, do not deploy. When the file is written, reply with only the slug you used.
