@@ -13,6 +13,7 @@ import type { DictKey } from "@/lib/i18n/dict";
 const items: { href: string; key: DictKey }[] = [
   { href: "/", key: "nav.home" },
   { href: "/shop", key: "nav.shop" },
+  { href: "/showcase", key: "nav.showcase" },
   { href: "/custom", key: "nav.custom" },
   { href: "/fabrication", key: "nav.fab" },
   { href: "/wood-library", key: "nav.library" },

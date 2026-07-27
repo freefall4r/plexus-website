@@ -11,8 +11,14 @@ const nextConfig: NextConfig = {
   // Client build portals are now dynamic, Firebase-backed routes
   // (app/live/[slug]/page.tsx) — no static-file rewrite needed.
   async rewrites() {
-    // NAWAH client preview — standalone static page in public/showcase/
-    return [{ source: "/showcase", destination: "/showcase/index.html" }];
+    // Standalone static pages under public/showcase/.
+    // /showcase itself is the app-router gallery (app/showcase/page.tsx).
+    return [
+      // NAWAH standalone presentation
+      { source: "/showcase/nawah", destination: "/showcase/nawah/index.html" },
+      // Guest Tree (Ines wedding guestbook) preview
+      { source: "/showcase/tree", destination: "/showcase/tree/index.html" },
+    ];
   },
 };
 

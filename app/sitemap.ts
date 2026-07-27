@@ -3,6 +3,7 @@ import { site } from "@/lib/config";
 import { getCatalogue } from "@/lib/catalogue";
 import { allLibrarySlugs } from "@/lib/woodLibrary";
 import { getWoodArticles } from "@/lib/woodArticles";
+import { showcaseDetailSlugs } from "@/lib/showcase";
 
 export const revalidate = 3600;
 
@@ -12,6 +13,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { path: "", priority: 1 },
     { path: "/shop", priority: 0.9 },
+    { path: "/showcase", priority: 0.85 },
+    ...showcaseDetailSlugs().map((slug) => ({ path: `/showcase/${slug}`, priority: 0.6 })),
+    { path: "/showcase/nawah", priority: 0.6 },
     { path: "/custom", priority: 0.8 },
     { path: "/fabrication", priority: 0.85 },
     { path: "/fabrication/order", priority: 0.6 },
