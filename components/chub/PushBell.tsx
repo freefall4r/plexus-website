@@ -14,7 +14,16 @@ import { useCallback, useEffect, useState } from "react";
 import { CHUB_PASSCODE_HEADER } from "@/lib/chub/auth";
 
 const SW_URL = "/chub-sw.js";
-const SW_SCOPE = "/chub";
+
+// On www the app lives at /chub, but on chub.plexusworkshop.com the proxy
+// serves the same page at "/" — and a service worker scoped to /chub can
+// never control a page at /, so navigator.serviceWorker.ready would wait
+// forever and the bell would hang on tap (the bug that ate Layth's first
+// subscription attempt). Scope must match where the page actually is; on
+// the chub subdomain "/" still only covers that origin, never the main site.
+function swScope(): string {
+  return window.location.pathname.startsWith("/chub") ? "/chub" : "/";
+}
 
 type BellState = "checking" | "unsupported" | "install-first" | "blocked" | "off" | "on" | "busy";
 
@@ -47,7 +56,7 @@ export function PushBell({ pass }: { pass: string }) {
       return;
     }
     navigator.serviceWorker
-      .getRegistration(SW_SCOPE)
+      .getRegistration(swScope())
       .then((reg) => reg?.pushManager.getSubscription() ?? null)
       .then((sub) => {
         if (sub) {
@@ -75,7 +84,7 @@ export function PushBell({ pass }: { pass: string }) {
     try {
       const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
       if (!vapid) throw new Error("missing key");
-      const reg = await navigator.serviceWorker.register(SW_URL, { scope: SW_SCOPE });
+      const reg = await navigator.serviceWorker.register(SW_URL, { scope: swScope() });
       await navigator.serviceWorker.ready;
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
@@ -105,7 +114,7 @@ export function PushBell({ pass }: { pass: string }) {
     setState("busy");
     setNote("");
     try {
-      const reg = await navigator.serviceWorker.getRegistration(SW_SCOPE);
+      const reg = await navigator.serviceWorker.getRegistration(swScope());
       const sub = await reg?.pushManager.getSubscription();
       if (sub) {
         await fetch("/api/chub/push", {
