@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>NAWAH نواة — A Reading Pod · Plexus Workshop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Amiri:ital,wght@0,400;0,700&family=Karla:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ground:#1d1913;
+    --panel:#26211a;
+    --panel-2:#2d2820;
+    --cream:#ede3ce;
+    --muted:#a79b84;
+    --olive:#98a065;
+    --brass:#c9a45c;
+    --line:rgba(237,227,206,.14);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--ground);
+    color:var(--cream);
+    font-family:'Karla',system-ui,sans-serif;
+    font-size:17px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--brass);color:var(--ground)}
+  img{max-width:100%;display:block}
+  a{color:var(--brass)}
+  :focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:0 clamp(20px,5vw,64px)}
+
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--olive);
+  }
+  h1,h2{font-family:'Marcellus',serif;font-weight:400;color:var(--cream)}
+  .ar{font-family:'Amiri',serif}
+
+  /* ---------- hero ---------- */
+  .hero{min-height:92vh;display:flex;align-items:center;position:relative;overflow:hidden}
+  .hero-rings{
+    position:absolute;right:-12vw;top:50%;transform:translateY(-50%);
+    width:min(62vw,780px);height:auto;opacity:.9;pointer-events:none;
+  }
+  .hero-inner{position:relative;z-index:1;padding:12vh 0 8vh}
+  .hero h1{
+    font-size:clamp(64px,12vw,168px);line-height:.95;letter-spacing:.015em;margin:22px 0 8px;
+  }
+  .hero .ar-name{
+    font-size:clamp(30px,4.6vw,58px);color:var(--brass);display:block;margin-bottom:26px;
+  }
+  .hero p.lede{max-width:32ch;font-size:clamp(18px,2vw,22px);color:var(--muted)}
+  .scroll-hint{
+    margin-top:9vh;font-family:'IBM Plex Mono',monospace;font-size:12px;
+    letter-spacing:.18em;color:var(--muted);text-transform:uppercase;
+  }
+  .scroll-hint::after{content:"";display:block;width:1px;height:56px;background:var(--line);margin-top:14px}
+
+  /* ply-edge divider — thin alternating laminations, like a plywood edge */
+  .ply{height:10px;background:repeating-linear-gradient(90deg,
+    #4a4032 0 26px, #6b5c44 26px 30px, #57493a 30px 58px, #7a6a50 58px 62px)}
+
+  section{padding:clamp(72px,11vh,130px) 0}
+  .section-head{display:flex;align-items:baseline;gap:22px;margin-bottom:16px}
+  h2{font-size:clamp(30px,4.4vw,52px)}
+  .section-head .ar{color:var(--muted);font-size:clamp(19px,2.4vw,28px)}
+
+  /* ---------- idea ---------- */
+  .idea-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(28px,5vw,72px);align-items:center}
+  .idea-copy p{margin-bottom:1.2em;color:var(--muted);max-width:52ch}
+  .idea-copy p strong{color:var(--cream);font-weight:600}
+  .idea-fig{background:#f4efe4;border-radius:6px;padding:10px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+  .idea-fig figcaption{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6b5c44;
+    padding:10px 6px 4px;letter-spacing:.06em;
+  }
+
+  /* ---------- mood band ---------- */
+  .mood{padding:0}
+  .mood img{width:100%;height:min(78vh,720px);object-fit:cover}
+  .mood figcaption{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);
+    letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:18px 20px;
+  }
+
+  /* ---------- the six ---------- */
+  .six-intro{max-width:58ch;color:var(--muted);margin-bottom:clamp(40px,6vh,70px)}
+  .six-intro strong{color:var(--cream)}
+  .options{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(26px,3.5vw,44px)}
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;
+  }
+  .js .card:not(.in){transform:translateY(26px);opacity:0}
+  .js .card{transition:transform .7s ease,opacity .7s ease}
+  .card img{width:100%;aspect-ratio:4/3;object-fit:cover}
+  .card-body{padding:22px 24px 26px}
+  .opt-no{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.2em;color:var(--olive);
+  }
+  .card h3{
+    font-family:'Marcellus',serif;font-weight:400;font-size:26px;margin:6px 0 2px;
+    display:flex;align-items:baseline;gap:12px;
+  }
+  .card h3 .ar{font-size:19px;color:var(--muted)}
+  .specs{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);
+    margin-top:10px;display:flex;flex-wrap:wrap;gap:8px 18px;
+  }
+  .badge{
+    display:inline-flex;align-items:center;gap:7px;
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--brass);
+  }
+  .badge::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--brass);
+    box-shadow:0 0 10px 2px rgba(201,164,92,.55)}
+
+  /* ---------- engineering ---------- */
+  .eng p.max{max-width:56ch;color:var(--muted);margin-bottom:1.2em}
+  .eng p.max strong{color:var(--cream)}
+  .stats{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:clamp(34px,5vh,56px) 0;
+  }
+  .stat{background:var(--panel);padding:26px 22px}
+  .stat b{
+    font-family:'Marcellus',serif;font-weight:400;font-size:clamp(28px,3.4vw,42px);
+    color:var(--cream);display:block;line-height:1.1;
+  }
+  .stat span{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.08em}
+  .sheets{display:grid;grid-template-columns:1fr 1fr;gap:clamp(20px,3vw,36px)}
+  .sheets figure{background:#f4efe4;border-radius:6px;padding:8px}
+  .sheets figcaption{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6b5c44;padding:8px 6px 2px}
+
+  /* ---------- 3d ---------- */
+  .three-d{text-align:center}
+  .three-d p{max-width:46ch;margin:0 auto 34px;color:var(--muted)}
+  .btn{
+    display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:.14em;
+    text-transform:uppercase;text-decoration:none;color:var(--ground);background:var(--brass);
+    padding:17px 34px;border-radius:4px;transition:background .25s ease;
+  }
+  .btn:hover{background:#dcb96e}
+  .keys{
+    margin-top:22px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);
+    letter-spacing:.06em;
+  }
+  .keys kbd{
+    border:1px solid var(--line);border-radius:4px;padding:1px 7px;margin:0 2px;color:var(--cream);
+  }
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--line);padding:56px 0 64px;text-align:center}
+  footer svg{width:52px;height:52px;margin-bottom:16px}
+  footer .name{font-family:'Marcellus',serif;font-size:20px;letter-spacing:.24em}
+  footer .sub{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);
+    letter-spacing:.18em;margin-top:8px;text-transform:uppercase}
+
+  .js .reveal:not(.in){transform:translateY(26px);opacity:0}
+  .js .reveal{transition:transform .7s ease,opacity .7s ease}
+
+  @media (max-width:860px){
+    .idea-grid,.options,.sheets{grid-template-columns:1fr}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .hero-rings{right:-40vw;width:110vw;opacity:.35}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .js .card,.js .reveal{transform:none;opacity:1;transition:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <svg class="hero-rings" id="rings" viewBox="0 0 800 760" aria-hidden="true"></svg>
+  <div class="wrap hero-inner">
+    <span class="eyebrow">Plexus Workshop · Private Preview</span>
+    <h1>NAWAH</h1>
+    <span class="ar ar-name">نواة — بيت القراءة</span>
+    <p class="lede">A reading pod. Cut from flat birch sheets, built round — a quiet room within a room.</p>
+    <div class="scroll-hint">Scroll</div>
+  </div>
+</header>
+
+<div class="ply" role="presentation"></div>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <h2>The idea</h2><span class="ar">الفكرة</span>
+    </div>
+    <div class="idea-grid">
+      <div class="idea-copy">
+        <p><strong>NAWAH is a seed you sit inside.</strong> A sculptural pod that wraps around the reader — back, sides and overhead — leaving one open mouth of daylight and a cushion of olive-green wool.</p>
+        <p>The whole shell is cut from <strong>18&nbsp;mm birch plywood on our CNC</strong>, layer by layer, then threaded together on steel rods. No carving, no moulds — the drama comes from repetition: dozens of precise flat parts becoming one continuous curve.</p>
+        <p>It ships flat, assembles with a wrench, and every plywood edge is left exposed as the finish — the stripes of the laminations are the ornament.</p>
+      </div>
+      <figure class="idea-fig reveal">
+        <img src="assets/drawing-rings.png" alt="NAWAH technical drawing sheet — ring construction, elevations and ring family">
+        <figcaption>PLX-NAWAH-02 · working drawing, ring construction</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<figure class="mood">
+  <img src="assets/option-3.png" alt="NAWAH pod at dusk with its brass reading light glowing inside" loading="lazy">
+  <figcaption>The crown light — a brass stem and glass globe, hung through the shell</figcaption>
+</figure>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Six ways to build it</h2><span class="ar">ستة خيارات</span>
+    </div>
+    <p class="six-intro">One idea, explored properly. <strong>Three silhouettes</strong> — the balanced original, a slimmer taller cocoon, and a wider fuller pod — each buildable in <strong>two constructions</strong>: nested rings that wrap front-to-back, or vertical ribs that stand side by side. Three of the six carry the brass reading light.</p>
+    <div class="options">
+
+      <article class="card">
+        <img src="assets/option-1.png" alt="Option 1 — ring construction, original proportions, with reading light" loading="lazy">
+        <div class="card-body">
+          <span class="opt-no">OPTION 01</span>
+          <h3>The Original <span class="ar">الأصل</span></h3>
+          <div class="specs"><span>nested rings</span><span>100 × 95 × 116 cm</span></div>
+          <div class="specs" style="margin-top:8px"><span class="badge">reading light</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <img src="assets/option-2.png" alt="Option 2 — ring construction, slim tall proportions" loading="lazy">
+        <div class="card-body">
+          <span class="opt-no">OPTION 02</span>
+          <h3>The Slim <span class="ar">الرشيق</span></h3>
+          <div class="specs"><span>nested rings</span><span>88 × 95 × 120 cm</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <img src="assets/option-3.png" alt="Option 3 — ring construction, round full proportions, with reading light" loading="lazy">
+        <div class="card-body">
+          <span class="opt-no">OPTION 03</span>
+          <h3>The Full <span class="ar">الممتلئ</span></h3>
+          <div class="specs"><span>nested rings</span><span>112 × 95 × 108 cm</span></div>
+          <div class="specs" style="margin-top:8px"><span class="badge">reading light</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <img src="assets/option-4.png" alt="Option 4 — rib construction, original proportions" loading="lazy">
+        <div class="card-body">
+          <span class="opt-no">OPTION 04</span>
+          <h3>The Original, Ribbed <span class="ar">الأصل مضلّع</span></h3>
+          <div class="specs"><span>vertical ribs</span><span>100 × 95 × 116 cm</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <img src="assets/option-5.png" alt="Option 5 — rib construction, slim tall proportions, with reading light" loading="lazy">
+        <div class="card-body">
+          <span class="opt-no">OPTION 05</span>
+          <h3>The Slim, Ribbed <span class="ar">الرشيق مضلّع</span></h3>
+          <div class="specs"><span>vertical ribs</span><span>88 × 95 × 120 cm</span></div>
+          <div class="specs" style="margin-top:8px"><span class="badge">reading light</span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <img src="assets/option-6.png" alt="Option 6 — rib construction, round full proportions" loading="lazy">
+        <div class="card-body">
+          <span class="opt-no">OPTION 06</span>
+          <h3>The Full, Ribbed <span class="ar">الممتلئ مضلّع</span></h3>
+          <div class="specs"><span>vertical ribs</span><span>112 × 95 × 108 cm</span></div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<div class="ply" role="presentation"></div>
+
+<section class="eng">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Engineered before it exists</h2><span class="ar">مدروس قبل أن يُبنى</span>
+    </div>
+    <p class="max">This is not a sketch waiting for problems. The ring version has already been taken to <strong>manufacturing level</strong>: every ring is drawn, checked and nested; the rod paths are verified dead straight through the whole stack; the seat is a built platform, not a loose cushion on hope.</p>
+    <div class="stats reveal">
+      <div class="stat"><b>16</b><span>unique rings, each CNC-ready</span></div>
+      <div class="stat"><b>4</b><span>sheets of birch ply</span></div>
+      <div class="stat"><b>0</b><span>joints — every ring cut whole</span></div>
+      <div class="stat"><b>4</b><span>steel rods lock the stack</span></div>
+    </div>
+    <div class="sheets">
+      <figure class="reveal">
+        <img src="assets/drawing-rings.png" alt="Ring construction working drawing" loading="lazy">
+        <figcaption>PLX-NAWAH-02 · rings — elevations, ring family, hardware</figcaption>
+      </figure>
+      <figure class="reveal">
+        <img src="assets/drawing-ribs.png" alt="Rib construction working drawing" loading="lazy">
+        <figcaption>PLX-NAWAH-01 · ribs — elevations, rib family, stack detail</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="three-d">
+  <div class="wrap">
+    <div class="section-head" style="justify-content:center">
+      <h2>Walk around it</h2><span class="ar">تجوّل حوله</span>
+    </div>
+    <p>All six options live in one interactive 3D room — orbit them, explode the construction into its parts, switch the lights on.</p>
+    <a class="btn" href="assets/nawah-3d.html" target="_blank" rel="noopener">Open the 3D room</a>
+    <p class="keys">drag&nbsp;to&nbsp;orbit · scroll&nbsp;to&nbsp;zoom · <kbd>E</kbd>&nbsp;explode · <kbd>I</kbd>&nbsp;lights · <kbd>M</kbd>&nbsp;dimensions</p>
+  </div>
+</section>
+
+<footer>
+  <svg viewBox="-108 -108 216 216" aria-label="Plexus Workshop logo" id="plx-logo"><path d="M 79.67,46.00 L 53.12,53.12 L 46.00,79.67 L 19.44,72.56 L -0.00,92.00 L -19.44,72.56 L -46.00,79.67 L -53.12,53.12 L -79.67,46.00 L -72.56,19.44 L -92.00,-0.00 L -72.56,-19.44 L -79.67,-46.00 L -53.12,-53.12 L -46.00,-79.67 L -19.44,-72.56 L 0.00,-92.00 L 19.44,-72.56 L 46.00,-79.67 L 53.12,-53.12 L 79.67,-46.00 L 72.56,-19.44 L 92.00,-0.00 L 72.56,19.44 L 79.67,46.00 Z M 49.40,-28.52 L 32.93,-32.93 L 28.52,-49.40 L 12.05,-44.99 L 0.00,-57.04 L -12.05,-44.99 L -28.52,-49.40 L -32.93,-32.93 L -49.40,-28.52 L -44.99,-12.05 L -57.04,-0.00 L -44.99,12.05 L -49.40,28.52 L -32.93,32.93 L -28.52,49.40 L -12.05,44.99 L -0.00,57.04 L 12.05,44.99 L 28.52,49.40 L 32.93,32.93 L 49.40,28.52 L 44.99,12.05 L 57.04,-0.00 L 44.99,-12.05 L 49.40,-28.52 Z" fill="#c9a45c" fill-rule="evenodd"/></svg>
+  <div class="name">PLEXUS</div>
+  <div class="sub">Workshop · Amman · Custom CNC Furniture</div>
+</footer>
+
+<script>
+  // hero signature: nested tapering ellipses — the pod seen from its mouth
+  (function(){
+    const svg = document.getElementById('rings');
+    const N = 16, cx = 400, cy = 380;
+    let html = '';
+    for (let i = 0; i < N; i++){
+      const t = i / (N - 1);
+      const k = 1 - 0.62 * Math.pow(t, 1.55);
+      const rx = 335 * k, ry = 355 * k;
+      const off = (1 - k) * 55;
+      const o = 0.16 + 0.5 * (1 - t);
+      html += `<ellipse cx="${cx + off}" cy="${cy - off*0.6}" rx="${rx}" ry="${ry}"
+        fill="none" stroke="#c9ae84" stroke-opacity="${o.toFixed(2)}" stroke-width="${(9 - 5*t).toFixed(1)}"/>`;
+    }
+    svg.innerHTML = html;
+  })();
+
+  // scroll reveals — cards stay visible unless the observer is live
+  if ('IntersectionObserver' in window){
+    document.body.classList.add('js');
+    const io = new IntersectionObserver((es) => {
+      es.forEach(e => { if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.08, rootMargin: '0px 0px -5% 0px' });
+    document.querySelectorAll('.card,.reveal').forEach(el => io.observe(el));
+  }
+</script>
+</body>
+</html>
