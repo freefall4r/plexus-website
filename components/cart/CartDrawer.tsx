@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { useCart } from "@/lib/cart";
+import { useCart, lineId } from "@/lib/cart";
 import { useLang } from "@/lib/i18n/context";
 import { currency } from "@/lib/config";
+import { engravingStyleLabel } from "@/lib/engraving";
 
 export function CartDrawer() {
   const { items, total, count, setQty, remove, isOpen, close } = useCart();
@@ -55,7 +56,7 @@ export function CartDrawer() {
               <>
                 <div className="flex-1 overflow-y-auto px-5 py-4">
                   {items.map((it) => (
-                    <div key={it.slug} className="flex gap-3 border-b border-ink/10 py-4">
+                    <div key={lineId(it)} className="flex gap-3 border-b border-ink/10 py-4">
                       <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-bone-2">
                         {it.image && (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -71,10 +72,16 @@ export function CartDrawer() {
                             {ar ? "حسب الطلب · 2–4 أسابيع" : "Made to order · 2–4 wks"}
                           </p>
                         )}
+                        {it.engraving && (
+                          <p className="mt-0.5 truncate text-[11px] text-copper" dir="auto">
+                            ✒️ {ar ? "نقش" : "Engraving"}: “{it.engraving.text}” ·{" "}
+                            {engravingStyleLabel(it.engraving.style, ar)}
+                          </p>
+                        )}
                         <div className="mt-2 flex items-center gap-3">
                           <div className="flex items-center rounded-full border border-ink/20">
                             <button
-                              onClick={() => setQty(it.slug, it.qty - 1)}
+                              onClick={() => setQty(lineId(it), it.qty - 1)}
                               className="px-2.5 py-0.5 text-ink-soft hover:text-ink"
                               aria-label="−"
                             >
@@ -82,7 +89,7 @@ export function CartDrawer() {
                             </button>
                             <span className="min-w-[1.5rem] text-center font-mono text-sm">{it.qty}</span>
                             <button
-                              onClick={() => setQty(it.slug, it.qty + 1)}
+                              onClick={() => setQty(lineId(it), it.qty + 1)}
                               className="px-2.5 py-0.5 text-ink-soft hover:text-ink"
                               aria-label="+"
                             >
@@ -90,7 +97,7 @@ export function CartDrawer() {
                             </button>
                           </div>
                           <button
-                            onClick={() => remove(it.slug)}
+                            onClick={() => remove(lineId(it))}
                             className="text-xs text-ink-soft underline-offset-2 hover:text-clay hover:underline"
                           >
                             {ar ? "إزالة" : "Remove"}

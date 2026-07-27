@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { categories } from "@/lib/products";
 import type { CatalogueProduct } from "@/lib/catalogue";
 import { ProductMedia } from "./ProductMedia";
 import { ProductGallery } from "./ProductGallery";
 import { ProductCard } from "./ProductCard";
+import { EngravingOption } from "./EngravingOption";
 import { AddToCart } from "@/components/cart/AddToCart";
 import { useLang } from "@/lib/i18n/context";
 import { brand, currency, waLink, mailLink } from "@/lib/config";
+import { isEngravable, type Engraving } from "@/lib/engraving";
 
 export function ProductDetail({
   product,
@@ -19,6 +22,8 @@ export function ProductDetail({
   related: CatalogueProduct[];
 }) {
   const { t, lang, num } = useLang();
+  const [engraveOn, setEngraveOn] = useState(false);
+  const [engraving, setEngraving] = useState<Engraving>({ text: "", style: "clean" });
   const name = lang === "ar" ? product.name_ar : product.name;
   const desc = lang === "ar" ? product.description_ar : product.description;
   const wood = lang === "ar" ? product.wood_ar : product.wood;
@@ -26,6 +31,11 @@ export function ProductDetail({
   const catLabel = cat ? (lang === "ar" ? cat.label_ar : cat.label) : product.category;
 
   const isSold = product.tags?.includes("sold") ?? false;
+  const engravable = isEngravable(product) && !isSold;
+  const activeEngraving =
+    engravable && engraveOn && engraving.text.trim()
+      ? { ...engraving, text: engraving.text.trim() }
+      : undefined;
   const photos = [product.imageUrl, ...(product.galleryUrls ?? [])].filter(Boolean) as string[];
   const soldLabel = lang === "ar" ? "تم البيع" : "Sold";
   const soldNote =
@@ -124,6 +134,16 @@ export function ProductDetail({
                 ))}
               </dl>
 
+              {/* engraving */}
+              {engravable && (
+                <EngravingOption
+                  enabled={engraveOn}
+                  engraving={engraving}
+                  onToggle={setEngraveOn}
+                  onChange={setEngraving}
+                />
+              )}
+
               {/* order */}
               <div className="mt-8 flex flex-wrap gap-3">
                 {!isSold && (
@@ -133,6 +153,7 @@ export function ProductDetail({
                     name_ar={product.name_ar}
                     price={product.price}
                     image={product.imageUrl}
+                    engraving={activeEngraving}
                   />
                 )}
                 <a

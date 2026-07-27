@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useCart } from "@/lib/cart";
+import { useCart, lineId } from "@/lib/cart";
 import { useLang } from "@/lib/i18n/context";
 import { brand, contact, currency, waLink } from "@/lib/config";
+import { engravingStyleLabel } from "@/lib/engraving";
 
 export function CheckoutForm() {
   const { items, total, clear } = useCart();
@@ -19,7 +20,12 @@ export function CheckoutForm() {
 
   const placeOrder = () => {
     const lines = items
-      .map((i) => `• ${i.qty}× ${i.name}${i.madeToOrder ? " (made to order)" : ""} — ${currency.symbol} ${i.price * i.qty}`)
+      .map((i) => {
+        let line = `• ${i.qty}× ${i.name}${i.madeToOrder ? " (made to order)" : ""} — ${currency.symbol} ${i.price * i.qty}`;
+        if (i.engraving)
+          line += `\n   ✒️ Engraving (${engravingStyleLabel(i.engraving.style, false)}): "${i.engraving.text}"`;
+        return line;
+      })
       .join("\n");
     const msg =
       `🛒 *New order — ${brand.full}*\n\n` +
@@ -106,13 +112,19 @@ export function CheckoutForm() {
           <h2 className="font-display text-xl">{ar ? "ملخّص الطلب" : "Order summary"}</h2>
           <div className="mt-4 divide-y divide-ink/10">
             {items.map((i) => (
-              <div key={i.slug} className="flex items-start justify-between gap-3 py-3">
+              <div key={lineId(i)} className="flex items-start justify-between gap-3 py-3">
                 <div>
                   <p className="font-display">{ar ? i.name_ar || i.name : i.name}</p>
                   <p className="text-sm text-ink-soft">
                     {ar ? "الكمية" : "Qty"}: {i.qty}
                     {i.madeToOrder && (ar ? " · حسب الطلب" : " · made to order")}
                   </p>
+                  {i.engraving && (
+                    <p className="text-sm text-copper" dir="auto">
+                      ✒️ {ar ? "نقش" : "Engraving"}: “{i.engraving.text}” ·{" "}
+                      {engravingStyleLabel(i.engraving.style, ar)}
+                    </p>
+                  )}
                 </div>
                 <span className="shrink-0 font-mono text-sm">{currency.symbol} {num(i.price * i.qty)}</span>
               </div>

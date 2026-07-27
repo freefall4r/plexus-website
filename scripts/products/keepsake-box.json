@@ -1,0 +1,19 @@
+{
+  "name": "Keepsake Box",
+  "name_ar": "صندوق ذكريات",
+  "slug": "keepsake-box",
+  "image": "renders/keepsake-box.png",
+  "gallery": ["renders/keepsake-box-2.png"],
+  "price": 45,
+  "category": "decor",
+  "collection": "objects",
+  "wood": "Oak & walnut",
+  "wood_ar": "بلوط وجوز",
+  "dimensions": "24 × 16 × 10 cm",
+  "blurb": "A lidded oak keepsake box with a walnut inlay, engraved on the lid with a name or date — for weddings, babies, and things worth keeping.",
+  "blurb_ar": "صندوق ذكريات من خشب البلوط بغطاء مطعّم بالجوز، يُنقش على الغطاء اسم أو تاريخ — للأعراس والمواليد وكل ما يستحق الحفظ.",
+  "description": "A solid-oak box with a fitted lid and a walnut accent strip, laser-engraved on the lid with the name, date, or phrase you choose — Arabic or English, clean or calligraphy. Finger-jointed corners, soft-touch oil finish, felt-lined base. Made for wedding cards, baby keepsakes, letters, and watches. 24 × 16 cm, 10 cm tall.",
+  "description_ar": "صندوق من خشب البلوط الصلب بغطاء محكم وشريط من خشب الجوز، يُنقش على غطائه بالليزر الاسم أو التاريخ أو العبارة التي تختارها — بالعربية أو الإنجليزية، بنمط بسيط أو خط عربي. زوايا متعاشقة، تشطيب زيتي ناعم، وقاعدة مبطّنة باللباد. لأوراق العرس وذكريات المواليد والرسائل والساعات. ‏24 × 16 سم، الارتفاع 10 سم.",
+  "tags": ["made-to-order", "engravable"],
+  "featured": false
+}

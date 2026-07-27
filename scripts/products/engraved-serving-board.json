@@ -1,0 +1,19 @@
+{
+  "name": "Engraved Serving Board",
+  "name_ar": "لوح تقديم منقوش",
+  "slug": "engraved-serving-board",
+  "image": "renders/engraved-serving-board.png",
+  "gallery": ["renders/engraved-serving-board-2.png"],
+  "price": 35,
+  "category": "kitchenware",
+  "collection": "objects",
+  "wood": "Solid beech",
+  "wood_ar": "خشب الزان الصلب",
+  "dimensions": "40 × 25 × 2.5 cm",
+  "blurb": "A solid-beech serving board, laser-engraved with a name or phrase of your choice — the gift that gets used every day.",
+  "blurb_ar": "لوح تقديم من خشب الزان الصلب، يُنقش بالليزر باسم أو عبارة تختارها — هدية تُستعمل كل يوم.",
+  "description": "Cut from a single piece of solid beech and finished with food-safe oil, then laser-engraved in our Amman workshop with the name or phrase you choose — in Arabic or English, in a clean or calligraphy style. A wedding, housewarming, or family-kitchen gift that actually gets used. 40 × 25 cm, 2.5 cm thick.",
+  "description_ar": "يُقطع من قطعة واحدة من خشب الزان الصلب ويُشطّب بزيت آمن غذائيًا، ثم يُنقش بالليزر في ورشتنا في عمّان بالاسم أو العبارة التي تختارها — بالعربية أو الإنجليزية، بنمط بسيط أو خط عربي. هدية زفاف أو بيت جديد تُستعمل فعلًا. ‏40 × 25 سم، سماكة 2.5 سم.",
+  "tags": ["made-to-order", "engravable"],
+  "featured": true
+}

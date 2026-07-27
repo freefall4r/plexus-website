@@ -6,6 +6,7 @@ import type { CatalogueProduct } from "@/lib/catalogue";
 import { ProductMedia } from "./ProductMedia";
 import { useLang } from "@/lib/i18n/context";
 import { currency } from "@/lib/config";
+import { isEngravable } from "@/lib/engraving";
 
 export function ProductCard({ product, index = 0 }: { product: CatalogueProduct; index?: number }) {
   const { lang, t, num } = useLang();
@@ -13,6 +14,7 @@ export function ProductCard({ product, index = 0 }: { product: CatalogueProduct;
   const blurb = lang === "ar" ? product.blurb_ar : product.blurb;
   const wood = lang === "ar" ? product.wood_ar : product.wood;
   const isSold = product.tags?.includes("sold") ?? false;
+  const engravable = !isSold && isEngravable(product);
   const soldLabel = lang === "ar" ? "تم البيع" : "Sold";
 
   return (
@@ -44,6 +46,11 @@ export function ProductCard({ product, index = 0 }: { product: CatalogueProduct;
           {!isSold && (
             <span className="absolute bottom-3 ltr:right-3 rtl:left-3 translate-y-2 rounded-sm bg-bone/90 px-3 py-1 font-mono text-xs text-ink opacity-0 backdrop-blur transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
               {t("shop.madeToOrder")}
+            </span>
+          )}
+          {engravable && (
+            <span className="absolute bottom-3 ltr:left-3 rtl:right-3 rounded-sm bg-bone/90 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-ink backdrop-blur">
+              ✒️ {lang === "ar" ? "يُنقش باسمك" : "Personalized"}
             </span>
           )}
         </div>

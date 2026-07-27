@@ -8,24 +8,34 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
+import type { Engraving } from "@/lib/engraving";
 
 export type CartItem = {
   slug: string;
   name: string;
   name_ar?: string;
-  price: number; // JOD
+  price: number; // JOD, per unit — includes the engraving fee when engraved
   qty: number;
   image?: string;
   madeToOrder?: boolean;
+  engraving?: Engraving;
 };
+
+// One cart line per slug+engraving combo, so "board for Omar" and
+// "board for Lina" stay separate lines.
+export function lineId(item: Pick<CartItem, "slug" | "engraving">): string {
+  return item.engraving
+    ? `${item.slug}::${item.engraving.style}::${item.engraving.text}`
+    : item.slug;
+}
 
 type CartCtx = {
   items: CartItem[];
   count: number;
   total: number;
   add: (item: Omit<CartItem, "qty">, qty?: number) => void;
-  remove: (slug: string) => void;
-  setQty: (slug: string, qty: number) => void;
+  remove: (id: string) => void;
+  setQty: (id: string, qty: number) => void;
   clear: () => void;
   isOpen: boolean;
   open: () => void;
@@ -53,23 +63,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const add: CartCtx["add"] = useCallback((item, qty = 1) => {
     setItems((prev) => {
-      const found = prev.find((p) => p.slug === item.slug);
+      const id = lineId(item);
+      const found = prev.find((p) => lineId(p) === id);
       if (found)
-        return prev.map((p) => (p.slug === item.slug ? { ...p, qty: p.qty + qty } : p));
+        return prev.map((p) => (lineId(p) === id ? { ...p, qty: p.qty + qty } : p));
       return [...prev, { ...item, qty }];
     });
     setIsOpen(true);
   }, []);
 
-  const remove = useCallback((slug: string) => {
-    setItems((prev) => prev.filter((p) => p.slug !== slug));
+  const remove = useCallback((id: string) => {
+    setItems((prev) => prev.filter((p) => lineId(p) !== id));
   }, []);
 
-  const setQty = useCallback((slug: string, qty: number) => {
+  const setQty = useCallback((id: string, qty: number) => {
     setItems((prev) =>
       qty <= 0
-        ? prev.filter((p) => p.slug !== slug)
-        : prev.map((p) => (p.slug === slug ? { ...p, qty } : p))
+        ? prev.filter((p) => lineId(p) !== id)
+        : prev.map((p) => (lineId(p) === id ? { ...p, qty } : p))
     );
   }, []);
 

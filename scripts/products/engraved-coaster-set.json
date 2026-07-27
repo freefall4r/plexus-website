@@ -1,0 +1,19 @@
+{
+  "name": "Engraved Coaster Set (4)",
+  "name_ar": "طقم قواعد أكواب منقوش (4)",
+  "slug": "engraved-coaster-set",
+  "image": "renders/engraved-coaster-set.png",
+  "gallery": ["renders/engraved-coaster-set-2.png"],
+  "price": 18,
+  "category": "kitchenware",
+  "collection": "objects",
+  "wood": "Solid oak",
+  "wood_ar": "خشب البلوط الصلب",
+  "dimensions": "Ø 9 × 0.8 cm each",
+  "blurb": "Four solid-oak coasters engraved with initials, names, or a word you choose — the easiest personal gift there is.",
+  "blurb_ar": "أربع قواعد أكواب من خشب البلوط الصلب تُنقش بأحرف أو أسماء أو كلمة تختارها — أسهل هدية شخصية.",
+  "description": "A set of four solid-oak coasters, sanded smooth, oiled, and laser-engraved with whatever you choose — initials, a family name, or one word per coaster. Arabic or English, clean or calligraphy. Each coaster is Ø 9 cm and 8 mm thick, with a soft chamfered edge.",
+  "description_ar": "طقم من أربع قواعد أكواب من خشب البلوط الصلب، مصقولة ومزيّتة وتُنقش بالليزر بما تختاره — أحرف، اسم العائلة، أو كلمة على كل قاعدة. بالعربية أو الإنجليزية، بنمط بسيط أو خط عربي. قطر كل قاعدة 9 سم وسماكتها 8 ملم بحافة مشطوفة ناعمة.",
+  "tags": ["made-to-order", "engravable"],
+  "featured": false
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Desk Nameplate",
+  "name_ar": "لوحة اسم مكتبية",
+  "slug": "desk-nameplate",
+  "image": "renders/desk-nameplate.png",
+  "gallery": ["renders/desk-nameplate-2.png"],
+  "price": 25,
+  "category": "desk",
+  "collection": "objects",
+  "wood": "Solid walnut",
+  "wood_ar": "خشب الجوز الصلب",
+  "dimensions": "22 × 5 × 5 cm",
+  "blurb": "A solid-walnut desk nameplate, engraved with a name and title — for the office, the clinic, or the corner desk at home.",
+  "blurb_ar": "لوحة اسم مكتبية من خشب الجوز الصلب، تُنقش بالاسم واللقب — للمكتب أو العيادة أو زاوية العمل في البيت.",
+  "description": "A clean triangular prism of solid walnut that sits square on the desk, laser-engraved with a name and, if you like, a title beneath it — Arabic, English, or both sides, one language each. Finished with hardwax oil. A quietly serious gift for a promotion, a graduation, or a new clinic. 22 cm wide.",
+  "description_ar": "منشور مثلث أنيق من خشب الجوز الصلب يثبت على المكتب، يُنقش بالليزر بالاسم وتحته اللقب إن رغبت — بالعربية أو الإنجليزية أو على الوجهين بلغة لكل وجه. مُشطّب بزيت الشمع الصلب. هدية راقية لترقية أو تخرّج أو عيادة جديدة. العرض 22 سم.",
+  "tags": ["made-to-order", "engravable"],
+  "featured": false
+}

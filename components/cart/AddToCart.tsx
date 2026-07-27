@@ -3,6 +3,7 @@
 import { useCart } from "@/lib/cart";
 import { useLang } from "@/lib/i18n/context";
 import { isInStock } from "@/lib/stock";
+import { ENGRAVING_FEE, type Engraving } from "@/lib/engraving";
 
 type Props = {
   slug: string;
@@ -11,9 +12,10 @@ type Props = {
   price: number;
   image?: string;
   variant?: "primary" | "card";
+  engraving?: Engraving; // set when the buyer filled the engraving option
 };
 
-export function AddToCart({ slug, name, name_ar, price, image, variant = "primary" }: Props) {
+export function AddToCart({ slug, name, name_ar, price, image, variant = "primary", engraving }: Props) {
   const { add } = useCart();
   const { lang } = useLang();
   const ar = lang === "ar";
@@ -22,7 +24,15 @@ export function AddToCart({ slug, name, name_ar, price, image, variant = "primar
   const handle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    add({ slug, name, name_ar, price, image, madeToOrder: !stock });
+    add({
+      slug,
+      name,
+      name_ar,
+      price: engraving ? price + ENGRAVING_FEE : price,
+      image,
+      madeToOrder: !stock,
+      engraving,
+    });
   };
 
   if (variant === "card") {

@@ -10,6 +10,7 @@ import {
 import type { CatalogueProduct } from "@/lib/catalogue";
 import { ProductCard } from "./ProductCard";
 import { useLang } from "@/lib/i18n/context";
+import { isEngravable } from "@/lib/engraving";
 
 type Sort = "featured" | "priceAsc" | "priceDesc";
 
@@ -19,6 +20,7 @@ export function ShopClient({ items }: { items: CatalogueProduct[] }) {
   const [category, setCategory] = useState<WoodCategory | "all">("all");
   const [wood, setWood] = useState<string | "all">("all");
   const [sort, setSort] = useState<Sort>("featured");
+  const [personalized, setPersonalized] = useState(false);
 
   // woods actually present in the catalogue (for the filter dropdown)
   const woods = useMemo(
@@ -31,6 +33,7 @@ export function ShopClient({ items }: { items: CatalogueProduct[] }) {
       if (collection !== "all" && p.collection !== collection) return false;
       if (category !== "all" && p.category !== category) return false;
       if (wood !== "all" && p.wood !== wood) return false;
+      if (personalized && !isEngravable(p)) return false;
       return true;
     });
     list = [...list];
@@ -38,13 +41,14 @@ export function ShopClient({ items }: { items: CatalogueProduct[] }) {
     else if (sort === "priceDesc") list.sort((a, b) => b.price - a.price);
     else list.sort((a, b) => Number(!!b.featured) - Number(!!a.featured));
     return list;
-  }, [items, collection, category, wood, sort]);
+  }, [items, collection, category, wood, sort, personalized]);
 
   const clear = () => {
     setCollection("all");
     setCategory("all");
     setWood("all");
     setSort("featured");
+    setPersonalized(false);
   };
 
   return (
@@ -66,6 +70,9 @@ export function ShopClient({ items }: { items: CatalogueProduct[] }) {
                 {lang === "ar" ? c.label_ar : c.label}
               </Pill>
             ))}
+            <Pill active={personalized} onClick={() => setPersonalized((v) => !v)}>
+              ✒️ {lang === "ar" ? "هدايا تُنقش باسمك" : "Personalized gifts"}
+            </Pill>
           </div>
 
           <div className="ms-auto flex flex-wrap items-center gap-3">
