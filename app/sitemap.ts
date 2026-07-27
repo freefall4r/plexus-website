@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { site } from "@/lib/config";
 import { getCatalogue } from "@/lib/catalogue";
 import { allLibrarySlugs } from "@/lib/woodLibrary";
+import { getWoodArticles } from "@/lib/woodArticles";
 
 export const revalidate = 3600;
 
@@ -45,5 +46,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...products, ...library];
+  const articles: MetadataRoute.Sitemap = getWoodArticles().map((a) => ({
+    url: `${site.url}/wood-library/${a.slug}`,
+    lastModified: new Date(`${a.date}T00:00:00Z`),
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
+
+  return [...staticRoutes, ...products, ...library, ...articles];
 }

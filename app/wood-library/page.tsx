@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LibraryIndex } from "@/components/library/LibraryIndex";
 import { getLibraryEntries, getExplainers } from "@/lib/woodCatalogue";
+import { getWoodArticles } from "@/lib/woodArticles";
 
 export const metadata: Metadata = {
   title: "The Wood Library — A Wood Engineer's Guide | Plexus Workshop",
@@ -16,5 +17,8 @@ export default async function WoodLibraryPage() {
     getLibraryEntries(),
     Promise.resolve(getExplainers()),
   ]);
-  return <LibraryIndex entries={entries} explainers={explainers} />;
+  const articles = getWoodArticles();
+  return (
+    <LibraryIndex entries={entries} explainers={explainers} articles={articles} />
+  );
 }

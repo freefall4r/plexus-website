@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { WoodDetail } from "@/components/library/WoodDetail";
 import { ExplainerDetail } from "@/components/library/ExplainerDetail";
+import { ArticleDetail } from "@/components/library/ArticleDetail";
+import { getWoodArticle, allArticleSlugs } from "@/lib/woodArticles";
 import {
   getLibraryEntries,
   getLibraryEntry,
@@ -15,7 +17,7 @@ export const revalidate = 60;
 export const dynamicParams = true; // allow woods added later via Sanity
 
 export function generateStaticParams() {
-  return allLibrarySlugs().map((slug) => ({ slug }));
+  return [...allLibrarySlugs(), ...allArticleSlugs()].map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -30,6 +32,15 @@ export async function generateMetadata({
     return {
       title: `${explainer.title} | Plexus Workshop`,
       description: explainer.summary,
+      alternates: { canonical: `/wood-library/${slug}` },
+    };
+  }
+
+  const article = getWoodArticle(slug);
+  if (article) {
+    return {
+      title: `${article.title} | Plexus Workshop`,
+      description: article.summary,
       alternates: { canonical: `/wood-library/${slug}` },
     };
   }
@@ -73,6 +84,30 @@ export default async function LibraryEntryPage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <ExplainerDetail explainer={explainer} />
+      </>
+    );
+  }
+
+  const article = getWoodArticle(slug);
+  if (article) {
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: article.title,
+      description: article.summary,
+      image: `${site.url}${article.image}`,
+      datePublished: article.date,
+      author: { "@type": "Organization", name: "Plexus Workshop" },
+      publisher: { "@type": "Organization", name: "Plexus Workshop" },
+      mainEntityOfPage: `${site.url}/wood-library/${slug}`,
+    };
+    return (
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <ArticleDetail article={article} />
       </>
     );
   }

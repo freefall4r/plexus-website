@@ -10,6 +10,7 @@ import {
   CATEGORY_ORDER,
   type WoodEntry,
   type Explainer,
+  type WoodArticle,
 } from "@/lib/woodLibrary";
 
 const COPY = {
@@ -23,15 +24,32 @@ const COPY = {
     ar: "دليل مهندس عملي للمواد التي نبني بها — الأخشاب الطبيعية، وحقيقة الصلب مقابل اللين، والألواح المصنّعة (أبلكاش، لاتيه، MDF، HDF) التي تسمع بها عند كل نجّار. لغة بسيطة وأرقام حقيقية.",
   },
   explainersTitle: { en: "Start here", ar: "ابدأ من هنا" },
+  journalTitle: { en: "From the workshop journal", ar: "من دفتر الورشة" },
+  journalBlurb: {
+    en: "Deeper dives, one at a time — glues, joints, finishes, and lessons from the lab and the bench.",
+    ar: "مقالات أعمق، واحدة تلو الأخرى — الغراء، الوصلات، التشطيبات، ودروس من المختبر وطاولة العمل.",
+  },
   read: { en: "Read", ar: "اقرأ" },
 };
+
+function formatDate(iso: string, ar: boolean): string {
+  const d = new Date(`${iso}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(ar ? "ar-JO" : "en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
 
 export function LibraryIndex({
   entries,
   explainers,
+  articles = [],
 }: {
   entries: WoodEntry[];
   explainers: Explainer[];
+  articles?: WoodArticle[];
 }) {
   const { lang } = useLang();
   const ar = lang === "ar";
@@ -97,6 +115,58 @@ export function LibraryIndex({
             ))}
           </div>
         </section>
+
+        {/* Workshop journal — dated articles, newest first */}
+        {articles.length > 0 && (
+          <section className="mt-16 md:mt-24">
+            <Reveal>
+              <span className="overline text-copper">{COPY.journalTitle[lang]}</span>
+            </Reveal>
+            <Reveal delay={0.05}>
+              <p className="mt-2 max-w-[58ch] text-[clamp(0.98rem,0.94rem+0.2vw,1.08rem)] leading-relaxed text-ink-soft">
+                {COPY.journalBlurb[lang]}
+              </p>
+            </Reveal>
+            <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {articles.map((a, i) => (
+                <Reveal key={a.slug} delay={0.04 * i}>
+                  <Link
+                    href={`/wood-library/${a.slug}`}
+                    data-cursor="hover"
+                    className="group flex h-full flex-col overflow-hidden rounded-xl border border-ink/10 bg-bone-2/40 transition-colors hover:border-copper/40"
+                  >
+                    <div className="relative aspect-[16/10] w-full overflow-hidden bg-bone-2">
+                      <Image
+                        src={a.image}
+                        alt={ar ? a.title_ar : a.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    </div>
+                    <div className="flex flex-1 flex-col p-6">
+                      <span className="text-xs tracking-wide text-ink-soft/70">
+                        {formatDate(a.date, ar)}
+                      </span>
+                      <h3 className="mt-2 font-display text-[clamp(1.15rem,1.05rem+0.5vw,1.45rem)] font-light leading-tight text-ink">
+                        {ar ? a.title_ar : a.title}
+                      </h3>
+                      <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-ink-soft">
+                        {ar ? a.summary_ar : a.summary}
+                      </p>
+                      <span className="mt-auto inline-flex items-center gap-2 pt-4 text-sm tracking-wide text-copper">
+                        {COPY.read[lang]}
+                        <span aria-hidden className="transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1">
+                          →
+                        </span>
+                      </span>
+                    </div>
+                  </Link>
+                </Reveal>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Category grids */}
         {CATEGORY_ORDER.map((cat) => {

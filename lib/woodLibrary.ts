@@ -65,6 +65,14 @@ export type Explainer = {
   sections: ExplainerSection[];
 };
 
+/** A dated journal article — same shape as an Explainer plus a date.
+ *  Data lives in content/wood-articles/*.json (see lib/woodArticles.ts);
+ *  the type lives here so client components can import it without fs. */
+export type WoodArticle = Explainer & {
+  /** ISO date, e.g. "2026-07-27". Newest first on the index. */
+  date: string;
+};
+
 // ───────────────────────────────────────────────────────────────────────────
 // EXPLAINERS
 // ───────────────────────────────────────────────────────────────────────────
