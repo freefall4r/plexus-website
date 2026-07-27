@@ -3,9 +3,10 @@
 // C Hub passcode — "visit Muthanna" level items between anahata and Layth.
 // Not owner-gated: nothing about pricing or margin lives here.
 
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { isFirebaseConfigured } from "@/lib/firebase/admin";
 import { isValidChubPasscode, CHUB_PASSCODE_HEADER } from "@/lib/chub/auth";
+import { sendChubPush } from "@/lib/chub/push";
 import { getChubTodo, addChubTodoItem, toggleChubTodoItem, removeChubTodoItem } from "@/lib/chub/store";
 
 export const runtime = "nodejs";
@@ -55,6 +56,16 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "too_many_items" }, { status: 400 });
       }
       const item = await addChubTodoItem(text);
+      // Ping every subscribed device — after() runs once the response is
+      // sent and sendChubPush swallows its own errors, so the notification
+      // can never slow down or break the save (same pattern as new-job).
+      after(() =>
+        sendChubPush({
+          title: "📝 New to-do on C Hub",
+          body: text,
+          url: "/chub",
+        })
+      );
       return NextResponse.json({ ok: true, item });
     }
 

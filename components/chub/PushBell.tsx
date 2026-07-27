@@ -49,9 +49,25 @@ export function PushBell({ pass }: { pass: string }) {
     navigator.serviceWorker
       .getRegistration(SW_SCOPE)
       .then((reg) => reg?.pushManager.getSubscription() ?? null)
-      .then((sub) => setState(sub ? "on" : "off"))
+      .then((sub) => {
+        if (sub) {
+          // Re-save on every open. The bell's "on" only proves the PHONE
+          // holds a subscription — the server record can be missing (save
+          // failed once, or pruned after a dead-endpoint response) and the
+          // device silently gets nothing. Doc id is a hash of the endpoint,
+          // so re-posting the same device is an overwrite, never a duplicate.
+          fetch("/api/chub/push", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", [CHUB_PASSCODE_HEADER]: pass },
+            body: JSON.stringify({ subscription: sub.toJSON() }),
+          }).catch(() => null);
+          setState("on");
+        } else {
+          setState("off");
+        }
+      })
       .catch(() => setState("off"));
-  }, []);
+  }, [pass]);
 
   const enable = useCallback(async () => {
     setState("busy");
