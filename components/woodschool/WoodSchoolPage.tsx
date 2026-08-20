@@ -268,10 +268,10 @@ export function WoodSchoolPage() {
                 </p>
               </div>
               <Image
-                src="/wood-school/unit.png"
+                src="/wood-school/unit.jpg"
                 alt={ar ? "وحدة الحائط" : "The offset wall unit"}
-                width={1320}
-                height={1080}
+                width={1400}
+                height={1000}
                 className="rounded-lg border border-[#d9cbb3] bg-[#f4efe6]"
               />
             </div>
