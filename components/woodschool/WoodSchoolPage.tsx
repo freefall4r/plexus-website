@@ -32,10 +32,11 @@ export const COHORT = {
 
 const COPY = {
   overline: { en: "Plexus Wood School", ar: "مدرسة الخشب" },
-  heading: { en: "Four days, two teachers, and you will never look at a board the same way.", ar: "أربعة أيام، ومُعلِّمان، ولن تنظر إلى لوح الخشب بالطريقة نفسها بعدها." },
+  headA: { en: "Everything you need to know about wood.", ar: "كل ما تحتاج معرفته عن الخشب." },
+  headB: { en: "And everything you need to do with it.", ar: "وكل ما تحتاج فعله به." },
   intro: {
-    en: "For makers, artists and anyone who wants to start working with wood properly. Four days across two weekends, inside a working production workshop. The first weekend you learn the material and how a piece is designed, from an engineer who studied wood. The second weekend you make it, with a carpenter who builds for a living.",
-    ar: "للحرفيين والفنانين ولكل من يريد أن يبدأ العمل بالخشب كما يجب. أربعة أيام على مدى عطلتَي نهاية أسبوع، داخل ورشة إنتاج حقيقية. في الأولى تتعلّم المادة وكيف تُصمَّم القطعة، على يد مهندس درس الخشب. وفي الثانية تصنعها، مع نجّار يبني للعيش.",
+    en: "For makers, artists and anyone who wants to start working with wood properly. Four days across two weekends, inside C Hub — a working fabrication workshop in Amman. The first weekend is the material: what wood is, and how a piece gets designed before anyone cuts anything. The second weekend you make it, on real machines, with the carpenter whose shop it is.",
+    ar: "للحرفيين والفنانين ولكل من يريد أن يبدأ العمل بالخشب كما يجب. أربعة أيام على مدى عطلتَين، داخل C Hub — ورشة تصنيع حقيقية في عمّان. العطلة الأولى للمادة: ما هو الخشب، وكيف تُصمَّم القطعة قبل أن يُقصّ شيء. وفي الثانية تصنعها، على آلات حقيقية، مع النجّار صاحب الورشة.",
   },
   book: { en: "Add me to the list", ar: "أضِفني إلى القائمة" },
   waMsg: {
@@ -43,8 +44,8 @@ const COPY = {
     ar: "مرحباً — أريد الانضمام إلى قائمة مدرسة الخشب.",
   },
   where: {
-    en: `Four days over two weekends · ${COHORT.hours} · Plexus Workshop, Amman`,
-    ar: `أربعة أيام على مدى عطلتَين · ${COHORT.hours} · ورشة بلكسس، عمّان`,
+    en: `Four days over two weekends · ${COHORT.hours} · C Hub workshop, Amman`,
+    ar: `أربعة أيام على مدى عطلتَين · ${COHORT.hours} · ورشة C Hub، عمّان`,
   },
 
   factSeats: { en: "seats only", ar: "مقاعد فقط" },
@@ -55,19 +56,19 @@ const COPY = {
 
   daysTitle: { en: "The two weekends", ar: "العطلتان" },
   wk1: { en: "Weekend one — the material, and the design", ar: "العطلة الأولى — المادة والتصميم" },
-  wk1who: { en: "with the timber engineer", ar: "مع مهندس الأخشاب" },
+  wk1who: { en: "the material and the drawing board", ar: "المادة ولوح الرسم" },
   wk2: { en: "Weekend two — the shop, and the making", ar: "العطلة الثانية — الورشة والتنفيذ" },
-  wk2who: { en: "with a working master carpenter", ar: "مع نجّار محترف" },
+  wk2who: { en: "with Layth, in his workshop", ar: "مع ليث، في ورشته" },
   gap: {
     en: "The week in between is deliberate: your glue-up cures properly, and you come back having thought about what you are making.",
     ar: "الأسبوع الفاصل مقصود: يجف الغراء كما يجب، وتعود وقد فكّرت في ما تصنعه.",
   },
 
   pieceTitle: { en: "You leave carrying this", ar: "تخرج حاملاً هذه" },
-  teacher2Title: { en: "And who makes with you", ar: "ومن يصنع معك" },
+  teacher2Title: { en: "And the wood side", ar: "والجانب الخشبي" },
   teacher2: {
-    en: "The second weekend is led by a carpenter who builds for a living — machines, workshop etiquette, sharpening, and the working habits that no book teaches. You get the engineer and the craftsman, which is not a combination you will find twice in this city.",
-    ar: "يقود العطلة الثانية نجّار يبني للعيش — الآلات، وآداب الورشة، والسنّ، وعادات العمل التي لا يعلّمها كتاب. تحصل على المهندس والحِرَفي معاً، وهي تركيبة لن تجدها مرتين في هذه المدينة.",
+    en: "The first weekend is the material, taught by a timber engineer — MSc from the University of Sopron, with published research on laminated veneer lumber. Species, movement, what to buy and what it should cost, and how a piece is designed before anyone touches a machine. Then the tools come out and Layth takes over.",
+    ar: "العطلة الأولى للمادة، يقدّمها مهندس أخشاب — ماجستير من جامعة شوپرون، وأبحاث منشورة في الخشب الرقائقي المصفّح. الأنواع، والحركة، وماذا تشتري وكم يجب أن يكلّف، وكيف تُصمَّم القطعة قبل أن يلمس أحد آلة. ثم تخرج العدّة ويتسلّم ليث.",
   },
   pieceBlurb: {
     en: "A 400 × 300 × 180 mm wall unit in solid hardwood with a plywood back and two shelves set deliberately off from each other. Small enough to finish properly, honest enough to teach everything — the joints, why the back is plywood and not solid wood, how a shelf carries load, and how a piece is fixed to a wall so it never moves again.",
@@ -75,7 +76,7 @@ const COPY = {
   },
 
   includedTitle: { en: "Included — nothing further to buy", ar: "شامل — لا شيء آخر تشتريه" },
-  teacherTitle: { en: "Who is teaching", ar: "من يُدرّس" },
+  teacherTitle: { en: "Whose workshop this is", ar: "ورشة مَن هذه" },
   teacher: {
     en: "MSc in Timber Engineering, University of Sopron — with published and cited research on laminated veneer lumber and the structural use of underused species. Plexus Workshop is a solid-wood, CNC and laser fabrication shop in Amman doing custom and contract production for architects, designers and brands. The first weekend is his: what wood is, and how a piece gets designed before anyone cuts it.",
     ar: "ماجستير في هندسة الأخشاب من جامعة شوپرون — مع أبحاث منشورة ومُستشهَد بها في الخشب الرقائقي المصفّح والاستخدام الإنشائي للأنواع قليلة الاستعمال. ورشة بلكسس ورشة خشب صلب وتصنيع CNC وليزر في عمّان، تنفّذ إنتاجاً خاصاً وتعاقدياً لمعماريين ومصممين وعلامات تجارية. العطلة الأولى له: ما هو الخشب، وكيف تُصمَّم القطعة قبل أن يقصّ أحد شيئاً.",
@@ -190,8 +191,9 @@ export function WoodSchoolPage() {
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#9c5b2c]">
             {t(COPY.overline)}
           </p>
-          <h1 className="mt-5 font-serif text-4xl leading-tight sm:text-5xl">
-            {t(COPY.heading)}
+          <h1 className="mt-5 font-serif text-4xl leading-[1.12] sm:text-5xl">
+            {t(COPY.headA)}
+            <span className="block text-[#9c5b2c]">{t(COPY.headB)}</span>
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-[#473826]">
             {t(COPY.intro)}
