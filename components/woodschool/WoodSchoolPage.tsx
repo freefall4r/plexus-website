@@ -78,8 +78,8 @@ const COPY = {
   includedTitle: { en: "Included — nothing further to buy", ar: "شامل — لا شيء آخر تشتريه" },
   teacherTitle: { en: "Whose workshop this is", ar: "ورشة مَن هذه" },
   teacher: {
-    en: "MSc in Timber Engineering, University of Sopron — with published and cited research on laminated veneer lumber and the structural use of underused species. Plexus Workshop is a solid-wood, CNC and laser fabrication shop in Amman doing custom and contract production for architects, designers and brands. The first weekend is his: what wood is, and how a piece gets designed before anyone cuts it.",
-    ar: "ماجستير في هندسة الأخشاب من جامعة شوپرون — مع أبحاث منشورة ومُستشهَد بها في الخشب الرقائقي المصفّح والاستخدام الإنشائي للأنواع قليلة الاستعمال. ورشة بلكسس ورشة خشب صلب وتصنيع CNC وليزر في عمّان، تنفّذ إنتاجاً خاصاً وتعاقدياً لمعماريين ومصممين وعلامات تجارية. العطلة الأولى له: ما هو الخشب، وكيف تُصمَّم القطعة قبل أن يقصّ أحد شيئاً.",
+    en: "C Hub is a working fabrication workshop in Amman, and Layth is the man who founded it. He makes furniture and joinery for a living — real clients, real deadlines, every week of the year. The second weekend happens in his shop, on his machines, to his standards. What he teaches is the part nobody writes down: how a machine is actually set, how a tool is handed to another person, how a job is sequenced so that it finishes, and how to put a real edge on a chisel. There is no reading your way to any of it.",
+    ar: "C Hub ورشة تصنيع حقيقية في عمّان، وليث هو من أسّسها. يصنع الأثاث والنجارة لقمة عيشه — عملاء حقيقيون ومواعيد حقيقية، كل أسبوع من السنة. العطلة الثانية تجري في ورشته، وعلى آلاته، وبمعاييره. وما يعلّمه هو الجزء الذي لا يُكتب: كيف تُضبط الآلة فعلاً، وكيف تُسلَّم العدّة لشخص آخر، وكيف يُرتَّب العمل حتى ينتهي، وكيف تضع حدّاً حقيقياً على الإزميل. لا سبيل إلى أيٍّ من ذلك بالقراءة.",
   },
 
   howTitle: { en: "How it works", ar: "كيف تسير الأمور" },
