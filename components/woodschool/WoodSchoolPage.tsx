@@ -21,20 +21,21 @@ import { useLang } from "@/lib/i18n/context";
 export const COHORT = {
   number: "01",
   hours: "10:00 – 16:00",
-  days: 2,
+  days: 4,
+  weekends: 2,
   seats: 5,
-  price: 120,
-  fullPrice: 150,
-  deposit: 60,
+  price: 200,
+  fullPrice: 260,
+  deposit: 100,
   dates: null as { en: string; ar: string } | null,
 };
 
 const COPY = {
   overline: { en: "Plexus Wood School", ar: "مدرسة الخشب" },
-  heading: { en: "Two days, and you will never look at a board the same way.", ar: "يومان، ولن تنظر إلى لوح الخشب بالطريقة نفسها بعدها." },
+  heading: { en: "Four days, two teachers, and you will never look at a board the same way.", ar: "أربعة أيام، ومُعلِّمان، ولن تنظر إلى لوح الخشب بالطريقة نفسها بعدها." },
   intro: {
-    en: "For makers, artists and anyone who wants to start working with wood properly. Not a hobby class and not a lecture — two days inside a working production workshop, learning the material from an engineer who studied it, then building something real out of it.",
-    ar: "للحرفيين والفنانين ولكل من يريد أن يبدأ العمل بالخشب كما يجب. ليست دورة هواة ولا محاضرة — يومان داخل ورشة إنتاج حقيقية، تتعلّم فيهما المادة على يد مهندس درسها، ثم تصنع بها شيئاً حقيقياً.",
+    en: "For makers, artists and anyone who wants to start working with wood properly. Four days across two weekends, inside a working production workshop. The first weekend you learn the material and how a piece is designed, from an engineer who studied wood. The second weekend you make it, with a carpenter who builds for a living.",
+    ar: "للحرفيين والفنانين ولكل من يريد أن يبدأ العمل بالخشب كما يجب. أربعة أيام على مدى عطلتَي نهاية أسبوع، داخل ورشة إنتاج حقيقية. في الأولى تتعلّم المادة وكيف تُصمَّم القطعة، على يد مهندس درس الخشب. وفي الثانية تصنعها، مع نجّار يبني للعيش.",
   },
   book: { en: "Add me to the list", ar: "أضِفني إلى القائمة" },
   waMsg: {
@@ -42,36 +43,47 @@ const COPY = {
     ar: "مرحباً — أريد الانضمام إلى قائمة مدرسة الخشب.",
   },
   where: {
-    en: `Two days · ${COHORT.hours} · Plexus Workshop, Amman`,
-    ar: `يومان · ${COHORT.hours} · ورشة بلكسس، عمّان`,
+    en: `Four days over two weekends · ${COHORT.hours} · Plexus Workshop, Amman`,
+    ar: `أربعة أيام على مدى عطلتَين · ${COHORT.hours} · ورشة بلكسس، عمّان`,
   },
 
   factSeats: { en: "seats only", ar: "مقاعد فقط" },
-  factDays: { en: "full days", ar: "يومان كاملان" },
+  factDays: { en: "full days", ar: "أيام كاملة" },
   factPrice: { en: "all included", ar: "شامل كل شيء" },
   factLevel: { en: "experience needed", ar: "خبرة مطلوبة" },
   none: { en: "None", ar: "لا شيء" },
 
-  daysTitle: { en: "The two days", ar: "اليومان" },
-  day1: { en: "Day one — the material, and the making", ar: "اليوم الأول — المادة والتنفيذ" },
-  day2: { en: "Day two — the finish, and the wall", ar: "اليوم الثاني — الدهان والتثبيت" },
+  daysTitle: { en: "The two weekends", ar: "العطلتان" },
+  wk1: { en: "Weekend one — the material, and the design", ar: "العطلة الأولى — المادة والتصميم" },
+  wk1who: { en: "with the timber engineer", ar: "مع مهندس الأخشاب" },
+  wk2: { en: "Weekend two — the shop, and the making", ar: "العطلة الثانية — الورشة والتنفيذ" },
+  wk2who: { en: "with a working master carpenter", ar: "مع نجّار محترف" },
+  gap: {
+    en: "The week in between is deliberate: your glue-up cures properly, and you come back having thought about what you are making.",
+    ar: "الأسبوع الفاصل مقصود: يجف الغراء كما يجب، وتعود وقد فكّرت في ما تصنعه.",
+  },
 
   pieceTitle: { en: "You leave carrying this", ar: "تخرج حاملاً هذه" },
+  teacher2Title: { en: "And who makes with you", ar: "ومن يصنع معك" },
+  teacher2: {
+    en: "The second weekend is led by a carpenter who builds for a living — machines, workshop etiquette, sharpening, and the working habits that no book teaches. You get the engineer and the craftsman, which is not a combination you will find twice in this city.",
+    ar: "يقود العطلة الثانية نجّار يبني للعيش — الآلات، وآداب الورشة، والسنّ، وعادات العمل التي لا يعلّمها كتاب. تحصل على المهندس والحِرَفي معاً، وهي تركيبة لن تجدها مرتين في هذه المدينة.",
+  },
   pieceBlurb: {
-    en: "A 400 × 300 × 180 mm wall unit in solid hardwood with a plywood back and two shelves set deliberately off from each other. Small enough to finish properly over two days, honest enough to teach everything — the joints, why the back is plywood and not solid wood, how a shelf carries load, and how a piece is fixed to a wall so it never moves again.",
-    ar: "وحدة حائط ٤٠٠ × ٣٠٠ × ١٨٠ مم من الخشب الصلب، بظهر من الأبلكاش ورفّين غير متساويي الارتفاع عمداً. صغيرة بما يكفي لإنهائها في يومين، وصادقة بما يكفي لتعليم كل شيء — الوصلات، ولماذا الظهر أبلكاش لا خشب صلب، وكيف يحمل الرف الحِمل، وكيف تُثبَّت القطعة على الحائط فلا تتحرك أبداً.",
+    en: "A 400 × 300 × 180 mm wall unit in solid hardwood with a plywood back and two shelves set deliberately off from each other. Small enough to finish properly, honest enough to teach everything — the joints, why the back is plywood and not solid wood, how a shelf carries load, and how a piece is fixed to a wall so it never moves again.",
+    ar: "وحدة حائط ٤٠٠ × ٣٠٠ × ١٨٠ مم من الخشب الصلب، بظهر من الأبلكاش ورفّين غير متساويي الارتفاع عمداً. صغيرة بما يكفي لإنهائها كما يجب، وصادقة بما يكفي لتعليم كل شيء — الوصلات، ولماذا الظهر أبلكاش لا خشب صلب، وكيف يحمل الرف الحِمل، وكيف تُثبَّت القطعة على الحائط فلا تتحرك أبداً.",
   },
 
   includedTitle: { en: "Included — nothing further to buy", ar: "شامل — لا شيء آخر تشتريه" },
   teacherTitle: { en: "Who is teaching", ar: "من يُدرّس" },
   teacher: {
-    en: "MSc in Timber Engineering, University of Sopron — with published and cited research on laminated veneer lumber and the structural use of underused species. Plexus Workshop is a solid-wood, CNC and laser fabrication shop in Amman doing custom and contract production for architects, designers and brands. This is the same material knowledge that goes into client work, taught over two days.",
-    ar: "ماجستير في هندسة الأخشاب من جامعة شوپرون — مع أبحاث منشورة ومُستشهَد بها في الخشب الرقائقي المصفّح والاستخدام الإنشائي للأنواع قليلة الاستعمال. ورشة بلكسس ورشة خشب صلب وتصنيع CNC وليزر في عمّان، تنفّذ إنتاجاً خاصاً وتعاقدياً لمعماريين ومصممين وعلامات تجارية. هذه المعرفة نفسها التي تدخل في عمل العملاء، تُدرَّس في يومين.",
+    en: "MSc in Timber Engineering, University of Sopron — with published and cited research on laminated veneer lumber and the structural use of underused species. Plexus Workshop is a solid-wood, CNC and laser fabrication shop in Amman doing custom and contract production for architects, designers and brands. The first weekend is his: what wood is, and how a piece gets designed before anyone cuts it.",
+    ar: "ماجستير في هندسة الأخشاب من جامعة شوپرون — مع أبحاث منشورة ومُستشهَد بها في الخشب الرقائقي المصفّح والاستخدام الإنشائي للأنواع قليلة الاستعمال. ورشة بلكسس ورشة خشب صلب وتصنيع CNC وليزر في عمّان، تنفّذ إنتاجاً خاصاً وتعاقدياً لمعماريين ومصممين وعلامات تجارية. العطلة الأولى له: ما هو الخشب، وكيف تُصمَّم القطعة قبل أن يقصّ أحد شيئاً.",
   },
 
   howTitle: { en: "How it works", ar: "كيف تسير الأمور" },
   howBlurb: {
-    en: "There is no fixed date, and that is on purpose — a group of five is easier to suit than a calendar.",
+    en: "There are no fixed dates, and that is on purpose — a group of five is easier to suit than a calendar.",
     ar: "لا يوجد تاريخ ثابت، وهذا مقصود — من الأسهل أن نوافق خمسة أشخاص من أن نوافق التقويم.",
   },
   priceTitle: { en: "Seats & fee", ar: "المقاعد والرسوم" },
@@ -85,22 +97,38 @@ const COPY = {
   },
 };
 
-const DAY1 = [
+const D1 = [
   { en: "What wood actually is — cells, grain, and the three planes", ar: "ما هو الخشب فعلاً — الخلايا والعروق والمستويات الثلاثة" },
   { en: "The species in your hands, and the engineered boards", ar: "الأنواع بين يديك، والألواح المصنّعة" },
   { en: "Moisture and movement — why a piece splits in January", ar: "الرطوبة والحركة — لماذا تتشقق القطعة في كانون الثاني" },
-  { en: "Joints, then marking out — where accuracy is won or lost", ar: "الوصلات ثم التخطيط — حيث تُكسب الدقة أو تُفقد" },
-  { en: "Cut your own joinery, one at the machine at a time", ar: "تقص وصلاتك بنفسك، واحد على الآلة في كل مرة" },
-  { en: "Dry fit, then glue up — it cures here overnight", ar: "تركيب تجريبي ثم التغرية — وتجف هنا طوال الليل" },
+  { en: "Buying wood in Amman — names, prices, the six checks", ar: "شراء الخشب في عمّان — الأسماء والأسعار والفحوصات الستة" },
+  { en: "Your own finish sample set, made and labelled", ar: "مجموعة عيّنات الدهان الخاصة بك، تصنعها وتوسمها" },
 ];
 
-const DAY2 = [
+const D2 = [
+  { en: "Choosing the joint for the load it carries", ar: "اختيار الوصلة حسب الحِمل الذي تحمله" },
+  { en: "Will it hold? Your shelf under real structural analysis", ar: "هل ستصمد؟ رفّك تحت تحليل إنشائي حقيقي" },
+  { en: "Design approach — how a piece is actually designed", ar: "منهج التصميم — كيف تُصمَّم القطعة فعلاً" },
+  { en: "Marking out — where accuracy is won or lost", ar: "التخطيط — حيث تُكسب الدقة أو تُفقد" },
+  { en: "Logistics and costing — how a job moves through a shop", ar: "اللوجستيات والتكلفة — كيف يسير الطلب في الورشة" },
+  { en: "Draw your own piece, and have it reviewed", ar: "ارسم قطعتك الخاصة، وتُراجَع معك" },
+];
+
+const D3 = [
+  { en: "Workshop etiquette, ethics and safety", ar: "آداب الورشة وأخلاقيات العمل والسلامة" },
+  { en: "Every machine, properly introduced", ar: "كل آلة، مع شرح كامل" },
+  { en: "Sharpening — chisels and plane irons, by hand", ar: "السنّ — الأزاميل وشفرات الفارة، يدوياً" },
+  { en: "Cut your own joinery, one at the machine at a time", ar: "تقص وصلاتك بنفسك، واحد على الآلة في كل مرة" },
+  { en: "Dry fit, then glue up — it cures over the week", ar: "تركيب تجريبي ثم التغرية — وتجف خلال الأسبوع" },
+];
+
+const D4 = [
   { en: "Working a cured joint — scraper and block plane", ar: "العمل على وصلة جافة — المكشطة والفارة" },
   { en: "The shaped front edge", ar: "تشكيل الحافة الأمامية" },
   { en: "Sanding properly — the ladder, and why you stop at 220", ar: "الصقل الصحيح — التدرّج، ولماذا تتوقف عند ٢٢٠" },
-  { en: "Buying wood in Amman — names, prices, the six checks", ar: "شراء الخشب في عمّان — الأسماء والأسعار والفحوصات الستة" },
-  { en: "Will it hold? Your shelf under real structural analysis", ar: "هل ستصمد؟ رفّك تحت تحليل إنشائي حقيقي" },
-  { en: "Mounting, then the finish — and what to buy first", ar: "التثبيت ثم الدهان — وماذا تشتري أولاً" },
+  { en: "Mounting — four bosses, four bolts, into a real wall", ar: "التثبيت — أربع قواعد وأربعة مسامير، في حائط حقيقي" },
+  { en: "The finish, on your own piece", ar: "الدهان، على قطعتك أنت" },
+  { en: "What to buy first — your first ten tools, with prices", ar: "ماذا تشتري أولاً — أول عشر أدوات بأسعارها" },
 ];
 
 const INCLUDED = [
@@ -109,7 +137,7 @@ const INCLUDED = [
   { en: "A printed workbook in Arabic and English", ar: "كتيّب مطبوع بالعربية والإنجليزية" },
   { en: "A certificate signed on completion", ar: "شهادة موقّعة عند الإتمام" },
   { en: "All tools, machine time and safety equipment", ar: "كل الأدوات ووقت الآلات ومعدّات السلامة" },
-  { en: "Lunch, both days", ar: "الغداء، في اليومين" },
+  { en: "Lunch, all four days", ar: "الغداء، في الأيام الأربعة" },
 ];
 
 export function WoodSchoolPage() {
@@ -142,9 +170,9 @@ export function WoodSchoolPage() {
     },
     {
       n: "3",
-      en: "We pick a weekend together", ar: "نختار عطلة نهاية أسبوع معاً",
-      den: "Once the five of you exist, we agree a weekend that actually suits you.",
-      dar: "بعد اكتمال الخمسة، نتفق على عطلة تناسبكم فعلاً.",
+      en: "We pick two weekends together", ar: "نختار عطلتَين معاً",
+      den: "Once the five of you exist, we agree two weekends that actually suit you.",
+      dar: "بعد اكتمال الخمسة، نتفق على عطلتَين تناسبكم فعلاً.",
     },
     {
       n: "4",
@@ -225,31 +253,44 @@ export function WoodSchoolPage() {
         </Reveal>
       </section>
 
-      {/* the two days */}
+      {/* the two weekends */}
       <section className="mx-auto max-w-5xl px-6 pb-16">
         <Reveal>
           <h2 className="font-serif text-3xl">{t(COPY.daysTitle)}</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#473826]">
+            {t(COPY.gap)}
+          </p>
           <div className="mt-8 grid gap-5 md:grid-cols-2">
             {[
-              { title: t(COPY.day1), items: DAY1 },
-              { title: t(COPY.day2), items: DAY2 },
-            ].map((d) => (
+              { title: t(COPY.wk1), who: t(COPY.wk1who), days: [D1, D2] },
+              { title: t(COPY.wk2), who: t(COPY.wk2who), days: [D3, D4] },
+            ].map((wk, wi) => (
               <div
-                key={d.title}
+                key={wk.title}
                 className="rounded-lg border border-[#e3d9c7] bg-white p-6"
               >
-                <h3 className="font-serif text-xl">{d.title}</h3>
-                <ul className="mt-4 space-y-3">
-                  {d.items.map((it) => (
-                    <li
-                      key={it.en}
-                      className="flex gap-3 text-sm leading-relaxed text-[#473826]"
-                    >
-                      <span className="text-[#c98f4e]">—</span>
-                      <span>{t(it)}</span>
-                    </li>
-                  ))}
-                </ul>
+                <h3 className="font-serif text-xl">{wk.title}</h3>
+                <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.15em] text-[#9c5b2c]">
+                  {wk.who}
+                </p>
+                {wk.days.map((day, di) => (
+                  <div key={di} className={di ? "mt-6" : "mt-5"}>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#a8977c]">
+                      {ar ? `اليوم ${wi * 2 + di + 1}` : `Day ${wi * 2 + di + 1}`}
+                    </p>
+                    <ul className="mt-2 space-y-2">
+                      {day.map((it) => (
+                        <li
+                          key={it.en}
+                          className="flex gap-3 text-sm leading-relaxed text-[#473826]"
+                        >
+                          <span className="text-[#c98f4e]">—</span>
+                          <span>{t(it)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
@@ -305,6 +346,14 @@ export function WoodSchoolPage() {
             </p>
             <p className="mt-4 text-sm leading-relaxed text-[#473826]">
               {t(COPY.teacher)}
+            </p>
+          </div>
+          <div className="mt-4 rounded-lg border border-[#e3d9c7] bg-white p-7">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#9c5b2c]">
+              {t(COPY.teacher2Title)}
+            </p>
+            <p className="mt-4 text-sm leading-relaxed text-[#473826]">
+              {t(COPY.teacher2)}
             </p>
           </div>
         </Reveal>
