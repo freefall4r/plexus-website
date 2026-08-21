@@ -65,23 +65,17 @@ const COPY = {
   },
 
   pieceTitle: { en: "You leave carrying this", ar: "تخرج حاملاً هذه" },
-  teacher2Title: { en: "And the wood side", ar: "والجانب الخشبي" },
-  teacher2: {
-    en: "The first weekend is the material, taught by a timber engineer — MSc from the University of Sopron, with published research on laminated veneer lumber. Species, movement, what to buy and what it should cost, and how a piece is designed before anyone touches a machine. Then the tools come out and Layth takes over.",
-    ar: "العطلة الأولى للمادة، يقدّمها مهندس أخشاب — ماجستير من جامعة شوپرون، وأبحاث منشورة في الخشب الرقائقي المصفّح. الأنواع، والحركة، وماذا تشتري وكم يجب أن يكلّف، وكيف تُصمَّم القطعة قبل أن يلمس أحد آلة. ثم تخرج العدّة ويتسلّم ليث.",
-  },
   pieceBlurb: {
     en: "A 400 × 300 × 180 mm wall unit in solid hardwood with a plywood back and two shelves set deliberately off from each other. Small enough to finish properly, honest enough to teach everything — the joints, why the back is plywood and not solid wood, how a shelf carries load, and how a piece is fixed to a wall so it never moves again.",
     ar: "وحدة حائط ٤٠٠ × ٣٠٠ × ١٨٠ مم من الخشب الصلب، بظهر من الأبلكاش ورفّين غير متساويي الارتفاع عمداً. صغيرة بما يكفي لإنهائها كما يجب، وصادقة بما يكفي لتعليم كل شيء — الوصلات، ولماذا الظهر أبلكاش لا خشب صلب، وكيف يحمل الرف الحِمل، وكيف تُثبَّت القطعة على الحائط فلا تتحرك أبداً.",
   },
 
   includedTitle: { en: "Included — nothing further to buy", ar: "شامل — لا شيء آخر تشتريه" },
-  teacherTitle: { en: "Whose workshop this is", ar: "ورشة مَن هذه" },
-  teacher: {
-    en: "C Hub is a working fabrication workshop in Amman, and Layth is the man who founded it. He makes furniture and joinery for a living — real clients, real deadlines, every week of the year. The second weekend happens in his shop, on his machines, to his standards. What he teaches is the part nobody writes down: how a machine is actually set, how a tool is handed to another person, how a job is sequenced so that it finishes, and how to put a real edge on a chisel. There is no reading your way to any of it.",
-    ar: "C Hub ورشة تصنيع حقيقية في عمّان، وليث هو من أسّسها. يصنع الأثاث والنجارة لقمة عيشه — عملاء حقيقيون ومواعيد حقيقية، كل أسبوع من السنة. العطلة الثانية تجري في ورشته، وعلى آلاته، وبمعاييره. وما يعلّمه هو الجزء الذي لا يُكتب: كيف تُضبط الآلة فعلاً، وكيف تُسلَّم العدّة لشخص آخر، وكيف يُرتَّب العمل حتى ينتهي، وكيف تضع حدّاً حقيقياً على الإزميل. لا سبيل إلى أيٍّ من ذلك بالقراءة.",
+  teachTitle: { en: "Who you learn from", ar: "ممّن تتعلّم" },
+  teachLead: {
+    en: "The science of the material, and the hands that work it — taught by the two people who each do one of those for a living.",
+    ar: "علم المادة، واليد التي تشتغلها — يعلّمهما الشخصان اللذان يعيش كلٌّ منهما من واحدة منهما.",
   },
-
   howTitle: { en: "How it works", ar: "كيف تسير الأمور" },
   howBlurb: {
     en: "There are no fixed dates, and that is on purpose — a group of five is easier to suit than a calendar.",
@@ -130,6 +124,37 @@ const D4 = [
   { en: "Mounting — four bosses, four bolts, into a real wall", ar: "التثبيت — أربع قواعد وأربعة مسامير، في حائط حقيقي" },
   { en: "The finish, on your own piece", ar: "الدهان، على قطعتك أنت" },
   { en: "What to buy first — your first ten tools, with prices", ar: "ماذا تشتري أولاً — أول عشر أدوات بأسعارها" },
+];
+
+const PEOPLE = [
+  {
+    role: { en: "The making", ar: "الصناعة" },
+    name: { en: "Layth", ar: "ليث" },
+    sub: { en: "Founder, C Hub", ar: "مؤسّس C Hub" },
+    body: {
+      en: "Layth founded C Hub, a working fabrication workshop in Amman, and he has spent his working life making — furniture, joinery, fit-outs, for real clients on real deadlines. He has taught a great many people to make things, and helped a great many more get their own ideas built. The second weekend is his: his workshop, his machines, his standards. What he passes on is the part that never gets written down — how a machine is truly set, how a job is sequenced so that it finishes, how a tool is handed to another person, and how to put a real edge on steel.",
+      ar: "أسّس ليث ورشة C Hub في عمّان، وقضى حياته العملية في الصناعة — أثاث ونجارة وتجهيزات، لعملاء حقيقيين وبمواعيد حقيقية. علّم عدداً كبيراً من الناس كيف يصنعون، وساعد عدداً أكبر على تنفيذ أفكارهم. العطلة الثانية له: ورشته، وآلاته، ومعاييره. وما ينقله هو الجزء الذي لا يُكتب — كيف تُضبط الآلة حقاً، وكيف يُرتَّب العمل حتى ينتهي، وكيف تُسلَّم العدّة لشخص آخر، وكيف تضع حدّاً حقيقياً على الحديد.",
+    },
+    tags: [
+      { en: "Master maker & carpenter", ar: "صانع ونجّار محترف" },
+      { en: "Founder of C Hub", ar: "مؤسّس C Hub" },
+      { en: "Has taught many makers", ar: "علّم كثيرين" },
+    ],
+  },
+  {
+    role: { en: "The material", ar: "المادة" },
+    name: { en: "Plexus Workshop", ar: "ورشة بلكسس" },
+    sub: { en: "Timber engineer", ar: "مهندس أخشاب" },
+    body: {
+      en: "MSc in Timber Engineering from the University of Sopron, with published and cited research on laminated veneer lumber and the structural use of species nobody bothers with — work that pulled close to the strength of expensive timber out of two-thirds cheap wood. Plexus designs and makes in solid wood for architects, designers and brands. The first weekend is the material and the drawing board: what wood is, how it moves, what it costs in Amman, and how a piece is designed so that it survives. Then the tools come out and Layth takes over.",
+      ar: "ماجستير في هندسة الأخشاب من جامعة شوپرون، مع أبحاث منشورة ومُستشهَد بها في الخشب الرقائقي المصفّح والاستخدام الإنشائي لأنواع لا يلتفت إليها أحد — عمل استخرج ما يقارب قوة الخشب الغالي من ثلثَي خشب رخيص. تصمّم بلكسس وتصنع بالخشب الصلب لمعماريين ومصممين وعلامات تجارية. العطلة الأولى للمادة ولوح الرسم: ما هو الخشب، وكيف يتحرّك، وكم يكلّف في عمّان، وكيف تُصمَّم القطعة لتصمد. ثم تخرج العدّة ويتسلّم ليث.",
+    },
+    tags: [
+      { en: "MSc Timber Engineering", ar: "ماجستير هندسة أخشاب" },
+      { en: "Published research", ar: "أبحاث منشورة" },
+      { en: "Design & engineering", ar: "تصميم وهندسة" },
+    ],
+  },
 ];
 
 const INCLUDED = [
@@ -339,24 +364,40 @@ export function WoodSchoolPage() {
         </Reveal>
       </section>
 
-      {/* teacher */}
+      {/* who you learn from — two people, equal billing */}
       <section className="mx-auto max-w-5xl px-6 pb-16">
         <Reveal>
-          <div className="rounded-lg border border-[#e3d9c7] bg-white p-7">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#9c5b2c]">
-              {t(COPY.teacherTitle)}
-            </p>
-            <p className="mt-4 text-sm leading-relaxed text-[#473826]">
-              {t(COPY.teacher)}
-            </p>
-          </div>
-          <div className="mt-4 rounded-lg border border-[#e3d9c7] bg-white p-7">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#9c5b2c]">
-              {t(COPY.teacher2Title)}
-            </p>
-            <p className="mt-4 text-sm leading-relaxed text-[#473826]">
-              {t(COPY.teacher2)}
-            </p>
+          <h2 className="font-serif text-3xl">{t(COPY.teachTitle)}</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#473826]">
+            {t(COPY.teachLead)}
+          </p>
+          <div className="mt-8 grid gap-5 md:grid-cols-2">
+            {PEOPLE.map((person) => (
+              <div
+                key={person.name.en}
+                className="flex flex-col rounded-lg border border-[#e3d9c7] bg-white p-7"
+              >
+                <span className="h-1 w-12 rounded-full bg-[#c98f4e]" />
+                <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.22em] text-[#9c5b2c]">
+                  {t(person.role)}
+                </p>
+                <h3 className="mt-2 font-serif text-2xl">{t(person.name)}</h3>
+                <p className="mt-1 text-sm text-[#6b5d4a]">{t(person.sub)}</p>
+                <p className="mt-4 text-sm leading-relaxed text-[#473826]">
+                  {t(person.body)}
+                </p>
+                <div className="mt-auto flex flex-wrap gap-2 pt-6">
+                  {person.tags.map((tag) => (
+                    <span
+                      key={tag.en}
+                      className="rounded-full border border-[#d9cbb3] bg-[#f7f3ec] px-3 py-1 text-[11px] font-semibold text-[#6b5d4a]"
+                    >
+                      {t(tag)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </Reveal>
       </section>
