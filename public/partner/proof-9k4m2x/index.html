@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plexus Workshop — Partnership Proposal</title>
+<style>
+  :root{
+    --ink:#14100c; --ink2:#1c1712; --edge:#2e251c;
+    --paper:#f0eae0; --stone:#9c8f7e; --oak:#c08a4e; --ember:#e7b667;
+    --display:"Optima","Candara","Gill Sans",system-ui,sans-serif;
+    --body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --spec:"Menlo","SFMono-Regular",Consolas,monospace;
+    --gut:clamp(1.25rem,4vw,4rem);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--body);
+       font-size:clamp(1rem,.55vw + .9rem,1.09rem);line-height:1.62}
+  img{max-width:100%;display:block}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 var(--gut)}
+  .kicker{font-family:var(--spec);font-size:.72rem;letter-spacing:.22em;
+          text-transform:uppercase;color:var(--stone)}
+  section{padding:clamp(3rem,7vw,5.5rem) 0;border-bottom:1px solid var(--edge)}
+  h1{font-family:var(--display);font-weight:400;font-size:clamp(2.3rem,6.4vw,4.4rem);
+     line-height:1.0;margin:1.3rem 0 0;letter-spacing:-.015em}
+  h1 em{font-style:normal;color:var(--oak)}
+  h2{font-family:var(--display);font-weight:400;letter-spacing:-.01em;
+     font-size:clamp(1.7rem,4vw,2.6rem);line-height:1.06;margin:.4rem 0 0}
+  h3{font-family:var(--display);font-weight:400;font-size:1.28rem;margin:2.2rem 0 .3rem;color:var(--ember)}
+  p{margin:1.1rem 0 0;color:#d8cfc1;max-width:66ch}
+  p.lede{color:var(--paper);font-size:1.14em}
+  .mast{padding-top:clamp(3rem,8vw,6rem)}
+  .stand{max-width:56ch;margin:1.8rem 0 0;color:#d8cfc1}
+  .meta{display:flex;flex-wrap:wrap;gap:.6rem 2.4rem;margin-top:2.4rem;
+        font-family:var(--spec);font-size:.76rem;letter-spacing:.08em;color:var(--stone)}
+  .meta b{color:var(--paper);font-weight:400}
+
+  .big{display:grid;gap:1.4rem 2.2rem;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin-top:2.4rem}
+  .big div{border-top:1px solid var(--edge);padding-top:.9rem}
+  .big .n{font-family:var(--display);font-size:clamp(2rem,4.5vw,2.9rem);color:var(--ember);line-height:1}
+  .big .l{font-family:var(--spec);font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;
+          color:var(--stone);margin-top:.5rem;display:block;line-height:1.5}
+
+  table{width:100%;border-collapse:collapse;margin-top:1.8rem;font-size:.94rem}
+  th,td{text-align:left;padding:.7rem .8rem;border-bottom:1px solid var(--edge);vertical-align:top}
+  th{font-family:var(--spec);font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;
+     color:var(--stone);font-weight:400}
+  td b{color:var(--paper);font-weight:400}
+  td{color:#d8cfc1}
+
+  .plates{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));margin-top:2.2rem}
+  .plates figure{margin:0}
+  .plates img{border:1px solid var(--edge);width:100%;aspect-ratio:4/5;object-fit:cover}
+  .plates figcaption{font-family:var(--spec);font-size:.67rem;letter-spacing:.06em;
+        color:var(--stone);margin-top:.6rem;line-height:1.55}
+  .plates figcaption b{color:var(--paper);font-weight:400}
+
+  .flow{counter-reset:s;margin-top:2rem;padding:0;list-style:none}
+  .flow li{counter-increment:s;position:relative;padding:.85rem 0 .85rem 3.1rem;border-bottom:1px solid var(--edge);color:#d8cfc1}
+  .flow li::before{content:counter(s,decimal-leading-zero);position:absolute;left:0;top:.95rem;
+      font-family:var(--spec);font-size:.72rem;color:var(--oak);letter-spacing:.1em}
+  .flow b{color:var(--paper);font-weight:400}
+
+  .split{display:grid;gap:1.6rem;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:2rem}
+  .split > div{border:1px solid var(--edge);padding:1.5rem 1.4rem}
+  .split h4{font-family:var(--spec);font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;
+            color:var(--stone);margin:0 0 .9rem;font-weight:400}
+  .split .pct{font-family:var(--display);font-size:2.3rem;color:var(--ember);line-height:1}
+  .split p{margin-top:.8rem;font-size:.93rem}
+
+  .ask{border:1px solid var(--oak);padding:clamp(1.6rem,4vw,2.6rem);margin-top:2.4rem;
+       background:rgba(192,138,78,.05)}
+  .ask h2{margin-top:0}
+
+  .todo{border:2px dashed #b4472e;background:rgba(180,71,46,.09);padding:1.3rem 1.5rem;margin-top:1.8rem}
+  .todo .kicker{color:#e0745a}
+  .todo p{color:#f0d5cd;margin-top:.6rem}
+
+  footer{padding:3rem 0 4rem;color:var(--stone);font-family:var(--spec);font-size:.74rem;letter-spacing:.06em}
+
+  @media print{
+    body{background:#fff;color:#14100c}
+    p,td,.plates figcaption{color:#3a322a}
+    section{border-color:#d8d0c4;page-break-inside:avoid}
+    .todo{display:none}
+    h1 em,.big .n,.split .pct,h3{color:#8a5a22}
+  }
+</style>
+</head>
+<body>
+
+<header class="wrap mast">
+  <span class="kicker">Plexus Workshop · Amman, Jordan · Partnership Proposal</span>
+  <h1>I don't need your machines.<br><em>I need somewhere to put the work.</em></h1>
+  <p class="stand lede">I design and sell high-end bespoke woodwork, and I bring the clients with me.
+  I have no workshop of my own — by choice. For the past year I have run an entire premium brand out of
+  somebody else's shop, and filled it. I'd like to do the same in yours.</p>
+  <div class="meta">
+    <span><b>Mohammad Fakhori</b> · M.Sc. Timber Engineering</span>
+    <span>University of Sopron, Hungary</span>
+    <span>plexusworkshop.com</span>
+  </div>
+</header>
+
+<section class="wrap">
+  <span class="kicker">The proposition</span>
+  <h2>You have machines standing still. I have more work than hands.</h2>
+  <p class="lede">A workshop's costs are fixed. The rent, the machines, the power and the wages
+  are the same whether the floor is full or empty — so idle capacity isn't slow business, it's loss,
+  every day of the week.</p>
+  <p>I generate demand for the kind of work most shops turn away: one-off, high-design, high-margin
+  commissions where the client is paying for the thinking as much as the timber. I handle the client,
+  the design, the engineering, the pricing, the drawings and the delivery. You fabricate.
+  We share what comes in.</p>
+  <p>No investment from you. No exclusivity. No change to how you run your floor. If it doesn't
+  make you money, you stop.</p>
+</section>
+
+<section class="wrap">
+  <span class="kicker">The proof</span>
+  <h2>I have done this exactly once, and it worked.</h2>
+  <p>In 2025 I began operating out of a workshop in Amman that was running well under capacity.
+  I brought no capital and no machines — only clients, design and a way of working. Today that
+  floor is busy, and Plexus turns over real money at prices most workshops here are told they
+  can't charge.</p>
+
+  <div class="todo">
+    <span class="kicker">⚠ Fill this in before showing anyone</span>
+    <p><b>The before-and-after numbers.</b> Roughly how busy was the shop when you arrived — days
+    worked per week, jobs per month, whatever you can honestly say? This section is the strongest
+    page in the document and right now it's the only one running on adjectives instead of figures.
+    Give me the numbers and I'll put them in.</p>
+  </div>
+
+  <div class="big">
+    <div><span class="n">1 yr</span><span class="l">From an idle floor to a full one</span></div>
+    <div><span class="n">7–8</span><span class="l">Inbound enquiries per day, with zero paid advertising</span></div>
+    <div><span class="n">160&ndash;2,720</span><span class="l">JOD per commission — the range I sell across</span></div>
+    <div><span class="n">0</span><span class="l">Machines owned. All of it made on somebody else's iron</span></div>
+  </div>
+
+  <p>Every one of those enquiries arrived through reputation, search and word of mouth that I built
+  myself. That is the asset I would be bringing through your door — not a CV.</p>
+</section>
+
+<section class="wrap">
+  <span class="kicker">The work</span>
+  <h2>Photographs of delivered commissions. No renders.</h2>
+  <div class="plates">
+    <figure><img src="img/alh-face.jpg" alt=""><figcaption><b>Alhambra Modular Light</b> — backlit cherry mashrabiya, private commission</figcaption></figure>
+    <figure><img src="img/alh-exploded.jpg" alt=""><figcaption><b>Same piece, engineered</b> — every part drawn and dimensioned before a board is cut</figcaption></figure>
+    <figure><img src="img/cane-01.jpg" alt=""><figcaption><b>Carved cane</b> — sculpted handle, hardwax oil finish</figcaption></figure>
+    <figure><img src="img/lamp-01.jpg" alt=""><figcaption><b>Bar lamp</b> — timber and light, a recurring line</figcaption></figure>
+    <figure><img src="img/table-01.jpg" alt=""><figcaption><b>Solid oak table</b> — client commission</figcaption></figure>
+    <figure><img src="img/vinyl-01.jpg" alt=""><figcaption><b>DJ vinyl library</b> — delivered and installed</figcaption></figure>
+    <figure><img src="img/topo-01.jpg" alt=""><figcaption><b>Topographic relief</b> — CNC-carved panel</figcaption></figure>
+    <figure><img src="img/crescent-01.jpg" alt=""><figcaption><b>Crescent piece</b> — curved lamination</figcaption></figure>
+  </div>
+  <p>The full catalogue, with materials and process, is at <b>plexusworkshop.com/showcase</b>.</p>
+</section>
+
+<section class="wrap">
+  <span class="kicker">What I actually bring</span>
+  <h2>A way of running the job, not just a portfolio.</h2>
+  <p>Over the last year I have built the software I needed and couldn't buy. It comes with me,
+  it runs on your jobs from the first week, and it is the reason I can quote fast and price high
+  without guessing.</p>
+
+  <table>
+    <tr><th>Tool</th><th>What it does</th><th>Evidence</th></tr>
+    <tr>
+      <td><b>CutFlow</b><br>SketchUp extension</td>
+      <td>Nests parts onto sheets and produces the cut list.</td>
+      <td><b>24 boards down to 21</b> across four realistic jobs — 12.5% fewer sheets, best single
+      job 25%. Measured against a shelf/first-fit baseline, <i>not</i> against commercial nesting software.</td>
+    </tr>
+    <tr>
+      <td><b>THE LOAD</b><br>structural engine</td>
+      <td>Finite element analysis with real orthotropic timber properties and Eurocode&nbsp;5 checks —
+      sag, cracking, joints, buckling, tip-over.</td>
+      <td>Lets us quote structural and public-venue work with a number behind it instead of a shrug.
+      Built on my M.Sc. research; I model in Ansys.</td>
+    </tr>
+    <tr>
+      <td><b>The Bench</b><br>costing engine</td>
+      <td>A photograph or a sentence in, and a costed board list and quote out.</td>
+      <td>Quotes leave the same day. That alone wins jobs.</td>
+    </tr>
+    <tr>
+      <td><b>KUN</b><br>3D visualisation</td>
+      <td>The client sees the piece, in their material, before anyone touches timber.</td>
+      <td>It is why clients accept higher prices — they aren't buying a promise.</td>
+    </tr>
+    <tr>
+      <td><b>Client portals</b></td>
+      <td>Live build tracking. The client watches their commission progress by stage.</td>
+      <td>Fewer phone calls, later balance payments collected on time.</td>
+    </tr>
+  </table>
+
+  <h3>And the part that isn't software</h3>
+  <p>M.Sc. in Timber Industry Engineering from the University of Sopron, Hungary. Published and cited
+  research on laminated veneer lumber from underused species. Finite element modelling that predicted
+  real deflection to within 3–9%. I know what wood does before we cut it.</p>
+</section>
+
+<section class="wrap">
+  <span class="kicker">How a job runs</span>
+  <h2>Where your floor starts and stops.</h2>
+  <ol class="flow">
+    <li><b>The enquiry comes to me.</b> My phone, my site, my reputation. You are never asked to find work.</li>
+    <li><b>I design and engineer it</b> — drawings, 3D, structural check, cut files. At my cost, on my time.</li>
+    <li><b>I price it and close the client</b>, and I take a deposit before anything is cut.</li>
+    <li><b>You receive a complete package</b> — cut list, nested sheets, hardware schedule, joint-by-joint
+    method. Not a sketch and a conversation.</li>
+    <li><b>Your shop fabricates.</b> I am on the floor for the stages that decide the finish.</li>
+    <li><b>I finish, inspect and deliver</b> to the client myself. The standard is mine to hold.</li>
+    <li><b>Money in, split on the agreed terms</b>, per job, with nothing carried over.</li>
+  </ol>
+</section>
+
+<section class="wrap">
+  <span class="kicker">The terms</span>
+  <h2>The split follows the machine hours.</h2>
+  <p>Some jobs live on your machines. Some live on my drawing board and my hands at the finishing
+  bench. Paying the same split on both would cheat one of us every time, so the terms follow the work.</p>
+
+  <div class="split">
+    <div>
+      <h4>Design-led commissions</h4>
+      <div class="pct">60 / 40</div>
+      <p>Lights, boxes, carved and sculpted pieces, one-off furniture. High design and finishing
+      content, low machine time. <b>60 to me, 40 to the shop</b>, after materials.</p>
+    </div>
+    <div>
+      <h4>Machine-led production</h4>
+      <div class="pct">40 / 60</div>
+      <p>Joinery runs, cabinetry, repeat units, anything that mostly eats saw and CNC hours.
+      <b>40 to me, 60 to the shop</b>, after materials.</p>
+    </div>
+    <div>
+      <h4>Materials</h4>
+      <div class="pct">At cost</div>
+      <p>Timber, sheet goods, hardware and finish come off the top before any split, at the
+      invoice price. Neither side marks them up on the other.</p>
+    </div>
+  </div>
+
+  <p>Which tier a job falls into is agreed <b>before</b> it starts, in writing, on the job sheet.
+  No renegotiating a piece that's already on the bench.</p>
+
+  <h3>What each side is responsible for</h3>
+  <table>
+    <tr><th></th><th>Me</th><th>The workshop</th></tr>
+    <tr><td><b>Finding the client</b></td><td>✓ All of it</td><td>—</td></tr>
+    <tr><td><b>Design, engineering, drawings</b></td><td>✓ At my own cost</td><td>—</td></tr>
+    <tr><td><b>Pricing and the client relationship</b></td><td>✓ Mine, and stays mine</td><td>—</td></tr>
+    <tr><td><b>Machines, space, power</b></td><td>—</td><td>✓</td></tr>
+    <tr><td><b>Fabrication labour</b></td><td>Present for critical stages</td><td>✓</td></tr>
+    <tr><td><b>Finishing and quality control</b></td><td>✓ Mine to hold</td><td>—</td></tr>
+    <tr><td><b>Delivery and installation</b></td><td>✓</td><td>—</td></tr>
+    <tr><td><b>If a piece is rejected by the client</b></td><td colspan="2">Whoever's stage caused it carries the remake. Agreed per job, in writing.</td></tr>
+  </table>
+</section>
+
+<section class="wrap">
+  <div class="ask">
+    <span class="kicker">The ask</span>
+    <h2>One job. No commitment either way.</h2>
+    <p class="lede">Take one commission with me, start to finish, on the terms above. It will cost
+    you nothing but time on a machine that is currently standing still.</p>
+    <p>At the end of it you will know exactly what I'm worth to your floor, and I'll know whether
+    your shop can hold the standard I sell. If either answer is no, we shake hands and that's the
+    end of it. If both are yes, we do it again next month, and the month after.</p>
+    <p>I'm not asking you to believe a proposal. I'm asking you to run one job.</p>
+  </div>
+</section>
+
+<footer class="wrap">
+  PLEXUS WORKSHOP · AMMAN · plexusworkshop.com<br>
+  Prepared for a workshop partnership conversation. Photographs are of delivered work.
+</footer>
+
+</body>
+</html>
